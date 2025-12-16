@@ -1,9 +1,16 @@
 'use client';
 
-import { useState } from 'react';
-import { Play, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Play, Check, AlertCircle, Loader2, ArrowRight } from 'lucide-react';
 
-export default function Home() {
+interface TaskCardProps {
+  title: string;
+  description: string;
+  endpoint: string;
+  category: string;
+}
+
+function TaskCard({ title, description, endpoint, category }: TaskCardProps) {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
 
@@ -11,14 +18,16 @@ export default function Home() {
     setStatus('loading');
     setMessage('');
     try {
-      const res = await fetch('/api/manual-trigger', { method: 'POST' });
-      const data = await res.json();
-      if (res.ok && data.success) {
+      const method = endpoint.includes('leancloud') ? 'GET' : 'POST';
+      const response = await fetch(endpoint, { method });
+      const data = await response.json();
+
+      if (response.ok && (data.success || data.status === 'success')) {
         setStatus('success');
-        setMessage(data.message);
+        setMessage(data.message || 'Task completed successfully');
       } else {
         setStatus('error');
-        setMessage(data.message || 'Unknown error occurred');
+        setMessage(data.message || data.error || 'Unknown error occurred');
       }
     } catch (error: any) {
       setStatus('error');
@@ -27,46 +36,124 @@ export default function Home() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24 bg-gray-900 text-white">
-      <div className="z-10 max-w-5xl w-full items-center justify-center font-mono text-sm flex flex-col gap-8">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
-          Supabase Keep-Alive
-        </h1>
+    <div className="flex flex-col h-full bg-white border border-[#e5e5e0] p-8 rounded-lg transition-shadow hover:shadow-sm">
+      <div className="mb-6">
+        <span className="text-xs font-medium tracking-wider uppercase text-[#6b6b6b] mb-2 block">
+          {category}
+        </span>
+        <h2 className="text-2xl font-medium text-[#191919] mb-3 font-serif">
+          {title}
+        </h2>
+        <p className="text-[#555555] leading-relaxed text-base">
+          {description}
+        </p>
+      </div>
 
-        <div className="bg-gray-800 p-8 rounded-xl shadow-2xl border border-gray-700 w-full max-w-md flex flex-col items-center gap-6">
-          <div className="text-center text-gray-400">
-            <p>Prevent your Supabase project from pausing.</p>
-            <p className="text-xs mt-2">Scheduled: Daily at 08:00 UTC</p>
-          </div>
-
+      <div className="mt-auto pt-6 border-t border-[#f0f0ed]">
+        <div className="flex items-center gap-4">
           <button
             onClick={handleRun}
             disabled={status === 'loading'}
             className={`
-              group relative flex items-center justify-center gap-2 px-8 py-4 rounded-full font-bold text-lg transition-all duration-300
-              ${status === 'loading' ? 'bg-gray-600 cursor-not-allowed' : 'bg-green-500 hover:bg-green-400 hover:shadow-[0_0_20px_rgba(74,222,128,0.5)] active:scale-95'}
+              group flex items-center gap-2 px-5 py-2.5 rounded-md text-sm font-medium transition-all duration-200
+              ${status === 'loading'
+                ? 'bg-[#e5e5e0] text-[#888888] cursor-not-allowed'
+                : 'bg-[#191919] text-[#fdfcf8] hover:bg-[#333333] active:translate-y-0.5'
+              }
             `}
           >
             {status === 'loading' ? (
-              <Loader2 className="animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
-              <Play className="fill-current" />
+              <Play className="w-4 h-4 fill-current" />
             )}
-            {status === 'loading' ? 'Running...' : 'Run Now'}
+            Run Task
           </button>
 
+          {/* Status Indicators */}
           {status !== 'idle' && (
             <div className={`
-              flex items-center gap-3 p-4 rounded-lg w-full animate-in fade-in slide-in-from-bottom-4
-              ${status === 'success' ? 'bg-green-900/30 text-green-400 border border-green-900' : ''}
-              ${status === 'error' ? 'bg-red-900/30 text-red-400 border border-red-900' : ''}
+              flex items-center gap-2 text-sm animate-in fade-in duration-300
+              ${status === 'success' ? 'text-[#3f6212]' : ''}
+              ${status === 'error' ? 'text-[#9f3e3e]' : ''}
             `}>
-              {status === 'success' && <CheckCircle className="shrink-0" />}
-              {status === 'error' && <XCircle className="shrink-0" />}
-              <p className="break-all">{message}</p>
+              {status === 'success' && <Check className="w-4 h-4" />}
+              {status === 'error' && <AlertCircle className="w-4 h-4" />}
             </div>
           )}
         </div>
+
+        {message && status !== 'idle' && (
+          <p className={`mt-3 text-sm ${status === 'error' ? 'text-[#9f3e3e]' : 'text-[#3f6212]'}`}>
+            {message}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default function Home() {
+  const [systemStatus, setSystemStatus] = useState<'Operational' | 'Degraded' | 'Checking'>('Checking');
+  const [version, setVersion] = useState('v0.2.0');
+
+  useEffect(() => {
+    // Fetch System Health
+    const checkHealth = async () => {
+      try {
+        const res = await fetch('/api/health');
+        const data = await res.json();
+        setSystemStatus(data.status || 'Unknown');
+      } catch (e) {
+        setSystemStatus('Degraded');
+      }
+    };
+
+    checkHealth();
+  }, []);
+
+  return (
+    <main className="min-h-screen py-24 px-6 sm:px-12 bg-[#fdfcf8]">
+      <div className="max-w-3xl mx-auto">
+
+        {/* Header Section */}
+        <header className="mb-24">
+          <h1 className="text-4xl sm:text-5xl font-medium text-[#191919] mb-6 font-serif tracking-tight leading-tight">
+            System Operations
+          </h1>
+          <p className="text-lg text-[#555555] max-w-xl leading-relaxed font-light">
+            Control center for automated maintenance protocols and cross-service data synchronization.
+          </p>
+        </header>
+
+        {/* Content Grid */}
+        <div className="grid grid-cols-1 gap-12">
+          <TaskCard
+            category="Database Maintenance"
+            title="Supabase"
+            description="Triggers the daily activity signal to prevent project suspension. Scheduled execution occurs daily at 08:00 UTC."
+            endpoint="/api/manual-trigger"
+          />
+
+          <TaskCard
+            category="Data Synchronization"
+            title="LeanCloud"
+            description="Initiates a connection to the international data cluster. Scheduled execution occurs daily at 09:00 UTC."
+            endpoint="/api/leancloud-keep-alive"
+          />
+        </div>
+
+        {/* Footer */}
+        <footer className="mt-32 pt-8 border-t border-[#e5e5e0] flex items-center justify-between text-xs text-[#888888] tracking-widest uppercase">
+          <div className="flex items-center gap-2">
+            <span className={`w-2 h-2 rounded-full ${systemStatus === 'Operational' ? 'bg-emerald-500' :
+              systemStatus === 'Checking' ? 'bg-gray-400 animate-pulse' : 'bg-amber-500'
+              }`}></span>
+            <p>Status: {systemStatus}</p>
+          </div>
+          <p>Workflow {version} • Antigravity</p>
+        </footer>
+
       </div>
     </main>
   );

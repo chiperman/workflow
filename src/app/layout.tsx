@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Supabase Keep-Alive",
-  description: "Prevent Supabase project from pausing",
+  title: "Workflow Operations",
+  description: "Automated maintenance and synchronization control center.",
 };
 
 export default function RootLayout({
