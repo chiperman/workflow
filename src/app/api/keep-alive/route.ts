@@ -13,6 +13,30 @@ export async function GET(request: Request) {
         return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
-    const result = await runKeepAlive();
-    return NextResponse.json(result, { status: result.success ? 200 : 500 });
+    const MAX_RETRIES = 3;
+    let attempt = 0;
+    let result;
+
+    while (attempt < MAX_RETRIES) {
+        attempt++;
+        try {
+            result = await runKeepAlive();
+            if (result.success) {
+                return NextResponse.json(result, { status: 200 });
+            }
+            throw new Error(result.message || 'Unknown failure');
+        } catch (error) {
+            console.error(`Attempt ${attempt} failed:`, error);
+            if (attempt === MAX_RETRIES) {
+                return NextResponse.json(
+                    { success: false, message: `Failed after ${MAX_RETRIES} attempts. Last error: ${error instanceof Error ? error.message : String(error)}` },
+                    { status: 500 }
+                );
+            }
+            // Wait 1 second before retrying
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+    }
+
+    return NextResponse.json({ success: false, message: 'Unexpected loop exit' }, { status: 500 });
 }
