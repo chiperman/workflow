@@ -144,14 +144,32 @@ export default function Home() {
         </div>
 
         {/* Footer */}
-        <footer className="mt-32 pt-8 border-t border-[#e5e5e0] flex items-center justify-between text-xs text-[#888888] tracking-widest uppercase">
-          <div className="flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full ${systemStatus === 'Operational' ? 'bg-emerald-500' :
-              systemStatus === 'Checking' ? 'bg-gray-400 animate-pulse' : 'bg-amber-500'
-              }`}></span>
-            <p>Status: {systemStatus}</p>
+        <footer className="mt-32 pt-12 border-t border-[#e5e5e0] flex flex-col md:flex-row items-center justify-between text-xs text-[#888888] tracking-widest uppercase gap-8">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-2">
+              <span className={`w-2 h-2 rounded-full ${systemStatus === 'Operational' ? 'bg-emerald-500' :
+                systemStatus === 'Checking' ? 'bg-gray-400 animate-pulse' : 'bg-amber-500'
+                }`}></span>
+              <p>Status: {systemStatus}</p>
+            </div>
+            <p>Workflow {version} • Antigravity</p>
           </div>
-          <p>Workflow {version} • Antigravity</p>
+
+          <div className="flex flex-col items-center md:items-end gap-3">
+            <span className="text-[10px] text-[#a0a09a]">Powered By</span>
+            <div className="flex items-center gap-6">
+              <a href="https://nextjs.org" target="_blank" rel="noreferrer" title="Vercel" className="opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-300">
+                {/* Invert the white Vercel logo to make it visible on the light theme always */}
+                <img src="/vercel.svg" alt="Vercel" className="h-4 w-auto invert" />
+              </a>
+              <a href="https://github.com" target="_blank" rel="noreferrer" title="GitHub" className="opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-300">
+                <img src="/github.svg" alt="GitHub" className="h-5 w-auto" />
+              </a>
+              <a href="https://deepmind.google/technologies/gemini/" target="_blank" rel="noreferrer" title="Gemini" className="opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-300">
+                <img src="/gemini-color.svg" alt="Gemini" className="h-5 w-auto" />
+              </a>
+            </div>
+          </div>
         </footer>
 
       </div>
