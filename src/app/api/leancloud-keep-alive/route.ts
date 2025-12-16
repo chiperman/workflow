@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import LC from 'leancloud-storage';
 import { sendBarkNotification } from '@/lib/bark';
 
 export const dynamic = 'force-dynamic';
 
+// LeanCloud REST API Implementation
 export async function GET() {
     const start = Date.now();
     const appId = process.env.LEANCLOUD_APP_ID;
@@ -13,17 +13,21 @@ export async function GET() {
 
     if (!appId || !appKey || !serverURL) {
         const errorMsg = 'Missing LeanCloud environment variables';
-        if (!masterKey) {
-            console.warn('LEANCLOUD_MASTER_KEY is missing. Operations might fail due to ACL.');
-        }
-        if (!appId || !appKey || !serverURL) {
-            console.error(errorMsg);
-            await sendBarkNotification('LeanCloud Keep-Alive Failed', errorMsg);
-            return NextResponse.json(
-                { error: errorMsg },
-                { status: 500 }
-            );
-        }
+        console.error(errorMsg);
+        await sendBarkNotification('LeanCloud Keep-Alive Failed', errorMsg);
+        return NextResponse.json({ error: errorMsg }, { status: 500 });
+    }
+
+    // Headers for LeanCloud REST API
+    // Use Master Key if available to bypass ACL
+    const headers: HeadersInit = {
+        'X-LC-Id': appId,
+        'X-LC-Key': masterKey ? `${masterKey},master` : appKey,
+        'Content-Type': 'application/json',
+    };
+
+    if (!masterKey) {
+        console.warn('LEANCLOUD_MASTER_KEY is missing. Write operations might fail due to ACL.');
     }
 
     const MAX_RETRIES = 3;
@@ -32,42 +36,63 @@ export async function GET() {
     while (attempt < MAX_RETRIES) {
         attempt++;
         try {
-            // Initialize LeanCloud
-            if (!LC.applicationId) { // check if already initialized to avoid re-init errors if possible, or just init is safe usually
-                LC.init({
-                    appId,
-                    appKey,
-                    masterKey,
-                    serverURL,
-                });
+            // 1. Query for existing record
+            const queryUrl = `${serverURL}/1.1/classes/keep_alive?limit=1`;
+            const queryRes = await fetch(queryUrl, { headers });
+
+            if (!queryRes.ok) {
+                const errText = await queryRes.text();
+                throw new Error(`Query failed: ${queryRes.status} ${errText}`);
             }
 
-            const query = new LC.Query('keep_alive');
-            const existingRecord = await query.first() as LC.Object | null;
+            const queryData = await queryRes.json();
+            const existingRecord = queryData.results && queryData.results.length > 0 ? queryData.results[0] : null;
 
             let message = '';
             let action = '';
 
             if (existingRecord) {
-                await existingRecord.save({
-                    timestamp: new Date(),
-                    triggeredBy: 'cron-job (update)',
-                }, { useMasterKey: true });
+                // 2. Update existing record
+                const updateUrl = `${serverURL}/1.1/classes/keep_alive/${existingRecord.objectId}`;
+                const updateRes = await fetch(updateUrl, {
+                    method: 'PUT',
+                    headers,
+                    body: JSON.stringify({
+                        timestamp: { __type: 'Date', iso: new Date().toISOString() },
+                        triggeredBy: 'cron-job (update-rest)',
+                    }),
+                });
+
+                if (!updateRes.ok) {
+                    const errText = await updateRes.text();
+                    throw new Error(`Update failed: ${updateRes.status} ${errText}`);
+                }
+
                 action = 'updated';
-                message = 'Existing keep-alive record updated.';
+                message = 'Existing keep-alive record updated via REST.';
             } else {
-                const KeepAlive = LC.Object.extend('keep_alive');
-                const newRecord = new KeepAlive();
-                await newRecord.save({
-                    triggeredBy: 'cron-job (create)',
-                    timestamp: new Date(),
-                }, { useMasterKey: true });
+                // 3. Create new record
+                const createUrl = `${serverURL}/1.1/classes/keep_alive`;
+                const createRes = await fetch(createUrl, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({
+                        timestamp: { __type: 'Date', iso: new Date().toISOString() },
+                        triggeredBy: 'cron-job (create-rest)',
+                    }),
+                });
+
+                if (!createRes.ok) {
+                    const errText = await createRes.text();
+                    throw new Error(`Create failed: ${createRes.status} ${errText}`);
+                }
+
                 action = 'created';
-                message = 'New keep-alive record created.';
+                message = 'New keep-alive record created via REST.';
             }
 
             const duration = Date.now() - start;
-            const successMsg = `LeanCloud Keep-Alive Success: ${message} Duration: ${duration}ms.`;
+            const successMsg = `LeanCloud Keep-Alive Success (REST): ${message} Duration: ${duration}ms.`;
             console.log(successMsg);
             await sendBarkNotification('LeanCloud Keep-Alive Success', successMsg);
 
@@ -83,10 +108,10 @@ export async function GET() {
 
             if (attempt === MAX_RETRIES) {
                 const duration = Date.now() - start;
-                const errorMsg = `LeanCloud Keep-Alive Failed after ${MAX_RETRIES} attempts. Last error: ${error.message}. Duration: ${duration}ms.`;
+                const errorMsg = `LeanCloud Keep-Alive Failed after ${MAX_RETRIES} attempts (REST). Last error: ${error.message}. Duration: ${duration}ms.`;
                 await sendBarkNotification('LeanCloud Keep-Alive Failed', errorMsg);
                 return NextResponse.json(
-                    { error: 'Failed to execute keep-alive logic after retries', details: error.message },
+                    { error: 'Keep-alive logic failed', details: error.message },
                     { status: 500 }
                 );
             }
@@ -95,8 +120,5 @@ export async function GET() {
         }
     }
 
-    return NextResponse.json(
-        { error: 'Unexpected execution flow' },
-        { status: 500 }
-    );
+    return NextResponse.json({ error: 'Unexpected flow' }, { status: 500 });
 }
