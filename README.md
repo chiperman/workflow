@@ -66,3 +66,11 @@ cp env.example .env.local
 npm run dev
 ```
 访问 `http://localhost:3000` 即可使用。
+
+## ❤️ 致谢
+
+本项目由以下服务强力驱动：
+
+- **Vercel**: 提供卓越的 Serverless 部署与 Cron Job 支持。
+- **Google Gemini**: 提供智能代码辅助与开发建议。
+- **GitHub**: 提供代码托管与开源协作平台。
