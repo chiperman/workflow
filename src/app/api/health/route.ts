@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import LC from 'leancloud-storage';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,15 +23,25 @@ export async function GET() {
     try {
         const appId = process.env.LEANCLOUD_APP_ID;
         const appKey = process.env.LEANCLOUD_APP_KEY;
+        const masterKey = process.env.LEANCLOUD_MASTER_KEY;
         const serverURL = process.env.LEANCLOUD_API_SERVER;
 
         if (appId && appKey && serverURL) {
-            if (!LC.applicationId) {
-                LC.init({ appId, appKey, serverURL });
+            const headers: HeadersInit = {
+                'X-LC-Id': appId,
+                'X-LC-Key': masterKey ? `${masterKey},master` : appKey,
+                'Content-Type': 'application/json',
+            };
+
+            // Perform a lightweight query using REST API
+            const res = await fetch(`${serverURL}/1.1/classes/keep_alive?limit=1`, { headers });
+
+            if (res.ok) {
+                status.leancloud = 'operational';
+            } else {
+                console.warn(`Health Check - LeanCloud returned ${res.status}`);
+                status.leancloud = 'outage';
             }
-            const query = new LC.Query('keep_alive');
-            await query.limit(1).first();
-            status.leancloud = 'operational';
         } else {
             status.leancloud = 'misconfigured';
         }
