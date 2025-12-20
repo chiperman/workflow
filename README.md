@@ -34,14 +34,40 @@
 - **Cron 安全**:
   - `CRON_SECRET`: Vercel Cron Protection 密钥（可选，推荐）。
 
-### 2. 部署到 Vercel
+### 2. 创建 Supabase 表
+
+在 Supabase Dashboard 的 SQL Editor 中执行以下 SQL：
+
+```sql
+-- Create keep_alive table
+CREATE TABLE IF NOT EXISTS keep_alive (
+  id INTEGER PRIMARY KEY,
+  timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  manual_count INTEGER NOT NULL DEFAULT 0,
+  auto_count INTEGER NOT NULL DEFAULT 0
+);
+
+-- Insert initial record
+INSERT INTO keep_alive (id, timestamp, manual_count, auto_count)
+VALUES (1, NOW(), 0, 0)
+ON CONFLICT (id) DO NOTHING;
+
+-- Enable RLS (without creating policies)
+-- Service role automatically bypasses RLS
+-- Anon key and regular users cannot access this table
+ALTER TABLE keep_alive ENABLE ROW LEVEL SECURITY;
+```
+
+> **安全说明**: 此配置启用了 RLS 但不创建任何策略，确保只有使用 Service Role Key 的后端可以访问此表，即使 Anon Key 泄露也无法访问数据。
+
+### 3. 部署到 Vercel
 
 1.  Push 代码到 GitHub。
 2.  在 Vercel 导入项目。
 3.  配置上述环境变量。
 4.  部署。
 
-### 3. 验证 Cron Job
+### 4. 验证 Cron Job
 
 部署后，在 Vercel 控制台的 **Settings -> Cron Jobs** 中查看定时任务。
 
