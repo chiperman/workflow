@@ -9,73 +9,168 @@ interface ServiceStats {
   manual_count: number;
 }
 
+interface ServiceHealth {
+  status: 'operational' | 'misconfigured' | 'outage' | 'unknown';
+  tableExists?: boolean;
+  stats: ServiceStats;
+  message?: string;
+}
+
 interface TaskCardProps {
   title: string;
   description: string;
   endpoint: string;
   category: string;
   method: 'GET' | 'POST';
-  healthStatus?: string;
-  initialStats?: ServiceStats; // Pass initial stats from parent
-  onSystemError?: () => void;
+  serviceHealth: ServiceHealth;
+  onStatsUpdate: (newHealth: ServiceHealth) => void;
 }
 
-function TaskCard({ title, description, endpoint, category, method, healthStatus, initialStats, onSystemError }: TaskCardProps) {
+// Rolling Number Component (Fixed Animation Logic)
+function RollingNumber({ value }: { value: number }) {
+  const [displayValue, setDisplayValue] = useState(value);
+  const [nextValue, setNextValue] = useState(value);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  // 当 value 变化时，总是更新 nextValue
+  useEffect(() => {
+    if (value !== displayValue) {
+      setNextValue(value);
+
+      // 只有在没有动画时才启动新动画
+      if (!isAnimating) {
+        setIsAnimating(true);
+        const timer = setTimeout(() => {
+          setDisplayValue(value);
+          setIsAnimating(false);
+        }, 550);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [value]);
+
+  // 当动画结束时，检查是否有待处理的更新
+  useEffect(() => {
+    if (!isAnimating && nextValue !== displayValue) {
+      setIsAnimating(true);
+      const timer = setTimeout(() => {
+        setDisplayValue(nextValue);
+        setIsAnimating(false);
+      }, 550);
+      return () => clearTimeout(timer);
+    }
+  }, [isAnimating, nextValue, displayValue]);
+
+  return (
+    <span className="relative inline-flex h-[1.25em] overflow-hidden align-bottom">
+      <span
+        className={`flex flex-col ${isAnimating ? 'transition-transform duration-500 ease-in-out -translate-y-1/2' : ''}`}
+        style={{ height: '2.5em' }}
+      >
+        <span className="h-[1.25em] leading-[1.25em] block text-center min-w-[1ch]">{displayValue}</span>
+        <span className="h-[1.25em] leading-[1.25em] block text-center min-w-[1ch]">{nextValue}</span>
+      </span>
+    </span>
+  );
+}
+
+function TaskCard({ title, description, endpoint, category, method, serviceHealth, onStatsUpdate }: TaskCardProps) {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
-  const [stats, setStats] = useState<ServiceStats>(initialStats || { auto_count: 0, manual_count: 0 });
+  const [showCreateGuide, setShowCreateGuide] = useState(false);
 
-  // Update stats if initialStats changes (e.g. re-fetch from parent)
-  useEffect(() => {
-    if (initialStats) {
-      setStats(initialStats);
-    }
-  }, [initialStats]);
+  // Supabase table creation SQL
+  const supabaseCreateTableSQL = `-- Create keep_alive table
+CREATE TABLE IF NOT EXISTS keep_alive (
+  id INTEGER PRIMARY KEY,
+  timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  manual_count INTEGER NOT NULL DEFAULT 0,
+  auto_count INTEGER NOT NULL DEFAULT 0
+);
 
-  // React to global health status
-  useEffect(() => {
-    if (healthStatus === 'outage' || healthStatus === 'misconfigured') {
-      setStatus('error');
-      if (!message) setMessage('System health check failed for this service.');
-    }
-  }, [healthStatus]);
+-- Insert initial record
+INSERT INTO keep_alive (id, timestamp, manual_count, auto_count)
+VALUES (1, NOW(), 0, 0)
+ON CONFLICT (id) DO NOTHING;
 
-  // Report error to parent
-  useEffect(() => {
-    if (status === 'error' && onSystemError) {
-      onSystemError();
-    }
-  }, [status, onSystemError]);
+-- Enable RLS (without creating policies)
+-- Service role automatically bypasses RLS
+-- Anon key and regular users cannot access this table
+ALTER TABLE keep_alive ENABLE ROW LEVEL SECURITY;`;
 
-  const fetchStats = async () => {
+  // LeanCloud class creation REST API command
+  const leanCloudCreateClassCommand = `# Create keep_alive class using REST API
+# Replace YOUR_APP_ID, YOUR_APP_KEY, and YOUR_SERVER_URL with your credentials
+
+curl -X POST \\
+  -H "X-LC-Id: YOUR_APP_ID" \\
+  -H "X-LC-Key: YOUR_APP_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "auto_count": 0,
+    "manual_count": 0
+  }' \\
+  https://YOUR_SERVER_URL/1.1/classes/keep_alive`;
+
+  // 复制到剪贴板
+  const copyToClipboard = async (text: string) => {
     try {
-      const baseUrl = endpoint.split('?')[0];
-      let statsEndpoint = baseUrl;
-      if (category === 'Database Maintenance') {
-        statsEndpoint = '/api/supabase-keep-alive';
-      }
-
-      const res = await fetch(`${statsEndpoint}?mode=status`);
-      if (res.ok) {
-        const data = await res.json();
-
-        if (data.tableExists === false) {
-          setStatus('error');
-          setMessage('Table deleted / Not initialized. Please run task to initialize.');
-        } else if (data.success && data.data) {
-          setStats(data.data);
-        }
-      }
-    } catch (e) {
-      console.error('Failed to fetch stats', e);
-      setStatus('error');
-      setMessage('Failed to sync status');
+      await navigator.clipboard.writeText(text);
+      setMessage('✓ SQL copied to clipboard!');
+      setTimeout(() => setMessage(''), 2000);
+    } catch (err) {
+      setMessage('Failed to copy SQL');
     }
   };
 
-  // Removed useEffect check for onMount, now relying on parent passing initialStats
+  // React to global health status
+  useEffect(() => {
+    if (serviceHealth.status === 'outage' || serviceHealth.status === 'misconfigured') {
+      // 只在不是 loading 状态时设置错误状态
+      // 避免覆盖用户点击 Run Task 后的 loading 状态
+      if (status !== 'loading') {
+        setStatus('error');
+      }
+
+      // 检查是否是表不存在的错误
+      // 只要 tableExists 为 false，就显示创建引导
+      const isTableMissing = serviceHealth.tableExists === false;
+
+      if (isTableMissing) {
+        setShowCreateGuide(true);
+        // 根据服务类型显示不同的提示
+        if (title === 'Supabase') {
+          setMessage('Table does not exist. Click the copy button below to get the SQL statement.');
+        } else if (title === 'LeanCloud') {
+          setMessage('Class does not exist. Click "Run Task" to create it automatically.');
+        }
+      } else if (serviceHealth.message) {
+        setShowCreateGuide(false);
+        setMessage(serviceHealth.message);
+      } else {
+        setShowCreateGuide(false);
+        const defaultMessage = serviceHealth.status === 'misconfigured'
+          ? 'Configuration error: Please check your settings.'
+          : 'Service is currently unavailable.';
+        setMessage(defaultMessage);
+      }
+    } else if (serviceHealth.status === 'operational') {
+      // 服务正常时，清除所有错误状态
+      if (status === 'error') {
+        setStatus('idle');
+      }
+      setMessage('');
+      setShowCreateGuide(false);
+    }
+  }, [serviceHealth, title]);  // 移除 status 从依赖数组，避免循环更新
 
   const handleRun = async () => {
+    // Prevent multiple simultaneous requests
+    if (status === 'loading') {
+      console.log(`[TaskCard: ${title}] Request already in progress, ignoring click`);
+      return;
+    }
+
     setStatus('loading');
     setMessage('');
     try {
@@ -83,17 +178,49 @@ function TaskCard({ title, description, endpoint, category, method, healthStatus
       const response = await fetch(url, { method });
       const data = await response.json();
 
-      if (response.ok && (data.success || data.status === 'success')) {
+      console.log(`[TaskCard: ${title}] API Response:`, data);
+
+      if (response.ok && (data.success || data.status === 'success' || data.data)) {
         setStatus('success');
         setMessage(data.message || 'Task completed successfully');
-        fetchStats(); // Refresh stats after success
+
+        // Update stats and service health status
+        if (data.data) {
+          console.log(`[TaskCard: ${title}] Applying new stats:`, data.data);
+          // 更新完整的服务健康状态
+          onStatsUpdate({
+            status: 'operational',
+            tableExists: true,
+            stats: data.data,
+            message: undefined
+          });
+          // 清除错误状态和创建引导
+          setShowCreateGuide(false);
+        }
       } else {
         setStatus('error');
         setMessage(data.message || data.error || 'Unknown error occurred');
+
+        // Update service health to reflect the failure
+        // Reset counts to 0 since the operation failed (likely table doesn't exist)
+        onStatsUpdate({
+          status: response.status === 500 ? 'outage' : 'misconfigured',
+          tableExists: false,
+          stats: { auto_count: 0, manual_count: 0 },
+          message: data.message || data.error
+        });
       }
     } catch (error: any) {
       setStatus('error');
       setMessage(error.message || 'Network error');
+
+      // Update service health to reflect network error
+      onStatsUpdate({
+        status: 'outage',
+        tableExists: false,
+        stats: { auto_count: 0, manual_count: 0 },
+        message: error.message || 'Network error'
+      });
     }
   };
 
@@ -117,15 +244,14 @@ function TaskCard({ title, description, endpoint, category, method, healthStatus
           {description}
         </p>
 
-        {/* Stats Display */}
         <div className="flex gap-4 mt-4 text-xs font-mono text-[#888888] uppercase tracking-wider">
           <div className="flex items-center gap-1.5">
             <span className={`w-1.5 h-1.5 rounded-full ${status === 'error' ? 'bg-red-500' : 'bg-blue-400'}`}></span>
-            <span>Auto: {stats.auto_count}</span>
+            <span>Auto: <RollingNumber value={serviceHealth.stats.auto_count} /></span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className={`w-1.5 h-1.5 rounded-full ${status === 'error' ? 'bg-red-500' : 'bg-emerald-400'}`}></span>
-            <span>Manual: {stats.manual_count}</span>
+            <span>Manual: <RollingNumber value={serviceHealth.stats.manual_count} /></span>
           </div>
         </div>
       </div>
@@ -161,6 +287,56 @@ function TaskCard({ title, description, endpoint, category, method, healthStatus
             <p className="leading-relaxed">{message}</p>
           </div>
         )}
+
+        {/* 表创建引导 */}
+        {showCreateGuide && title === 'Supabase' && (
+          <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
+            <div className="flex items-start gap-2 mb-2">
+              <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-amber-900 mb-1">Table Setup Required</p>
+                <p className="text-xs text-amber-700 leading-relaxed">
+                  Supabase requires manual table creation. Copy the SQL below and execute it in your Supabase SQL Editor.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => copyToClipboard(supabaseCreateTableSQL)}
+              className="mt-2 flex items-center gap-2 px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-medium rounded border border-amber-300 transition-colors"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              Copy SQL Statement
+            </button>
+          </div>
+        )}
+
+        {showCreateGuide && title === 'LeanCloud' && (
+          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+            <div className="flex items-start gap-2 mb-2">
+              <AlertCircle className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-blue-900 mb-1">Class Setup Options</p>
+                <p className="text-xs text-blue-700 leading-relaxed mb-2">
+                  <strong>Option 1 (Recommended):</strong> Click "Run Task" below and LeanCloud will automatically create the class.
+                </p>
+                <p className="text-xs text-blue-700 leading-relaxed">
+                  <strong>Option 2:</strong> Manually create the class using the REST API command below.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => copyToClipboard(leanCloudCreateClassCommand)}
+              className="mt-2 flex items-center gap-2 px-3 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-900 text-xs font-medium rounded border border-blue-300 transition-colors"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              Copy REST API Command
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -168,42 +344,37 @@ function TaskCard({ title, description, endpoint, category, method, healthStatus
 
 export default function Home() {
   const [systemStatus, setSystemStatus] = useState<'Operational' | 'Degraded' | 'Checking'>('Checking');
-  const [healthDetails, setHealthDetails] = useState<Record<string, string>>({});
-  const [supabaseStats, setSupabaseStats] = useState<ServiceStats | undefined>();
-  const [leanCloudStats, setLeanCloudStats] = useState<ServiceStats | undefined>();
+  const [supabaseHealth, setSupabaseHealth] = useState<ServiceHealth>({
+    status: 'unknown',
+    stats: { auto_count: 0, manual_count: 0 }
+  });
+  const [leanCloudHealth, setLeanCloudHealth] = useState<ServiceHealth>({
+    status: 'unknown',
+    stats: { auto_count: 0, manual_count: 0 }
+  });
   const [version, setVersion] = useState('v0.2.0');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Parallel Fetching for simultaneous updates
-        const [healthRes, supabaseRes, leancloudRes] = await Promise.all([
-          fetch('/api/health'),
-          fetch('/api/supabase-keep-alive?mode=status'),
-          fetch('/api/leancloud-keep-alive?mode=status')
-        ]);
-
+        // 单次请求获取所有健康和统计数据
+        const healthRes = await fetch('/api/health');
         const healthData = await healthRes.json();
-        const supabaseData = await supabaseRes.json();
-        const leancloudData = await leancloudRes.json();
 
-        console.log('Batch Data Fetch:', { health: healthData, supabase: supabaseData, leancloud: leancloudData });
+        console.log('Health Data:', healthData);
 
-        // Update all states in one batch reaction
-        setHealthDetails(healthData.details || {});
+        // 从统一响应中提取数据
+        const { status, services } = healthData;
 
-        if (supabaseData.success && supabaseData.data) {
-          setSupabaseStats(supabaseData.data);
-        }
-        if (leancloudData.success && leancloudData.data) {
-          setLeanCloudStats(leancloudData.data);
-        }
+        // 更新整体状态
+        setSystemStatus(status || 'Checking');
 
-        // Final status determination relies on Health API, but we accept override if stats failed
-        // Note: TaskCards will also check their specific props
-        setSystemStatus(healthData.status || 'Unknown');
+        // 更新服务健康信息（包含状态、统计和错误消息）
+        setSupabaseHealth(services.supabase);
+        setLeanCloudHealth(services.leancloud);
 
       } catch (e) {
+        console.error('Failed to fetch health data:', e);
         setSystemStatus('Degraded');
       }
     };
@@ -211,14 +382,25 @@ export default function Home() {
     fetchData();
   }, []);
 
-  const failingServices = Object.entries(healthDetails)
-    .filter(([_, status]) => status !== 'operational' && status !== 'unknown')
-    .map(([service]) => service.charAt(0).toUpperCase() + service.slice(1));
+  // 监听服务健康状态变化，自动更新全局状态
+  useEffect(() => {
+    // 计算整体系统状态
+    const supabaseOk = supabaseHealth.status === 'operational';
+    const leanCloudOk = leanCloudHealth.status === 'operational';
 
-  // Callback for children to report critical failures immediately
-  const reportError = () => {
-    setSystemStatus('Degraded');
-  };
+    if (supabaseOk && leanCloudOk) {
+      setSystemStatus('Operational');
+    } else if (supabaseHealth.status === 'unknown' || leanCloudHealth.status === 'unknown') {
+      setSystemStatus('Checking');
+    } else {
+      setSystemStatus('Degraded');
+    }
+  }, [supabaseHealth.status, leanCloudHealth.status]);
+
+  const failingServices = [
+    supabaseHealth.status !== 'operational' && supabaseHealth.status !== 'unknown' ? 'Supabase' : null,
+    leanCloudHealth.status !== 'operational' && leanCloudHealth.status !== 'unknown' ? 'LeanCloud' : null
+  ].filter(Boolean);
 
   return (
     <main className="min-h-screen py-8 px-6 sm:px-12 bg-[#fdfcf8] flex flex-col justify-center">
@@ -242,9 +424,8 @@ export default function Home() {
             description="Triggers the daily activity signal to prevent project suspension."
             endpoint="/api/manual-trigger"
             method="POST"
-            healthStatus={healthDetails.supabase}
-            initialStats={supabaseStats}
-            onSystemError={reportError}
+            serviceHealth={supabaseHealth}
+            onStatsUpdate={setSupabaseHealth}
           />
 
           <TaskCard
@@ -253,9 +434,8 @@ export default function Home() {
             description="Initiates a connection to the international data cluster."
             endpoint="/api/leancloud-keep-alive"
             method="GET"
-            healthStatus={healthDetails.leancloud}
-            initialStats={leanCloudStats}
-            onSystemError={reportError}
+            serviceHealth={leanCloudHealth}
+            onStatsUpdate={setLeanCloudHealth}
           />
         </div>
 

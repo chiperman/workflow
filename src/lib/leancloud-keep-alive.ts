@@ -15,6 +15,7 @@ export async function runLeanCloudKeepAlive(trigger: 'auto' | 'manual' = 'auto')
     action?: 'updated' | 'created';
     message: string;
     duration: number;
+    data?: { auto_count: number; manual_count: number };
     error?: string;
 }> {
     const start = Date.now();
@@ -138,20 +139,26 @@ export async function runLeanCloudKeepAlive(trigger: 'auto' | 'manual' = 'auto')
         const successMsg = `LeanCloud Keep-Alive Success: ${baseAction} at ${beijingTime} (${trigger} run). Counts: Auto=${finalAuto}, Manual=${finalManual}. Duration: ${duration}ms.`;
 
         console.log(successMsg);
-        await sendBarkNotification('✅ LeanCloud Keep-Alive Success', successMsg, 'LeanCloud-Success');
+
+        // Note: Bark notification is now sent at the API route level to avoid duplicate notifications during retries
 
         return {
             success: true,
             action,
             message: successMsg,
             duration,
+            data: {
+                auto_count: finalAuto,
+                manual_count: finalManual
+            }
         };
 
     } catch (error: any) {
         const duration = Date.now() - start;
         const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false });
         const errorMsg = `❌ LeanCloud Keep-Alive Failed\n• Error: ${error.message}\n• Duration: ${duration}ms\n• Time: ${timestamp}`;
-        await sendBarkNotification('❌ LeanCloud Keep-Alive Failed', errorMsg, 'LeanCloud-Failed');
+
+        // Note: Bark notification is now sent at the API route level to avoid duplicate notifications during retries
 
         return {
             success: false,

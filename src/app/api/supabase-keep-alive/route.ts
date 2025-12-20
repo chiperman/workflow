@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { runKeepAlive, getSupabaseStats } from '@/lib/supabase-keep-alive';
 import { withRetry } from '@/lib/utils';
+import { sendBarkNotification } from '@/lib/bark';
 
 export const dynamic = 'force-dynamic'; // Ensure it's not cached
 
@@ -34,10 +35,17 @@ export async function GET(request: Request) {
             return res;
         });
 
+        // Send success notification after all retries succeeded
+        await sendBarkNotification('✅ Supabase Keep-Alive Success', result.message, 'Supabase-Success');
         return NextResponse.json(result, { status: 200 });
 
     } catch (error: any) {
         console.error('Max retries exhausted:', error);
+
+        // Send failure notification only after all retries failed
+        const failureMessage = error.message || 'Failed after max retries';
+        await sendBarkNotification('❌ Supabase Keep-Alive Failed', failureMessage, 'Supabase-Failed');
+
         return NextResponse.json(
             {
                 success: false,

@@ -10,6 +10,7 @@ import { sendBarkNotification } from './bark';
 export async function runKeepAlive(trigger: 'auto' | 'manual' = 'auto'): Promise<{
     success: boolean;
     message: string;
+    duration: number;
     data?: any;
     error?: string;
 }> {
@@ -60,8 +61,17 @@ export async function runKeepAlive(trigger: 'auto' | 'manual' = 'auto'): Promise
         const action = existing ? 'Updated record' : 'Created new record';
         const message = `Supabase Keep-Alive Success: ${action} at ${beijingTime} (${trigger} run). Counts: Auto=${autoCount}, Manual=${manualCount}. Duration: ${duration}ms.`;
         console.log(message);
-        await sendBarkNotification('✅ Supabase Keep-Alive Success', message, 'Supabase-Success');
-        return { success: true, message, data: upsertData };
+
+        // Note: Bark notification is now sent at the API route level to avoid duplicate notifications during retries
+        return {
+            success: true,
+            message,
+            duration,
+            data: {
+                manual_count: manualCount,
+                auto_count: autoCount
+            }
+        };
 
     } catch (error: any) {
         const duration = Date.now() - start;
@@ -74,8 +84,9 @@ export async function runKeepAlive(trigger: 'auto' | 'manual' = 'auto'): Promise
 
         const message = `❌ Supabase Keep-Alive Failed\n• Error: ${customMsg}\n• Duration: ${duration}ms\n• Time: ${timestamp}`;
         console.error(message.replace(/\n/g, ' | '));
-        await sendBarkNotification('❌ Supabase Keep-Alive Failed', message, 'Supabase-Failed');
-        return { success: false, message, error: customMsg };
+
+        // Note: Bark notification is now sent at the API route level to avoid duplicate notifications during retries
+        return { success: false, message, duration, error: customMsg };
     }
 }
 
