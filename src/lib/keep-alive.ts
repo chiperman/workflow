@@ -22,13 +22,14 @@ export async function runKeepAlive() {
 
         const message = `Supabase Keep-Alive Success: ${userInfo}. Duration: ${duration}ms.`;
         console.log(message);
-        await sendBarkNotification('Success - Supabase Keep-Alive', message);
+        await sendBarkNotification('✅ Supabase Keep-Alive Success', message, 'Supabase-Success');
         return { success: true, message, data: users };
     } catch (error: any) {
         const duration = Date.now() - start;
-        const message = `Supabase Keep-Alive Task FAILED after ${duration}ms. Error: ${error.message}`;
-        console.error(message);
-        await sendBarkNotification('Failure - Supabase Keep-Alive', message);
+        const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false });
+        const message = `❌ Supabase Keep-Alive Failed\n• Error: ${error.message}\n• Duration: ${duration}ms\n• Time: ${timestamp}`;
+        console.error(message.replace(/\n/g, ' | '));
+        await sendBarkNotification('❌ Supabase Keep-Alive Failed', message, 'Supabase-Failed');
         return { success: false, message, error: error.message };
     }
 }
