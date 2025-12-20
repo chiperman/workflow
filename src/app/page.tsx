@@ -352,7 +352,7 @@ export default function Home() {
     status: 'unknown',
     stats: { auto_count: 0, manual_count: 0 }
   });
-  const [version, setVersion] = useState('v0.2.0');
+  const [version, setVersion] = useState('v0.3.0');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -470,6 +470,9 @@ export default function Home() {
               </a>
               <a href="https://deepmind.google/technologies/gemini/" target="_blank" rel="noreferrer" title="Gemini" className="opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-300">
                 <img src="/gemini-color.svg" alt="Gemini" className="h-5 w-auto" />
+              </a>
+              <a href="https://claude.ai" target="_blank" rel="noreferrer" title="Claude" className="opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-300">
+                <img src="/claude-color.svg" alt="Claude" className="h-5 w-auto" />
               </a>
             </div>
           </div>
