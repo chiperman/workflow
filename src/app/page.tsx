@@ -14,17 +14,52 @@ interface TaskCardProps {
 function TaskCard({ title, description, endpoint, category, method }: TaskCardProps) {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
+  const [stats, setStats] = useState<{ auto_count: number; manual_count: number }>({ auto_count: 0, manual_count: 0 });
+
+  const fetchStats = async () => {
+    try {
+      // Use the base endpoint (remove query params if any) and add mode=status
+      const baseUrl = endpoint.split('?')[0];
+      // For manual-trigger (Supabase), the logic is slightly different, but the route should support mode=status
+      // For manual-trigger route, we might need to use the supabase-keep-alive route instead?
+      // Wait, manual-trigger route does NOT support mode=status currently. 
+      // Supabase TaskCard endpoint is /api/manual-trigger.
+      // But stats are in /api/supabase-keep-alive.
+      // I need to adjust this.
+
+      let statsEndpoint = baseUrl;
+      if (category === 'Database Maintenance') {
+        statsEndpoint = '/api/supabase-keep-alive';
+      }
+
+      const res = await fetch(`${statsEndpoint}?mode=status`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.data) {
+          setStats(data.data);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to fetch stats', e);
+    }
+  };
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
 
   const handleRun = async () => {
     setStatus('loading');
     setMessage('');
     try {
-      const response = await fetch(endpoint, { method });
+      const url = `${endpoint}${endpoint.includes('?') ? '&' : '?'}trigger=manual`;
+      const response = await fetch(url, { method });
       const data = await response.json();
 
       if (response.ok && (data.success || data.status === 'success')) {
         setStatus('success');
         setMessage(data.message || 'Task completed successfully');
+        fetchStats(); // Refresh stats after success
       } else {
         setStatus('error');
         setMessage(data.message || data.error || 'Unknown error occurred');
@@ -36,17 +71,29 @@ function TaskCard({ title, description, endpoint, category, method }: TaskCardPr
   };
 
   return (
-    <div className="flex flex-col h-full bg-white border border-[#e5e5e0] p-8 rounded-lg transition-shadow hover:shadow-sm">
-      <div className="mb-6">
-        <span className="text-xs font-medium tracking-wider uppercase text-[#6b6b6b] mb-2 block">
+    <div className="flex flex-col h-full bg-white border border-[#e5e5e0] p-6 rounded-lg transition-shadow hover:shadow-sm">
+      <div className="mb-4">
+        <span className="text-[10px] font-medium tracking-wider uppercase text-[#6b6b6b] mb-1.5 block">
           {category}
         </span>
-        <h2 className="text-2xl font-medium text-[#191919] mb-3 font-serif">
+        <h2 className="text-xl font-medium text-[#191919] mb-2 font-serif">
           {title}
         </h2>
-        <p className="text-[#555555] leading-relaxed text-base">
+        <p className="text-[#555555] leading-relaxed text-sm">
           {description}
         </p>
+
+        {/* Stats Display */}
+        <div className="flex gap-4 mt-4 text-xs font-mono text-[#888888] uppercase tracking-wider">
+          <div className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+            <span>Auto: {stats.auto_count}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+            <span>Manual: {stats.manual_count}</span>
+          </div>
+        </div>
       </div>
 
       <div className="mt-auto pt-6 border-t border-[#f0f0ed]">
@@ -84,7 +131,7 @@ function TaskCard({ title, description, endpoint, category, method }: TaskCardPr
         </div>
 
         {message && status !== 'idle' && (
-          <p className={`mt-3 text-sm ${status === 'error' ? 'text-[#9f3e3e]' : 'text-[#3f6212]'}`}>
+          <p className={`mt-3 text-sm font-mono ${status === 'error' ? 'text-[#9f3e3e]' : 'text-[#3f6212]'}`}>
             {message}
           </p>
         )}
@@ -113,25 +160,25 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="min-h-screen py-24 px-6 sm:px-12 bg-[#fdfcf8]">
-      <div className="max-w-3xl mx-auto">
+    <main className="min-h-screen py-8 px-6 sm:px-12 bg-[#fdfcf8] flex flex-col justify-center">
+      <div className="w-full max-w-3xl mx-auto">
 
         {/* Header Section */}
-        <header className="mb-24">
-          <h1 className="text-4xl sm:text-5xl font-medium text-[#191919] mb-6 font-serif tracking-tight leading-tight">
+        <header className="mb-8 text-center sm:text-left">
+          <h1 className="text-3xl sm:text-4xl font-medium text-[#191919] mb-3 font-serif tracking-tight leading-tight">
             System Operations
           </h1>
-          <p className="text-lg text-[#555555] max-w-xl leading-relaxed font-light">
+          <p className="text-base text-[#555555] max-w-xl leading-relaxed font-light mx-auto sm:mx-0">
             Control center for automated maintenance protocols and cross-service data synchronization.
           </p>
         </header>
 
         {/* Content Grid */}
-        <div className="grid grid-cols-1 gap-12">
+        <div className="grid grid-cols-1 gap-6">
           <TaskCard
             category="Database Maintenance"
             title="Supabase"
-            description="Triggers the daily activity signal to prevent project suspension. Scheduled execution occurs daily at 08:00 UTC."
+            description="Triggers the daily activity signal to prevent project suspension."
             endpoint="/api/manual-trigger"
             method="POST"
           />
@@ -139,14 +186,14 @@ export default function Home() {
           <TaskCard
             category="Data Synchronization"
             title="LeanCloud"
-            description="Initiates a connection to the international data cluster. Scheduled execution occurs daily at 09:00 UTC."
+            description="Initiates a connection to the international data cluster."
             endpoint="/api/leancloud-keep-alive"
             method="GET"
           />
         </div>
 
         {/* Footer */}
-        <footer className="mt-32 pt-12 border-t border-[#e5e5e0] flex flex-col md:flex-row items-center justify-between text-xs text-[#888888] tracking-widest uppercase gap-8">
+        <footer className="mt-8 pt-6 border-t border-[#e5e5e0] flex flex-col md:flex-row items-center justify-between text-xs text-[#888888] tracking-widest uppercase gap-4">
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-2">
               <span className={`w-2 h-2 rounded-full ${systemStatus === 'Operational' ? 'bg-emerald-500' :

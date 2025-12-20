@@ -25,6 +25,9 @@
 
   --font-display: var(--font-serif);
   --font-body: var(--font-sans);
+  
+  /* Monospace for logs and IDs */
+  --font-mono: "ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "Liberation Mono", "Courier New", monospace;
 }
 
 body {

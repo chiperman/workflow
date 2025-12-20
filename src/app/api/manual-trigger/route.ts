@@ -5,7 +5,7 @@ import { withRetry } from '@/lib/utils';
 export async function POST() {
     try {
         const result = await withRetry(async () => {
-            const res = await runKeepAlive();
+            const res = await runKeepAlive('manual');
             if (!res.success) throw new Error(res.message);
             return res;
         });
