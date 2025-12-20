@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { runKeepAlive } from '@/lib/supabase-keep-alive';
+import { runKeepAlive, getSupabaseStats } from '@/lib/supabase-keep-alive';
 import { withRetry } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic'; // Ensure it's not cached
@@ -13,9 +13,21 @@ export async function GET(request: Request) {
         return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const mode = searchParams.get('mode');
+
+    // Return stats if requested
+    if (mode === 'status') {
+        const stats = await getSupabaseStats();
+        return NextResponse.json(stats);
+    }
+
+    const triggerParam = searchParams.get('trigger');
+    const trigger = triggerParam === 'manual' ? 'manual' : 'auto';
+
     try {
         const result = await withRetry(async () => {
-            const res = await runKeepAlive();
+            const res = await runKeepAlive(trigger);
             if (!res.success) {
                 throw new Error(res.message || 'Keep-alive reported failure');
             }
