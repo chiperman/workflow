@@ -3,30 +3,53 @@
 import { useState, useEffect } from 'react';
 import { Play, Check, AlertCircle, Loader2, ArrowRight } from 'lucide-react';
 
+// Define types for stats
+interface ServiceStats {
+  auto_count: number;
+  manual_count: number;
+}
+
 interface TaskCardProps {
   title: string;
   description: string;
   endpoint: string;
   category: string;
   method: 'GET' | 'POST';
+  healthStatus?: string;
+  initialStats?: ServiceStats; // Pass initial stats from parent
+  onSystemError?: () => void;
 }
 
-function TaskCard({ title, description, endpoint, category, method }: TaskCardProps) {
+function TaskCard({ title, description, endpoint, category, method, healthStatus, initialStats, onSystemError }: TaskCardProps) {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
-  const [stats, setStats] = useState<{ auto_count: number; manual_count: number }>({ auto_count: 0, manual_count: 0 });
+  const [stats, setStats] = useState<ServiceStats>(initialStats || { auto_count: 0, manual_count: 0 });
+
+  // Update stats if initialStats changes (e.g. re-fetch from parent)
+  useEffect(() => {
+    if (initialStats) {
+      setStats(initialStats);
+    }
+  }, [initialStats]);
+
+  // React to global health status
+  useEffect(() => {
+    if (healthStatus === 'outage' || healthStatus === 'misconfigured') {
+      setStatus('error');
+      if (!message) setMessage('System health check failed for this service.');
+    }
+  }, [healthStatus]);
+
+  // Report error to parent
+  useEffect(() => {
+    if (status === 'error' && onSystemError) {
+      onSystemError();
+    }
+  }, [status, onSystemError]);
 
   const fetchStats = async () => {
     try {
-      // Use the base endpoint (remove query params if any) and add mode=status
       const baseUrl = endpoint.split('?')[0];
-      // For manual-trigger (Supabase), the logic is slightly different, but the route should support mode=status
-      // For manual-trigger route, we might need to use the supabase-keep-alive route instead?
-      // Wait, manual-trigger route does NOT support mode=status currently. 
-      // Supabase TaskCard endpoint is /api/manual-trigger.
-      // But stats are in /api/supabase-keep-alive.
-      // I need to adjust this.
-
       let statsEndpoint = baseUrl;
       if (category === 'Database Maintenance') {
         statsEndpoint = '/api/supabase-keep-alive';
@@ -35,18 +58,22 @@ function TaskCard({ title, description, endpoint, category, method }: TaskCardPr
       const res = await fetch(`${statsEndpoint}?mode=status`);
       if (res.ok) {
         const data = await res.json();
-        if (data.success && data.data) {
+
+        if (data.tableExists === false) {
+          setStatus('error');
+          setMessage('Table deleted / Not initialized. Please run task to initialize.');
+        } else if (data.success && data.data) {
           setStats(data.data);
         }
       }
     } catch (e) {
       console.error('Failed to fetch stats', e);
+      setStatus('error');
+      setMessage('Failed to sync status');
     }
   };
 
-  useEffect(() => {
-    fetchStats();
-  }, []);
+  // Removed useEffect check for onMount, now relying on parent passing initialStats
 
   const handleRun = async () => {
     setStatus('loading');
@@ -73,9 +100,16 @@ function TaskCard({ title, description, endpoint, category, method }: TaskCardPr
   return (
     <div className="flex flex-col h-full bg-white border border-[#e5e5e0] p-6 rounded-lg transition-shadow hover:shadow-sm">
       <div className="mb-4">
-        <span className="text-[10px] font-medium tracking-wider uppercase text-[#6b6b6b] mb-1.5 block">
-          {category}
-        </span>
+        <div className="flex justify-between items-center mb-1.5">
+          <span className="text-[10px] font-medium tracking-wider uppercase text-[#6b6b6b] block">
+            {category}
+          </span>
+          {status !== 'idle' && (
+            <span className={`text-[10px] uppercase font-bold tracking-wider ${status === 'error' ? 'text-red-500' : status === 'success' ? 'text-emerald-600' : 'text-amber-500'}`}>
+              {status === 'loading' ? 'Running...' : status === 'error' ? 'Failed' : 'Operational'}
+            </span>
+          )}
+        </div>
         <h2 className="text-xl font-medium text-[#191919] mb-2 font-serif">
           {title}
         </h2>
@@ -86,11 +120,11 @@ function TaskCard({ title, description, endpoint, category, method }: TaskCardPr
         {/* Stats Display */}
         <div className="flex gap-4 mt-4 text-xs font-mono text-[#888888] uppercase tracking-wider">
           <div className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+            <span className={`w-1.5 h-1.5 rounded-full ${status === 'error' ? 'bg-red-500' : 'bg-blue-400'}`}></span>
             <span>Auto: {stats.auto_count}</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+            <span className={`w-1.5 h-1.5 rounded-full ${status === 'error' ? 'bg-red-500' : 'bg-emerald-400'}`}></span>
             <span>Manual: {stats.manual_count}</span>
           </div>
         </div>
@@ -116,24 +150,16 @@ function TaskCard({ title, description, endpoint, category, method }: TaskCardPr
             )}
             Run Task
           </button>
-
-          {/* Status Indicators */}
-          {status !== 'idle' && (
-            <div className={`
-              flex items-center gap-2 text-sm animate-in fade-in duration-300
-              ${status === 'success' ? 'text-[#3f6212]' : ''}
-              ${status === 'error' ? 'text-[#9f3e3e]' : ''}
-            `}>
-              {status === 'success' && <Check className="w-4 h-4" />}
-              {status === 'error' && <AlertCircle className="w-4 h-4" />}
-            </div>
-          )}
         </div>
 
         {message && status !== 'idle' && (
-          <p className={`mt-3 text-sm font-mono ${status === 'error' ? 'text-[#9f3e3e]' : 'text-[#3f6212]'}`}>
-            {message}
-          </p>
+          <div className={`mt-4 flex items-start gap-2 text-sm font-mono ${status === 'error' ? 'text-[#9f3e3e]' : 'text-[#3f6212]'}`}>
+            <span className="mt-0.5 shrink-0">
+              {status === 'success' && <Check className="w-4 h-4" />}
+              {status === 'error' && <AlertCircle className="w-4 h-4" />}
+            </span>
+            <p className="leading-relaxed">{message}</p>
+          </div>
         )}
       </div>
     </div>
@@ -142,22 +168,57 @@ function TaskCard({ title, description, endpoint, category, method }: TaskCardPr
 
 export default function Home() {
   const [systemStatus, setSystemStatus] = useState<'Operational' | 'Degraded' | 'Checking'>('Checking');
+  const [healthDetails, setHealthDetails] = useState<Record<string, string>>({});
+  const [supabaseStats, setSupabaseStats] = useState<ServiceStats | undefined>();
+  const [leanCloudStats, setLeanCloudStats] = useState<ServiceStats | undefined>();
   const [version, setVersion] = useState('v0.2.0');
 
   useEffect(() => {
-    // Fetch System Health
-    const checkHealth = async () => {
+    const fetchData = async () => {
       try {
-        const res = await fetch('/api/health');
-        const data = await res.json();
-        setSystemStatus(data.status || 'Unknown');
+        // Parallel Fetching for simultaneous updates
+        const [healthRes, supabaseRes, leancloudRes] = await Promise.all([
+          fetch('/api/health'),
+          fetch('/api/supabase-keep-alive?mode=status'),
+          fetch('/api/leancloud-keep-alive?mode=status')
+        ]);
+
+        const healthData = await healthRes.json();
+        const supabaseData = await supabaseRes.json();
+        const leancloudData = await leancloudRes.json();
+
+        console.log('Batch Data Fetch:', { health: healthData, supabase: supabaseData, leancloud: leancloudData });
+
+        // Update all states in one batch reaction
+        setHealthDetails(healthData.details || {});
+
+        if (supabaseData.success && supabaseData.data) {
+          setSupabaseStats(supabaseData.data);
+        }
+        if (leancloudData.success && leancloudData.data) {
+          setLeanCloudStats(leancloudData.data);
+        }
+
+        // Final status determination relies on Health API, but we accept override if stats failed
+        // Note: TaskCards will also check their specific props
+        setSystemStatus(healthData.status || 'Unknown');
+
       } catch (e) {
         setSystemStatus('Degraded');
       }
     };
 
-    checkHealth();
+    fetchData();
   }, []);
+
+  const failingServices = Object.entries(healthDetails)
+    .filter(([_, status]) => status !== 'operational' && status !== 'unknown')
+    .map(([service]) => service.charAt(0).toUpperCase() + service.slice(1));
+
+  // Callback for children to report critical failures immediately
+  const reportError = () => {
+    setSystemStatus('Degraded');
+  };
 
   return (
     <main className="min-h-screen py-8 px-6 sm:px-12 bg-[#fdfcf8] flex flex-col justify-center">
@@ -181,6 +242,9 @@ export default function Home() {
             description="Triggers the daily activity signal to prevent project suspension."
             endpoint="/api/manual-trigger"
             method="POST"
+            healthStatus={healthDetails.supabase}
+            initialStats={supabaseStats}
+            onSystemError={reportError}
           />
 
           <TaskCard
@@ -189,6 +253,9 @@ export default function Home() {
             description="Initiates a connection to the international data cluster."
             endpoint="/api/leancloud-keep-alive"
             method="GET"
+            healthStatus={healthDetails.leancloud}
+            initialStats={leanCloudStats}
+            onSystemError={reportError}
           />
         </div>
 
@@ -199,7 +266,14 @@ export default function Home() {
               <span className={`w-2 h-2 rounded-full ${systemStatus === 'Operational' ? 'bg-emerald-500' :
                 systemStatus === 'Checking' ? 'bg-gray-400 animate-pulse' : 'bg-amber-500'
                 }`}></span>
-              <p>Status: {systemStatus}</p>
+              <div className="flex gap-1">
+                <span className="font-semibold">Status: {systemStatus}</span>
+                {failingServices.length > 0 && (
+                  <span className="text-amber-600">
+                    ({failingServices.join(', ')} Unhealthy)
+                  </span>
+                )}
+              </div>
             </div>
             <p>Workflow {version} • Antigravity</p>
           </div>

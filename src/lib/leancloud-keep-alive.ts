@@ -41,26 +41,40 @@ export async function runLeanCloudKeepAlive(trigger: 'auto' | 'manual' = 'auto')
         const queryRes = await fetch(queryUrl, { headers });
 
         if (!queryRes.ok) {
-            const errText = await queryRes.text();
-            throw new Error(`Query failed: ${queryRes.status} ${errText}`);
+            // If class doesn't exist (404), it's not a fatal error, just means we need to create it.
+            if (queryRes.status === 404) {
+                // proceed with existingRecord = null
+            } else {
+                const errText = await queryRes.text();
+                throw new Error(`Query failed: ${queryRes.status} ${errText}`);
+            }
         }
 
-        const queryData = await queryRes.json();
-        const existingRecord = queryData.results && queryData.results.length > 0 ? queryData.results[0] : null;
+        let existingRecord = null;
+        if (queryRes.ok) {
+            const queryData = await queryRes.json();
+            existingRecord = queryData.results && queryData.results.length > 0 ? queryData.results[0] : null;
+        }
 
         let message = '';
         let action: 'updated' | 'created';
         const incrementField = trigger === 'manual' ? 'manual_count' : 'auto_count';
 
+        let beijingTime = '';
+
         if (existingRecord) {
             // 2. Update existing record
             const updateUrl = `${serverURL}/1.1/classes/keep_alive/${existingRecord.objectId}`;
 
-            // Use atomic increment
+            // Fallback: Read current count, increment in code, then update.
+            // This ensures fields are created if they don't exist.
+            const currentCount = existingRecord[incrementField] || 0;
+            const newCount = currentCount + 1;
+
             const updateBody = {
                 timestamp: { __type: 'Date', iso: new Date().toISOString() },
                 triggeredBy: `cron-job (update-rest) - ${trigger}`,
-                [incrementField]: { __op: 'Increment', amount: 1 }
+                [incrementField]: newCount
             };
 
             const updateRes = await fetch(updateUrl, {
@@ -76,8 +90,7 @@ export async function runLeanCloudKeepAlive(trigger: 'auto' | 'manual' = 'auto')
 
             const updateData = await updateRes.json();
             action = 'updated';
-            const beijingTime = new Date(updateData.updatedAt).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false });
-            message = `Updated existing record at ${beijingTime} (${trigger} run)`;
+            beijingTime = new Date(updateData.updatedAt).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false });
         } else {
             // 3. Create new record
             const createUrl = `${serverURL}/1.1/classes/keep_alive`;
@@ -101,12 +114,29 @@ export async function runLeanCloudKeepAlive(trigger: 'auto' | 'manual' = 'auto')
 
             const createData = await createRes.json();
             action = 'created';
-            const beijingTime = new Date(createData.createdAt).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false });
-            message = `Created new record at ${beijingTime} (${trigger} run)`;
+            beijingTime = new Date(createData.createdAt).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false });
+        }
+
+        // Calculate final counts for display
+        let finalAuto = 0;
+        let finalManual = 0;
+        if (action === 'updated' && existingRecord) {
+            finalAuto = existingRecord.auto_count || 0;
+            finalManual = existingRecord.manual_count || 0;
+            if (trigger === 'manual') finalManual++;
+            else finalAuto++;
+        } else if (action === 'created') {
+            if (trigger === 'manual') finalManual = 1;
+            else finalAuto = 1;
         }
 
         const duration = Date.now() - start;
-        const successMsg = `LeanCloud Keep-Alive Success: ${message} Duration: ${duration}ms.`;
+        // Standardized format matching Supabase: 
+        // "Success: Updated record at Time (Trigger run). Counts: Auto=X, Manual=Y. Duration: Zms."
+        // Note: LeanCloud distinguishes Created vs Updated, we keep that distinction for clarity but match the structure.
+        const baseAction = action === 'created' ? 'Created new record' : 'Updated record';
+        const successMsg = `LeanCloud Keep-Alive Success: ${baseAction} at ${beijingTime} (${trigger} run). Counts: Auto=${finalAuto}, Manual=${finalManual}. Duration: ${duration}ms.`;
+
         console.log(successMsg);
         await sendBarkNotification('✅ LeanCloud Keep-Alive Success', successMsg, 'LeanCloud-Success');
 
@@ -138,6 +168,7 @@ export async function runLeanCloudKeepAlive(trigger: 'auto' | 'manual' = 'auto')
 export async function getLeanCloudStats(): Promise<{
     success: boolean;
     data?: { manual_count: number; auto_count: number };
+    tableExists?: boolean;
     error?: string;
 }> {
     const appId = process.env.LEANCLOUD_APP_ID;
@@ -156,6 +187,13 @@ export async function getLeanCloudStats(): Promise<{
         const queryRes = await fetch(queryUrl, { headers });
 
         if (!queryRes.ok) {
+            if (queryRes.status === 404) {
+                return {
+                    success: true,
+                    data: { manual_count: 0, auto_count: 0 },
+                    tableExists: false
+                };
+            }
             throw new Error(`Query failed: ${queryRes.status}`);
         }
 
@@ -167,7 +205,8 @@ export async function getLeanCloudStats(): Promise<{
             data: {
                 manual_count: record?.manual_count || 0,
                 auto_count: record?.auto_count || 0
-            }
+            },
+            tableExists: true
         };
     } catch (error: any) {
         return { success: false, error: error.message };

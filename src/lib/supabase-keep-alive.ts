@@ -57,7 +57,8 @@ export async function runKeepAlive(trigger: 'auto' | 'manual' = 'auto'): Promise
         const duration = Date.now() - start;
         const beijingTime = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false });
 
-        const message = `Supabase Keep-Alive Success: Updated record at ${beijingTime} (${trigger} run). Counts: Auto=${autoCount}, Manual=${manualCount}. Duration: ${duration}ms.`;
+        const action = existing ? 'Updated record' : 'Created new record';
+        const message = `Supabase Keep-Alive Success: ${action} at ${beijingTime} (${trigger} run). Counts: Auto=${autoCount}, Manual=${manualCount}. Duration: ${duration}ms.`;
         console.log(message);
         await sendBarkNotification('✅ Supabase Keep-Alive Success', message, 'Supabase-Success');
         return { success: true, message, data: upsertData };
@@ -65,10 +66,16 @@ export async function runKeepAlive(trigger: 'auto' | 'manual' = 'auto'): Promise
     } catch (error: any) {
         const duration = Date.now() - start;
         const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false });
-        const message = `❌ Supabase Keep-Alive Failed\n• Error: ${error.message}\n• Duration: ${duration}ms\n• Time: ${timestamp}`;
+
+        let customMsg = error.message;
+        if (error.code === '42P01') {
+            customMsg = "Table 'keep_alive' does not exist. Supabase requires tables to be created via SQL Editor or Dashboard. (Cannot auto-create Table)";
+        }
+
+        const message = `❌ Supabase Keep-Alive Failed\n• Error: ${customMsg}\n• Duration: ${duration}ms\n• Time: ${timestamp}`;
         console.error(message.replace(/\n/g, ' | '));
         await sendBarkNotification('❌ Supabase Keep-Alive Failed', message, 'Supabase-Failed');
-        return { success: false, message, error: error.message };
+        return { success: false, message, error: customMsg };
     }
 }
 
@@ -78,6 +85,7 @@ export async function runKeepAlive(trigger: 'auto' | 'manual' = 'auto'): Promise
 export async function getSupabaseStats(): Promise<{
     success: boolean;
     data?: { manual_count: number; auto_count: number };
+    tableExists?: boolean;
     error?: string;
 }> {
     try {
@@ -87,7 +95,23 @@ export async function getSupabaseStats(): Promise<{
             .eq('id', 1)
             .single();
 
-        if (error && error.code !== 'PGRST116') {
+        if (error) {
+            // PGRST116: standard "No rows found" (Table exists, but empty) -> Normal success (0 counts)
+            if (error.code === 'PGRST116') {
+                return {
+                    success: true,
+                    data: { manual_count: 0, auto_count: 0 },
+                    tableExists: true
+                };
+            }
+            // 42P01: "relation ... does not exist" (Table missing)
+            if (error.code === '42P01') {
+                return {
+                    success: true,
+                    data: { manual_count: 0, auto_count: 0 },
+                    tableExists: false
+                };
+            }
             throw error;
         }
 
@@ -96,7 +120,8 @@ export async function getSupabaseStats(): Promise<{
             data: {
                 manual_count: existing?.manual_count || 0,
                 auto_count: existing?.auto_count || 0
-            }
+            },
+            tableExists: true
         };
     } catch (error: any) {
         return { success: false, error: error.message };
