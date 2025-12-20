@@ -1,4 +1,4 @@
-export async function sendBarkNotification(title: string, body: string) {
+export async function sendBarkNotification(title: string, body: string, group?: string) {
     const barkKey = process.env.BARK_DEVICE_KEY;
     if (!barkKey) {
         console.warn('BARK_DEVICE_KEY is not set, skipping notification');
@@ -7,7 +7,12 @@ export async function sendBarkNotification(title: string, body: string) {
 
     const encodedTitle = encodeURIComponent(title);
     const encodedBody = encodeURIComponent(body);
-    const url = `https://api.day.app/${barkKey}/${encodedTitle}/${encodedBody}`;
+
+    // Build URL with optional group parameter
+    let url = `https://api.day.app/${barkKey}/${encodedTitle}/${encodedBody}`;
+    if (group) {
+        url += `?group=${encodeURIComponent(group)}`;
+    }
 
     try {
         const res = await fetch(url);

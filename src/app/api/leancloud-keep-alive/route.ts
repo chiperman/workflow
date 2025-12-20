@@ -11,13 +11,6 @@ export async function GET() {
     const masterKey = process.env.LEANCLOUD_MASTER_KEY;
     const serverURL = process.env.LEANCLOUD_API_SERVER;
 
-    if (!appId || !appKey || !serverURL) {
-        const errorMsg = 'Missing LeanCloud environment variables';
-        console.error(errorMsg);
-        await sendBarkNotification('LeanCloud Keep-Alive Failed', errorMsg);
-        return NextResponse.json({ error: errorMsg }, { status: 500 });
-    }
-
     // Headers for LeanCloud REST API
     // Use Master Key if available to bypass ACL
     const headers: HeadersInit = {
@@ -92,9 +85,9 @@ export async function GET() {
             }
 
             const duration = Date.now() - start;
-            const successMsg = `LeanCloud Keep-Alive Success (REST): ${message} Duration: ${duration}ms.`;
+            const successMsg = `LeanCloud Keep-Alive Success: ${message} Duration: ${duration}ms.`;
             console.log(successMsg);
-            await sendBarkNotification('LeanCloud Keep-Alive Success', successMsg);
+            await sendBarkNotification('✅ LeanCloud Keep-Alive Success', successMsg, 'LeanCloud-Success');
 
             return NextResponse.json({
                 status: 'success',
@@ -108,8 +101,10 @@ export async function GET() {
 
             if (attempt === MAX_RETRIES) {
                 const duration = Date.now() - start;
-                const errorMsg = `LeanCloud Keep-Alive Failed after ${MAX_RETRIES} attempts (REST). Last error: ${error.message}. Duration: ${duration}ms.`;
-                await sendBarkNotification('LeanCloud Keep-Alive Failed', errorMsg);
+                const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false });
+                const errorMsg = `❌ LeanCloud Keep-Alive Failed\n• Error: ${error.message}\n• Duration: ${duration}ms\n• Time: ${timestamp}`;
+                console.error(errorMsg.replace(/\n/g, ' | '));
+                await sendBarkNotification('❌ LeanCloud Keep-Alive Failed', errorMsg, 'LeanCloud-Failed');
                 return NextResponse.json(
                     { error: 'Keep-alive logic failed', details: error.message },
                     { status: 500 }
