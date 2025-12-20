@@ -1,7 +1,19 @@
 import { NextResponse } from 'next/server';
-import { runKeepAlive } from '@/lib/keep-alive';
+import { runKeepAlive } from '@/lib/supabase-keep-alive';
+import { withRetry } from '@/lib/utils';
 
 export async function POST() {
-    const result = await runKeepAlive();
-    return NextResponse.json(result, { status: result.success ? 200 : 500 });
+    try {
+        const result = await withRetry(async () => {
+            const res = await runKeepAlive();
+            if (!res.success) throw new Error(res.message);
+            return res;
+        });
+        return NextResponse.json(result, { status: 200 });
+    } catch (error: any) {
+        return NextResponse.json(
+            { success: false, message: error.message },
+            { status: 500 }
+        );
+    }
 }

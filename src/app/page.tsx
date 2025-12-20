@@ -8,9 +8,10 @@ interface TaskCardProps {
   description: string;
   endpoint: string;
   category: string;
+  method: 'GET' | 'POST';
 }
 
-function TaskCard({ title, description, endpoint, category }: TaskCardProps) {
+function TaskCard({ title, description, endpoint, category, method }: TaskCardProps) {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
 
@@ -18,7 +19,6 @@ function TaskCard({ title, description, endpoint, category }: TaskCardProps) {
     setStatus('loading');
     setMessage('');
     try {
-      const method = endpoint.includes('leancloud') ? 'GET' : 'POST';
       const response = await fetch(endpoint, { method });
       const data = await response.json();
 
@@ -133,6 +133,7 @@ export default function Home() {
             title="Supabase"
             description="Triggers the daily activity signal to prevent project suspension. Scheduled execution occurs daily at 08:00 UTC."
             endpoint="/api/manual-trigger"
+            method="POST"
           />
 
           <TaskCard
@@ -140,6 +141,7 @@ export default function Home() {
             title="LeanCloud"
             description="Initiates a connection to the international data cluster. Scheduled execution occurs daily at 09:00 UTC."
             endpoint="/api/leancloud-keep-alive"
+            method="GET"
           />
         </div>
 
