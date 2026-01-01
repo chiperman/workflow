@@ -1,11 +1,13 @@
+import { RETRY_CONFIG } from '@/config/constants';
+
 /**
  * Retries a promise-returning function with intelligent error handling.
- * 
+ *
  * Features:
  * - Distinguishes between retryable and non-retryable errors
  * - Uses exponential backoff for retry delays
  * - Logs retry attempts for debugging
- * 
+ *
  * @param fn The function to execute.
  * @param retries Number of attempts (defaults to 3).
  * @param delayMs Base delay in milliseconds between attempts (defaults to 1000).
@@ -13,88 +15,100 @@
  * @throws The last error encountered if all retries fail or if error is non-retryable.
  */
 export async function withRetry<T>(
-    fn: () => Promise<T>,
-    retries = 3,
-    delayMs = 1000
+  fn: () => Promise<T>,
+  retries: number = RETRY_CONFIG.MAX_RETRIES,
+  delayMs: number = RETRY_CONFIG.BASE_DELAY_MS
 ): Promise<T> {
-    let attempt = 0;
-    let lastError: any;
+  let attempt = 0;
+  let lastError: unknown;
 
-    while (attempt < retries) {
-        attempt++;
-        try {
-            const result = await fn();
+  while (attempt < retries) {
+    attempt++;
+    try {
+      const result = await fn();
 
-            // Log success if this was a retry
-            if (attempt > 1) {
-                console.log(`✓ Retry succeeded on attempt ${attempt}/${retries}`);
-            }
+      // 如果是重试成功则记录日志
+      if (attempt > 1) {
+        console.log(`✓ Retry succeeded on attempt ${attempt}/${retries}`);
+      }
 
-            return result;
-        } catch (error: any) {
-            lastError = error;
+      return result;
+    } catch (error: unknown) {
+      lastError = error;
 
-            // Check if this is a non-retryable error
-            const isNonRetryable = isConfigurationError(error);
+      // 检查是否为不可重试错误
+      const isNonRetryable = isConfigurationError(error);
 
-            if (isNonRetryable) {
-                console.warn(`✗ Non-retryable error detected: ${error.message || error.code}`);
-                throw error;
-            }
+      if (isNonRetryable) {
+        const errorMsg =
+          error instanceof Error
+            ? error.message
+            : error && typeof error === 'object' && 'code' in error
+              ? String(error.code)
+              : 'Unknown';
+        console.warn(`✗ Non-retryable error detected: ${errorMsg}`);
+        throw error;
+      }
 
-            // Check if we've exhausted all retries
-            if (attempt >= retries) {
-                console.error(`✗ All ${retries} retry attempts failed`);
-                throw error;
-            }
+      // 检查是否已用尽所有重试次数
+      if (attempt >= retries) {
+        console.error(`✗ All ${retries} retry attempts failed`);
+        throw error;
+      }
 
-            // Calculate delay with exponential backoff: 1s, 2s, 4s
-            const delay = delayMs * Math.pow(2, attempt - 1);
-            console.log(`⟳ Retry attempt ${attempt}/${retries} failed. Retrying in ${delay}ms...`);
-            console.log(`  Error: ${error.message || error.code || 'Unknown error'}`);
+      // 使用指数退避计算延迟:1s, 2s, 4s
+      const delay = delayMs * Math.pow(RETRY_CONFIG.BACKOFF_MULTIPLIER, attempt - 1);
+      console.log(`⟳ Retry attempt ${attempt}/${retries} failed. Retrying in ${delay}ms...`);
+      const errorMsg =
+        error instanceof Error
+          ? error.message
+          : error && typeof error === 'object' && 'code' in error
+            ? String(error.code)
+            : 'Unknown error';
+      console.log(`  Error: ${errorMsg}`);
 
-            // Wait before retrying
-            await new Promise(resolve => setTimeout(resolve, delay));
-        }
+      // 等待后重试
+      await new Promise(resolve => setTimeout(resolve, delay));
     }
+  }
 
-    // This should never be reached, but TypeScript requires it
-    throw lastError || new Error('Unreachable code in withRetry');
+  // 这里永远不会达到，但 TypeScript 需要它
+  throw lastError || new Error('Unreachable code in withRetry');
 }
 
 /**
  * Determines if an error is a configuration error that should not be retried.
- * 
+ *
  * Non-retryable errors include:
  * - Database table/class does not exist
  * - Missing environment variables
  * - Authentication/permission errors
- * 
+ *
  * @param error The error to check
  * @returns true if the error should not be retried
  */
-function isConfigurationError(error: any): boolean {
-    const errorMessage = error.message?.toLowerCase() || '';
-    const errorCode = error.code || '';
+function isConfigurationError(error: unknown): boolean {
+  const errorMessage = (error instanceof Error ? error.message : '').toLowerCase();
+  const errorCode = error && typeof error === 'object' && 'code' in error ? String(error.code) : '';
 
-    // Supabase: Table does not exist
-    if (errorCode === '42P01') return true;
+  // Supabase: 表不存在
+  if (errorCode === '42P01') return true;
 
-    // LeanCloud: Class does not exist (when it's a config issue, not auto-create scenario)
-    // Note: We allow 404 to retry in case it's a temporary issue
+  // LeanCloud: 类不存在（当是配置问题时，而非自动创建场景）
+  // 注意：我们允许 404 重试，以防是临时问题
 
-    // Missing environment variables
-    if (errorMessage.includes('missing environment')) return true;
-    if (errorMessage.includes('missing env')) return true;
+  // 缺少环境变量
+  if (errorMessage.includes('missing environment')) return true;
+  if (errorMessage.includes('missing env')) return true;
 
-    // Authentication errors
-    if (errorMessage.includes('authentication failed')) return true;
-    if (errorMessage.includes('invalid credentials')) return true;
-    if (errorMessage.includes('permission denied')) return true;
+  // 认证错误
+  if (errorMessage.includes('authentication failed')) return true;
+  if (errorMessage.includes('invalid credentials')) return true;
+  if (errorMessage.includes('permission denied')) return true;
 
-    // Invalid configuration
-    if (errorMessage.includes('invalid configuration')) return true;
+  // 无效配置
+  if (errorMessage.includes('invalid configuration')) return true;
 
-    // All other errors are considered retryable (network issues, timeouts, etc.)
-    return false;
+  // 所有其他错误都被认为是可重试的（网络问题、超时等）
+  return false;
 }
