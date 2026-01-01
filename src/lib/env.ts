@@ -1,0 +1,125 @@
+/**
+ * 环境变量验证模块
+ *
+ * 在应用启动时验证所有必需的环境变量，提供类型安全的访问方式。
+ * 如果缺少必需的环境变量，会抛出详细的错误消息。
+ */
+
+interface EnvConfig {
+  supabase: {
+    url: string;
+    serviceRoleKey: string;
+  };
+  leancloud: {
+    appId: string;
+    appKey: string;
+    serverUrl: string;
+    masterKey?: string;
+  };
+  bark?: {
+    deviceKey: string;
+  };
+  cron?: {
+    secret: string;
+  };
+}
+
+/**
+ * 验证并获取环境变量
+ */
+function validateEnv(): EnvConfig {
+  const missing: string[] = [];
+  const warnings: string[] = [];
+
+  // 必需的 Supabase 环境变量
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl) missing.push('NEXT_PUBLIC_SUPABASE_URL');
+  if (!supabaseServiceRoleKey) missing.push('SUPABASE_SERVICE_ROLE_KEY');
+
+  // 必需的 LeanCloud 环境变量
+  const leancloudAppId = process.env.LEANCLOUD_APP_ID;
+  const leancloudAppKey = process.env.LEANCLOUD_APP_KEY;
+  const leancloudServerUrl = process.env.LEANCLOUD_API_SERVER;
+  const leancloudMasterKey = process.env.LEANCLOUD_MASTER_KEY;
+
+  if (!leancloudAppId) missing.push('LEANCLOUD_APP_ID');
+  if (!leancloudAppKey) missing.push('LEANCLOUD_APP_KEY');
+  if (!leancloudServerUrl) missing.push('LEANCLOUD_API_SERVER');
+
+  // 可选的 Bark 环境变量
+  const barkDeviceKey = process.env.BARK_DEVICE_KEY;
+  if (!barkDeviceKey) {
+    warnings.push('BARK_DEVICE_KEY is not set. Bark notifications will be disabled.');
+  }
+
+  // 可选的 Cron 安全密钥
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret) {
+    warnings.push('CRON_SECRET is not set. Cron endpoints will not be protected.');
+  }
+
+  // 如果有缺失的必需变量,抛出错误
+  if (missing.length > 0) {
+    const errorMessage = [
+      '',
+      '❌ Environment Variable Validation Failed',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      '',
+      'Missing required environment variables:',
+      ...missing.map(v => `  • ${v}`),
+      '',
+      'Please check your .env.local file and ensure all required variables are set.',
+      'See env.example for reference.',
+      '',
+    ].join('\n');
+
+    // 直接输出错误并退出,避免冗余的错误堆栈
+    console.error(errorMessage);
+    process.exit(1);
+  }
+
+  // 显示警告（如果有）
+  if (warnings.length > 0 && process.env.NODE_ENV === 'development') {
+    console.warn('\n⚠️  Environment Variable Warnings:');
+    warnings.forEach(w => console.warn(`  - ${w}`));
+    console.warn('');
+  }
+
+  // 返回类型安全的环境变量对象
+  return {
+    supabase: {
+      url: supabaseUrl!,
+      serviceRoleKey: supabaseServiceRoleKey!,
+    },
+    leancloud: {
+      appId: leancloudAppId!,
+      appKey: leancloudAppKey!,
+      serverUrl: leancloudServerUrl!,
+      masterKey: leancloudMasterKey,
+    },
+    ...(barkDeviceKey && {
+      bark: {
+        deviceKey: barkDeviceKey,
+      },
+    }),
+    ...(cronSecret && {
+      cron: {
+        secret: cronSecret,
+      },
+    }),
+  };
+}
+
+/**
+ * 导出验证后的环境变量
+ *
+ * 使用方式:
+ * ```typescript
+ * import { env } from './env';
+ *
+ * const url = env.supabase.url;
+ * ```
+ */
+export const env = validateEnv();
