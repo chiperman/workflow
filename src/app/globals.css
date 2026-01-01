@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
   /* Anthropic-inspired "Warm Paper" Theme */
@@ -20,14 +20,16 @@
   --color-foreground: var(--foreground);
 
   /* Typography - Serif for Headings, Sans for Body */
-  --font-serif: "Times New Roman", Times, "Georgia", serif;
-  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-serif: 'Times New Roman', Times, 'Georgia', serif;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
 
   --font-display: var(--font-serif);
   --font-body: var(--font-sans);
-  
+
   /* Monospace for logs and IDs */
-  --font-mono: "ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "Liberation Mono", "Courier New", monospace;
+  --font-mono:
+    'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono',
+    'Courier New', monospace;
 }
 
 body {
