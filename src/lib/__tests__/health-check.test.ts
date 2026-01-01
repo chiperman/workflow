@@ -2,329 +2,329 @@ import { checkSupabaseHealth, checkLeanCloudHealth } from '../health-check';
 
 // Mock Supabase client
 jest.mock('../supabase', () => ({
-    supabase: {
-        from: jest.fn(),
-    },
+  supabase: {
+    from: jest.fn(),
+  },
 }));
 
 // Mock env
 jest.mock('../env', () => ({
-    env: {
-        leancloud: {
-            appId: 'test-app-id',
-            appKey: 'test-app-key',
-            masterKey: 'test-master-key',
-            serverUrl: 'https://test.leancloud.com',
-        },
+  env: {
+    leancloud: {
+      appId: 'test-app-id',
+      appKey: 'test-app-key',
+      masterKey: 'test-master-key',
+      serverUrl: 'https://test.leancloud.com',
     },
+  },
 }));
 
 import { supabase } from '../supabase';
 
 describe('checkSupabaseHealth', () => {
-    beforeEach(() => {
-        jest.clearAllMocks();
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('成功获取数据', async () => {
+    const mockData = {
+      id: 1,
+      auto_count: 10,
+      manual_count: 5,
+    };
+
+    (supabase.from as jest.Mock).mockReturnValue({
+      select: jest.fn().mockReturnValue({
+        eq: jest.fn().mockReturnValue({
+          single: jest.fn().mockResolvedValue({
+            data: mockData,
+            error: null,
+          }),
+        }),
+      }),
     });
 
-    it('成功获取数据', async () => {
-        const mockData = {
-            id: 1,
-            auto_count: 10,
-            manual_count: 5,
-        };
+    const result = await checkSupabaseHealth();
 
-        (supabase.from as jest.Mock).mockReturnValue({
-            select: jest.fn().mockReturnValue({
-                eq: jest.fn().mockReturnValue({
-                    single: jest.fn().mockResolvedValue({
-                        data: mockData,
-                        error: null,
-                    }),
-                }),
-            }),
-        });
+    expect(result).toEqual({
+      status: 'operational',
+      tableExists: true,
+      stats: {
+        auto_count: 10,
+        manual_count: 5,
+      },
+    });
+  });
 
-        const result = await checkSupabaseHealth();
+  it('表存在但无数据 (PGRST116)', async () => {
+    (supabase.from as jest.Mock).mockReturnValue({
+      select: jest.fn().mockReturnValue({
+        eq: jest.fn().mockReturnValue({
+          single: jest.fn().mockResolvedValue({
+            data: null,
+            error: { code: 'PGRST116', message: 'No rows found' },
+          }),
+        }),
+      }),
+    });
 
-        expect(result).toEqual({
-            status: 'operational',
-            tableExists: true,
-            stats: {
-                auto_count: 10,
-                manual_count: 5,
+    const result = await checkSupabaseHealth();
+
+    expect(result).toEqual({
+      status: 'operational',
+      tableExists: true,
+      stats: {
+        auto_count: 0,
+        manual_count: 0,
+      },
+    });
+  });
+
+  it('表不存在 (42P01)', async () => {
+    (supabase.from as jest.Mock).mockReturnValue({
+      select: jest.fn().mockReturnValue({
+        eq: jest.fn().mockReturnValue({
+          single: jest.fn().mockResolvedValue({
+            data: null,
+            error: {
+              code: '42P01',
+              message: 'relation "keep_alive" does not exist',
             },
-        });
+          }),
+        }),
+      }),
     });
 
-    it('表存在但无数据 (PGRST116)', async () => {
-        (supabase.from as jest.Mock).mockReturnValue({
-            select: jest.fn().mockReturnValue({
-                eq: jest.fn().mockReturnValue({
-                    single: jest.fn().mockResolvedValue({
-                        data: null,
-                        error: { code: 'PGRST116', message: 'No rows found' },
-                    }),
-                }),
-            }),
-        });
+    const result = await checkSupabaseHealth();
 
-        const result = await checkSupabaseHealth();
+    expect(result).toEqual({
+      status: 'misconfigured',
+      tableExists: false,
+      stats: {
+        auto_count: 0,
+        manual_count: 0,
+      },
+      message: 'Table "keep_alive" does not exist',
+    });
+  });
 
-        expect(result).toEqual({
-            status: 'operational',
-            tableExists: true,
-            stats: {
-                auto_count: 0,
-                manual_count: 0,
+  it('其他数据库错误', async () => {
+    (supabase.from as jest.Mock).mockReturnValue({
+      select: jest.fn().mockReturnValue({
+        eq: jest.fn().mockReturnValue({
+          single: jest.fn().mockResolvedValue({
+            data: null,
+            error: {
+              code: 'SOME_ERROR',
+              message: 'Database error',
             },
-        });
+          }),
+        }),
+      }),
     });
 
-    it('表不存在 (42P01)', async () => {
-        (supabase.from as jest.Mock).mockReturnValue({
-            select: jest.fn().mockReturnValue({
-                eq: jest.fn().mockReturnValue({
-                    single: jest.fn().mockResolvedValue({
-                        data: null,
-                        error: {
-                            code: '42P01',
-                            message: 'relation "keep_alive" does not exist',
-                        },
-                    }),
-                }),
-            }),
-        });
+    const result = await checkSupabaseHealth();
 
-        const result = await checkSupabaseHealth();
+    expect(result.status).toBe('outage');
+    expect(result.tableExists).toBe(false);
+    expect(result.message).toBeDefined();
+  });
 
-        expect(result).toEqual({
-            status: 'misconfigured',
-            tableExists: false,
-            stats: {
-                auto_count: 0,
-                manual_count: 0,
-            },
-            message: 'Table "keep_alive" does not exist',
-        });
+  it('网络错误', async () => {
+    (supabase.from as jest.Mock).mockReturnValue({
+      select: jest.fn().mockReturnValue({
+        eq: jest.fn().mockReturnValue({
+          single: jest.fn().mockRejectedValue(new Error('Network error')),
+        }),
+      }),
     });
 
-    it('其他数据库错误', async () => {
-        (supabase.from as jest.Mock).mockReturnValue({
-            select: jest.fn().mockReturnValue({
-                eq: jest.fn().mockReturnValue({
-                    single: jest.fn().mockResolvedValue({
-                        data: null,
-                        error: {
-                            code: 'SOME_ERROR',
-                            message: 'Database error',
-                        },
-                    }),
-                }),
-            }),
-        });
+    const result = await checkSupabaseHealth();
 
-        const result = await checkSupabaseHealth();
+    expect(result).toEqual({
+      status: 'outage',
+      tableExists: false,
+      stats: {
+        auto_count: 0,
+        manual_count: 0,
+      },
+      message: 'Network error',
+    });
+  });
 
-        expect(result.status).toBe('outage');
-        expect(result.tableExists).toBe(false);
-        expect(result.message).toBeDefined();
+  it('数据字段缺失时使用默认值', async () => {
+    (supabase.from as jest.Mock).mockReturnValue({
+      select: jest.fn().mockReturnValue({
+        eq: jest.fn().mockReturnValue({
+          single: jest.fn().mockResolvedValue({
+            data: { id: 1 }, // 缺少 auto_count 和 manual_count
+            error: null,
+          }),
+        }),
+      }),
     });
 
-    it('网络错误', async () => {
-        (supabase.from as jest.Mock).mockReturnValue({
-            select: jest.fn().mockReturnValue({
-                eq: jest.fn().mockReturnValue({
-                    single: jest.fn().mockRejectedValue(new Error('Network error')),
-                }),
-            }),
-        });
+    const result = await checkSupabaseHealth();
 
-        const result = await checkSupabaseHealth();
-
-        expect(result).toEqual({
-            status: 'outage',
-            tableExists: false,
-            stats: {
-                auto_count: 0,
-                manual_count: 0,
-            },
-            message: 'Network error',
-        });
+    expect(result).toEqual({
+      status: 'operational',
+      tableExists: true,
+      stats: {
+        auto_count: 0,
+        manual_count: 0,
+      },
     });
-
-    it('数据字段缺失时使用默认值', async () => {
-        (supabase.from as jest.Mock).mockReturnValue({
-            select: jest.fn().mockReturnValue({
-                eq: jest.fn().mockReturnValue({
-                    single: jest.fn().mockResolvedValue({
-                        data: { id: 1 }, // 缺少 auto_count 和 manual_count
-                        error: null,
-                    }),
-                }),
-            }),
-        });
-
-        const result = await checkSupabaseHealth();
-
-        expect(result).toEqual({
-            status: 'operational',
-            tableExists: true,
-            stats: {
-                auto_count: 0,
-                manual_count: 0,
-            },
-        });
-    });
+  });
 });
 
 describe('checkLeanCloudHealth', () => {
-    beforeEach(() => {
-        jest.clearAllMocks();
-        global.fetch = jest.fn();
+  beforeEach(() => {
+    jest.clearAllMocks();
+    global.fetch = jest.fn();
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('成功获取数据', async () => {
+    const mockResponse = {
+      results: [
+        {
+          objectId: '123',
+          auto_count: 15,
+          manual_count: 8,
+        },
+      ],
+    };
+
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: jest.fn().mockResolvedValue(mockResponse),
     });
 
-    afterEach(() => {
-        jest.restoreAllMocks();
+    const result = await checkLeanCloudHealth();
+
+    expect(result).toEqual({
+      status: 'operational',
+      tableExists: true,
+      stats: {
+        auto_count: 15,
+        manual_count: 8,
+      },
     });
 
-    it('成功获取数据', async () => {
-        const mockResponse = {
-            results: [
-                {
-                    objectId: '123',
-                    auto_count: 15,
-                    manual_count: 8,
-                },
-            ],
-        };
+    expect(global.fetch).toHaveBeenCalledWith(
+      'https://test.leancloud.com/1.1/classes/keep_alive?limit=1',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          'X-LC-Id': 'test-app-id',
+          'X-LC-Key': 'test-master-key,master',
+          'Content-Type': 'application/json',
+        }),
+      })
+    );
+  });
 
-        (global.fetch as jest.Mock).mockResolvedValue({
-            ok: true,
-            status: 200,
-            json: jest.fn().mockResolvedValue(mockResponse),
-        });
-
-        const result = await checkLeanCloudHealth();
-
-        expect(result).toEqual({
-            status: 'operational',
-            tableExists: true,
-            stats: {
-                auto_count: 15,
-                manual_count: 8,
-            },
-        });
-
-        expect(global.fetch).toHaveBeenCalledWith(
-            'https://test.leancloud.com/1.1/classes/keep_alive?limit=1',
-            expect.objectContaining({
-                headers: expect.objectContaining({
-                    'X-LC-Id': 'test-app-id',
-                    'X-LC-Key': 'test-master-key,master',
-                    'Content-Type': 'application/json',
-                }),
-            })
-        );
+  it('类不存在 (404)', async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: false,
+      status: 404,
     });
 
-    it('类不存在 (404)', async () => {
-        (global.fetch as jest.Mock).mockResolvedValue({
-            ok: false,
-            status: 404,
-        });
+    const result = await checkLeanCloudHealth();
 
-        const result = await checkLeanCloudHealth();
+    expect(result).toEqual({
+      status: 'misconfigured',
+      tableExists: false,
+      stats: {
+        auto_count: 0,
+        manual_count: 0,
+      },
+      message: 'Class "keep_alive" does not exist',
+    });
+  });
 
-        expect(result).toEqual({
-            status: 'misconfigured',
-            tableExists: false,
-            stats: {
-                auto_count: 0,
-                manual_count: 0,
-            },
-            message: 'Class "keep_alive" does not exist',
-        });
+  it('API 错误 (非 404)', async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: false,
+      status: 500,
     });
 
-    it('API 错误 (非 404)', async () => {
-        (global.fetch as jest.Mock).mockResolvedValue({
-            ok: false,
-            status: 500,
-        });
+    const result = await checkLeanCloudHealth();
 
-        const result = await checkLeanCloudHealth();
+    expect(result.status).toBe('outage');
+    expect(result.tableExists).toBe(false);
+    expect(result.message).toContain('Query failed: 500');
+  });
 
-        expect(result.status).toBe('outage');
-        expect(result.tableExists).toBe(false);
-        expect(result.message).toContain('Query failed: 500');
+  it('空结果', async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: jest.fn().mockResolvedValue({ results: [] }),
     });
 
-    it('空结果', async () => {
-        (global.fetch as jest.Mock).mockResolvedValue({
-            ok: true,
-            status: 200,
-            json: jest.fn().mockResolvedValue({ results: [] }),
-        });
+    const result = await checkLeanCloudHealth();
 
-        const result = await checkLeanCloudHealth();
+    expect(result).toEqual({
+      status: 'operational',
+      tableExists: true,
+      stats: {
+        auto_count: 0,
+        manual_count: 0,
+      },
+    });
+  });
 
-        expect(result).toEqual({
-            status: 'operational',
-            tableExists: true,
-            stats: {
-                auto_count: 0,
-                manual_count: 0,
-            },
-        });
+  it('网络错误', async () => {
+    (global.fetch as jest.Mock).mockRejectedValue(new Error('Network timeout'));
+
+    const result = await checkLeanCloudHealth();
+
+    expect(result).toEqual({
+      status: 'outage',
+      tableExists: false,
+      stats: {
+        auto_count: 0,
+        manual_count: 0,
+      },
+      message: 'Network timeout',
+    });
+  });
+
+  it('数据字段缺失时使用默认值', async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: jest.fn().mockResolvedValue({
+        results: [{ objectId: '123' }], // 缺少计数字段
+      }),
     });
 
-    it('网络错误', async () => {
-        (global.fetch as jest.Mock).mockRejectedValue(new Error('Network timeout'));
+    const result = await checkLeanCloudHealth();
 
-        const result = await checkLeanCloudHealth();
+    expect(result).toEqual({
+      status: 'operational',
+      tableExists: true,
+      stats: {
+        auto_count: 0,
+        manual_count: 0,
+      },
+    });
+  });
 
-        expect(result).toEqual({
-            status: 'outage',
-            tableExists: false,
-            stats: {
-                auto_count: 0,
-                manual_count: 0,
-            },
-            message: 'Network timeout',
-        });
+  it('JSON 解析错误', async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: jest.fn().mockRejectedValue(new Error('Invalid JSON')),
     });
 
-    it('数据字段缺失时使用默认值', async () => {
-        (global.fetch as jest.Mock).mockResolvedValue({
-            ok: true,
-            status: 200,
-            json: jest.fn().mockResolvedValue({
-                results: [{ objectId: '123' }], // 缺少计数字段
-            }),
-        });
+    const result = await checkLeanCloudHealth();
 
-        const result = await checkLeanCloudHealth();
-
-        expect(result).toEqual({
-            status: 'operational',
-            tableExists: true,
-            stats: {
-                auto_count: 0,
-                manual_count: 0,
-            },
-        });
-    });
-
-    it('JSON 解析错误', async () => {
-        (global.fetch as jest.Mock).mockResolvedValue({
-            ok: true,
-            status: 200,
-            json: jest.fn().mockRejectedValue(new Error('Invalid JSON')),
-        });
-
-        const result = await checkLeanCloudHealth();
-
-        expect(result.status).toBe('outage');
-        expect(result.message).toBe('Invalid JSON');
-    });
+    expect(result.status).toBe('outage');
+    expect(result.message).toBe('Invalid JSON');
+  });
 });
