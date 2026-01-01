@@ -84,8 +84,10 @@ ALTER TABLE keep_alive ENABLE ROW LEVEL SECURITY;
 
 ## 📂 项目结构
 
-- `src/app/api/keep-alive/route.ts`: Supabase 保活 API（含重试逻辑）。
+- `src/app/api/supabase-keep-alive/route.ts`: Supabase 保活 API（含重试逻辑）。
 - `src/app/api/leancloud-keep-alive/route.ts`: LeanCloud 保活 API（含重试逻辑）。
+- `src/app/api/health/route.ts`: 系统健康检查 API。
+- `src/app/api/manual-trigger/route.ts`: 手动触发控制器。
 - `src/app/page.tsx`: 现代化控制台前端。
 - `src/lib/bark.ts`: Bark 通知工具。
 - `vercel.json`: Cron 调度配置。
