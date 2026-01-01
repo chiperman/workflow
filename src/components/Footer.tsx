@@ -1,4 +1,5 @@
 import type { SystemStatus } from '@/types';
+import Image from 'next/image';
 
 interface FooterProps {
   version: string;
@@ -40,7 +41,13 @@ export function Footer({ version, systemStatus, failingServices }: FooterProps) 
             title="Vercel"
             className="opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-300"
           >
-            <img src="/vercel.svg" alt="Vercel" className="h-4 w-auto invert" />
+            <Image
+              src="/vercel.svg"
+              alt="Vercel"
+              width={16}
+              height={16}
+              className="h-4 w-auto invert"
+            />
           </a>
           <a
             href="https://github.com"
@@ -49,7 +56,7 @@ export function Footer({ version, systemStatus, failingServices }: FooterProps) 
             title="GitHub"
             className="opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-300"
           >
-            <img src="/github.svg" alt="GitHub" className="h-5 w-auto" />
+            <Image src="/github.svg" alt="GitHub" width={20} height={20} className="h-5 w-auto" />
           </a>
           <a
             href="https://deepmind.google/technologies/gemini/"
@@ -58,7 +65,13 @@ export function Footer({ version, systemStatus, failingServices }: FooterProps) 
             title="Gemini"
             className="opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-300"
           >
-            <img src="/gemini-color.svg" alt="Gemini" className="h-5 w-auto" />
+            <Image
+              src="/gemini-color.svg"
+              alt="Gemini"
+              width={20}
+              height={20}
+              className="h-5 w-auto"
+            />
           </a>
           <a
             href="https://claude.ai"
@@ -67,7 +80,13 @@ export function Footer({ version, systemStatus, failingServices }: FooterProps) 
             title="Claude"
             className="opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-300"
           >
-            <img src="/claude-color.svg" alt="Claude" className="h-5 w-auto" />
+            <Image
+              src="/claude-color.svg"
+              alt="Claude"
+              width={20}
+              height={20}
+              className="h-5 w-auto"
+            />
           </a>
         </div>
       </div>
