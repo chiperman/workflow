@@ -1,6 +1,16 @@
 import { RETRY_CONFIG } from '@/config/constants';
 
 /**
+ * 获取当前的北京时间字符串
+ */
+export function getBeijingTime(date: Date = new Date()): string {
+  return date.toLocaleString('zh-CN', {
+    timeZone: 'Asia/Shanghai',
+    hour12: false,
+  });
+}
+
+/**
  * Retries a promise-returning function with intelligent error handling.
  *
  * Features:
