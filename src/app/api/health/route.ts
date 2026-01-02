@@ -1,5 +1,5 @@
+import { checkLeanCloudHealth, checkSupabaseHealth } from '@/lib/health-check';
 import { NextResponse } from 'next/server';
-import { checkSupabaseHealth, checkLeanCloudHealth } from '@/lib/health-check';
 
 export const dynamic = 'force-dynamic';
 
