@@ -73,9 +73,10 @@ export function Footer({ version, systemStatus, failingServices, serviceStatuses
             <Image
               src="/vercel.svg"
               alt="Vercel"
-              width={16}
-              height={16}
+              width={1155}
+              height={1000}
               className="h-4 w-auto invert"
+              priority
             />
           </a>
           <a
