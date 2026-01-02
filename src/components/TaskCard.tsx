@@ -13,6 +13,7 @@ interface TaskCardProps {
   category: string;
   method: 'GET' | 'POST';
   serviceHealth: ServiceHealth;
+  appKey?: string;
   onStatsUpdate: (newHealth: ServiceHealth) => void;
 }
 
@@ -23,7 +24,7 @@ function getDerivedState(
   title: string
 ): {
   status?: 'idle' | 'loading' | 'success' | 'error';
-  message: string;
+  message?: string;
   showCreateGuide: boolean;
 } | null {
   if (serviceHealth.status === 'outage' || serviceHealth.status === 'misconfigured') {
@@ -59,9 +60,20 @@ function getDerivedState(
     };
   } else if (serviceHealth.status === 'operational') {
     // 服务正常时
+    // 如果当前是错误状态，但 message 包含特定背景错误关键词，则说明需要从背景错误恢复
+    const isBackgroundError =
+      currentStatus === 'error' && (serviceHealth.message || '').includes('not exist');
+
+    if (isBackgroundError) {
+      return {
+        status: 'idle',
+        message: '',
+        showCreateGuide: false,
+      };
+    }
+
+    // 否则，保持现状（保留手动执行产生的 success 或 error 状态及消息）
     return {
-      status: currentStatus === 'error' ? 'idle' : undefined, // 只在错误时重置为 idle，否则保持原样 (如 success)
-      message: '',
       showCreateGuide: false,
     };
   }
@@ -80,6 +92,7 @@ function TaskCardComponent({
   category,
   method,
   serviceHealth,
+  appKey,
   onStatsUpdate,
 }: TaskCardProps) {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -93,7 +106,7 @@ function TaskCardComponent({
     const derived = getDerivedState(serviceHealth, status, title);
     if (derived) {
       if (derived.status) setStatus(derived.status);
-      setMessage(derived.message);
+      if (derived.message !== undefined) setMessage(derived.message);
       setShowCreateGuide(derived.showCreateGuide);
     }
   }
@@ -119,7 +132,12 @@ function TaskCardComponent({
     setMessage('');
     try {
       const url = `${endpoint}${endpoint.includes('?') ? '&' : '?'}trigger=manual`;
-      const response = await fetch(url, { method });
+      const response = await fetch(url, {
+        method,
+        headers: {
+          ...(appKey && { 'X-App-Key': appKey }),
+        },
+      });
       const data = await response.json();
 
       if (response.ok && (data.success || data.status === 'success' || data.data)) {
@@ -228,7 +246,7 @@ function TaskCardComponent({
           <div
             className={`mt-4 flex items-start gap-2 text-sm font-mono ${status === 'error' ? 'text-[#9f3e3e]' : 'text-[#3f6212]'}`}
           >
-            <span className="mt-0.5 shrink-0">
+            <span className="mt-[2px] shrink-0">
               {status === 'success' && <Check className="w-4 h-4" />}
               {status === 'error' && <AlertCircle className="w-4 h-4" />}
             </span>
