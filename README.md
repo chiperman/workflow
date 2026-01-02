@@ -1,6 +1,6 @@
 # Workflow Operations System
 
-**v0.3.0**
+**v0.4.1**
 
 这是一个用于防止云服务（Supabase, LeanCloud）因不活跃而被暂停的全栈自动化解决方案。它包含每日自动运行的定时任务，具备自动重试机制，以及一个现代化的手动控制台。
 
@@ -8,7 +8,7 @@
 
 - **Supabase 自动保活**: 每日 08:00 UTC 自动连接 Supabase 数据库。
 - **LeanCloud 自动保活**: 每日 09:00 UTC 自动对 LeanCloud `keep_alive` 类进行操作以保持活跃。
-- **智能重试机制 (v0.3.0)**: 
+- **智能重试机制 (v0.3.0)**:
   - 指数退避重试（1s, 2s, 4s）
   - 自动识别配置错误（表不存在、环境变量缺失等）不重试
   - 网络错误自动重试，提高成功率
@@ -42,8 +42,9 @@
   - `LEANCLOUD_API_SERVER`: REST API Server URL。
   - `LEANCLOUD_MASTER_KEY`: Master Key (可选，但在 API 路由中建议配置以确保权限)。
 
-- **Cron 安全**:
-  - `CRON_SECRET`: Vercel Cron Protection 密钥（可选，推荐）。
+- **安全配置**:
+  - `CRON_SECRET`: Vercel Cron Protection 密钥（用于保护自动化任务）。
+  - `APP_KEY`: 应用访问密钥（用于保护网页控制台的手动操作）。
 
 ### 2. 创建 Supabase 表
 
@@ -78,30 +79,42 @@ ALTER TABLE keep_alive ENABLE ROW LEVEL SECURITY;
 3.  配置上述环境变量。
 4.  部署。
 
-### 4. 验证 Cron Job
-
 部署后，在 Vercel 控制台的 **Settings -> Cron Jobs** 中查看定时任务。
+
+### 5. 安全访问控制 (v0.4.0)
+
+本项目不仅保护了自动化接口，还通过 `APP_KEY` 保护了手动控制台。
+
+- **首次访问**：你需要先在 Vercel 环境变量中设置 `APP_KEY`。
+- **配置网页**：访问网页时，在顶部的 “App Key” 面板中输入同样的密钥并保存。
+- **工作机制**：密钥将持久化存储在你的浏览器中，点击 “Run Task” 时会自动验证，确保只有授权用户能操作。
 
 ## 📂 项目结构
 
-- `src/app/api/supabase-keep-alive/route.ts`: Supabase 保活 API（含重试逻辑）。
-- `src/app/api/leancloud-keep-alive/route.ts`: LeanCloud 保活 API（含重试逻辑）。
-- `src/app/api/health/route.ts`: 系统健康检查 API。
-- `src/app/api/manual-trigger/route.ts`: 手动触发控制器。
+- `src/lib/services/`: 核心业务逻辑（类继承模式）。
+- `src/lib/api-helper.ts`: 统一的 API 响应与鉴权处理。
+- `src/app/api/`: 各项服务的 API 路由。
 - `src/app/page.tsx`: 现代化控制台前端。
 - `src/lib/bark.ts`: Bark 通知工具。
 - `vercel.json`: Cron 调度配置。
 
 ## 📦 版本历史
 
-- **v0.3.0**: 
+- **v0.4.1**:
+  - 🔄 API 标准化重构：统一保活端点，支持基于 HTTP 方法的触发模式自动识别（POST 为手动，GET 为自动）
+  - 🗑️ 清理架构：废弃并移除冗余的 `/api/manual-trigger` 中转路径
+  - 📝 文档深度同步：重构全站文档以匹配最新的 API 交互规范
+- **v0.4.0**:
+  - 🏗️ 后端架构重构：引入 `BaseService` 抽象类和 `api-helper`，实现服务标准化
+  - 🔒 增强 API 访问控制：新增 `APP_KEY` 和 `CRON_SECRET` 验证
+  - 🐛 修复 Lint 报错：解决 `useEffect` 导致的层叠渲染性能问题
+  - 🧪 引入自动化测试：添加 Jest 单元测试覆盖核心逻辑
+- **v0.3.0**:
   - 🎯 智能重试机制（指数退避，错误类型识别）
   - 🏥 统一健康检查系统
   - 🛠️ 表创建引导（Supabase SQL + LeanCloud REST API）
   - 🔒 增强 RLS 安全策略
   - 🐛 修复状态更新和按钮禁用问题
-- **v0.2.0**: UI 重构（Anthropic 风格），增加 API 自动重试机制。
-- **v0.1.0**: 初始版本，包含基础 Cron 功能。
 
 ## 🧪 本地测试
 
@@ -110,6 +123,7 @@ cp env.example .env.local
 # 填入 keys
 npm run dev
 ```
+
 访问 `http://localhost:3000` 即可使用。
 
 ## ❤️ 致谢
