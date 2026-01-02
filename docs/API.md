@@ -6,14 +6,43 @@
 
 ## 📋 目录
 
+- [核心概念](#核心概念)
 - [健康检查 API](#健康检查-api)
-- [Supabase Keep-Alive API](#supabase-keep-alive-api)
-  - [手动触发端点](#手动触发端点)
-  - [自动触发端点](#自动触发端点-cron)
-- [LeanCloud Keep-Alive API](#leancloud-keep-alive-api)
+- [手动控制台 API (Manual)](#手动控制台-api-manual)
+- [定时任务 API (Cron)](#定时任务-api-cron)
 - [类型定义](#类型定义)
 - [错误处理](#错误处理)
 - [重试机制](#重试机制)
+
+---
+
+## 核心概念
+
+在 `v0.4.1` 架构中，所有保活操作都区分 **手动 (Manual)** 和 **自动 (Auto)** 两种模式，它们共享统一的处理逻辑，但执行不同的鉴权和统计策略。
+
+### 触发模式对比
+
+| 模式       | 触发源                | 鉴权方式               | 说明                                          |
+| :--------- | :-------------------- | :--------------------- | :-------------------------------------------- |
+| **Manual** | 控制台网页 / 手动按钮 | `X-App-Key` Header     | 更新 `manual_count`，用于临时的手动干预。     |
+| **Auto**   | Vercel Cron Job       | `Authorization` Header | 更新 `auto_count`，用于每日自动化的定期保活。 |
+
+### 响应格式 (KeepAliveResult)
+
+所有保活相关接口（无论手动或自动）均返回以下标准格式：
+
+```typescript
+{
+  success: boolean,
+  message: string,
+  duration: number,  // 执行耗时（毫秒）
+  data?: {
+    auto_count: number,
+    manual_count: number
+  },
+  error?: string
+}
+```
 
 ---
 
@@ -106,250 +135,46 @@ GET /api/health
 
 ---
 
-## Supabase Keep-Alive API
+## 手动控制台 API (Manual)
 
-Supabase 数据库保活任务，支持手动和自动触发。
+这些端点专门设计用于网页控制台的手动触发。推荐使用 `POST` 方法，后端会自动识别为手动模式。
 
-### 手动触发端点
+### 1. Supabase 手动触发
 
-用于用户在 UI 上点击按钮手动触发。
+- **端点**: `POST /api/supabase-keep-alive`
+- **Header**: `X-App-Key: <APP_KEY>`
+- **说明**: 触发 Supabase 的一次手动活跃信号。
 
-#### 端点
+### 2. LeanCloud 手动触发
 
-```
-POST /api/manual-trigger
-```
+- **端点**: `POST /api/leancloud-keep-alive`
+- **Header**: `X-App-Key: <APP_KEY>`
+- **说明**: 触发 LeanCloud 的一次手动活跃信号。
 
-#### 请求参数
-
-无（固定为手动触发）
-
-#### 请求示例
-
-```bash
-curl -X POST "http://localhost:3000/api/manual-trigger"
-```
-
-#### 响应格式
-
-```typescript
-{
-  success: boolean,
-  message?: string,
-  data?: {
-    auto_count: number,
-    manual_count: number
-  }
-}
-```
-
-#### 响应示例
-
-**成功响应（200 OK）**：
-
-```json
-{
-  "success": true,
-  "message": "Supabase keep-alive task completed successfully",
-  "data": {
-    "auto_count": 42,
-    "manual_count": 16
-  }
-}
-```
-
-**表不存在错误（500 Internal Server Error）**：
-
-```json
-{
-  "success": false,
-  "message": "Table \"keep_alive\" does not exist. Please create the table first."
-}
-```
-
-#### 副作用
-
-- 更新 Supabase `keep_alive` 表的 `manual_count`
-- 发送 Bark 通知（如果配置）
+> [!TIP]
+> 早期版本使用的 `/api/manual-trigger` 已被废弃，请统一使用上述专属端点。
 
 ---
 
-### 自动触发端点 (Cron)
+## 定时任务 API (Cron)
 
-用于 Vercel Cron Job 定时自动触发。
+这些端点专门配置在 `vercel.json` 中。使用 `GET` 方法时，后端会自动识别为自动触发模式。
 
-#### 端点
+### 端点一览
 
-```
-GET /api/supabase-keep-alive
-```
+| 服务          | 端点                            | 调度时间 (UTC) |
+| :------------ | :------------------------------ | :------------- |
+| **Supabase**  | `GET /api/supabase-keep-alive`  | 08:00          |
+| **LeanCloud** | `GET /api/leancloud-keep-alive` | 09:00          |
 
-#### 请求参数
+### 鉴权要求
 
-**查询参数**：
+必须携带 Vercel 系统提供的 Cron Secret：
 
-| 参数 | 类型 | 必需 | 默认值 | 说明 |
-|------|------|------|--------|------|
-| `trigger` | string | 否 | `auto` | 触发类型（`auto` 或 `manual`） |
+- **Header**: `Authorization: Bearer <CRON_SECRET>`
 
-#### 请求示例
-
-```bash
-# 自动触发（Cron Job）
-curl "http://localhost:3000/api/supabase-keep-alive?trigger=auto"
-
-# 手动触发（也可以使用这个端点）
-curl "http://localhost:3000/api/supabase-keep-alive?trigger=manual"
-```
-
-#### 响应格式
-
-同 [手动触发端点](#手动触发端点)
-
-#### Cron Job 配置
-
-在 `vercel.json` 中配置：
-
-```json
-{
-  "crons": [
-    {
-      "path": "/api/supabase-keep-alive?trigger=auto",
-      "schedule": "0 8 * * *"
-    }
-  ]
-}
-```
-
-**Cron 表达式说明**：
-- `0 8 * * *` - 每天 UTC 08:00 执行
-- 相当于北京时间 16:00
-
-#### 副作用
-
-- 更新 Supabase `keep_alive` 表的 `auto_count` 或 `manual_count`
-- 发送 Bark 通知（如果配置）
-
----
-
-## LeanCloud Keep-Alive API
-
-LeanCloud 数据库保活任务，支持手动和自动触发。
-
-### 端点
-
-```
-GET /api/leancloud-keep-alive
-```
-
-### 请求参数
-
-**查询参数**：
-
-| 参数 | 类型 | 必需 | 默认值 | 说明 |
-|------|------|------|--------|------|
-| `trigger` | string | 否 | `auto` | 触发类型（`auto` 或 `manual`） |
-| `mode` | string | 否 | - | 设置为 `status` 时只返回统计数据 |
-
-### 请求示例
-
-```bash
-# 自动触发（Cron Job）
-curl "http://localhost:3000/api/leancloud-keep-alive?trigger=auto"
-
-# 手动触发
-curl "http://localhost:3000/api/leancloud-keep-alive?trigger=manual"
-
-# 只获取统计数据
-curl "http://localhost:3000/api/leancloud-keep-alive?mode=status"
-```
-
-### 响应格式
-
-**Keep-Alive 响应**：
-
-```typescript
-{
-  success: boolean,
-  message?: string,
-  data?: {
-    auto_count: number,
-    manual_count: number
-  },
-  error?: string,
-  details?: string
-}
-```
-
-**统计数据响应（mode=status）**：
-
-```typescript
-{
-  auto_count: number,
-  manual_count: number
-}
-```
-
-### 响应示例
-
-**成功响应（200 OK）**：
-
-```json
-{
-  "success": true,
-  "message": "LeanCloud keep-alive completed",
-  "data": {
-    "auto_count": 38,
-    "manual_count": 13
-  }
-}
-```
-
-**类不存在（自动创建）**：
-
-```json
-{
-  "success": true,
-  "message": "Class created and initialized",
-  "data": {
-    "auto_count": 1,
-    "manual_count": 0
-  }
-}
-```
-
-**错误响应（500 Internal Server Error）**：
-
-```json
-{
-  "error": "Keep-alive logic failed",
-  "details": "Network timeout"
-}
-```
-
-### 特殊行为
-
-- 如果 `keep_alive` 类不存在，会自动创建
-- 自动设置 ACL 权限（公开读写）
-- 支持通过 `mode=status` 只获取统计数据
-
-### Cron Job 配置
-
-```json
-{
-  "crons": [
-    {
-      "path": "/api/leancloud-keep-alive?trigger=auto",
-      "schedule": "0 9 * * *"
-    }
-  ]
-}
-```
-
-### 副作用
-
-- 更新 LeanCloud `keep_alive` 类的 `auto_count` 或 `manual_count`
-- 发送 Bark 通知（如果配置）
+> [!NOTE]
+> 如果需要在 `GET` 请求中显式指定模式，可添加参数 `?trigger=auto` 或 `?trigger=manual`。参数优先级高于 HTTP 方法推断。
 
 ---
 
@@ -431,6 +256,7 @@ interface HealthCheckResponse {
 **LeanCloud 错误码**: `404`
 
 **Supabase 响应**：
+
 ```json
 {
   "success": false,
@@ -439,6 +265,7 @@ interface HealthCheckResponse {
 ```
 
 **LeanCloud 响应**：
+
 ```json
 {
   "success": true,
@@ -448,12 +275,14 @@ interface HealthCheckResponse {
 ```
 
 **说明**：
+
 - Supabase 需要手动创建表
 - LeanCloud 会自动创建类
 
 #### 2. 环境变量缺失
 
 **响应**：
+
 ```json
 {
   "success": false,
@@ -466,6 +295,7 @@ interface HealthCheckResponse {
 #### 3. 网络错误
 
 **响应**：
+
 ```json
 {
   "success": false,
@@ -478,6 +308,7 @@ interface HealthCheckResponse {
 #### 4. 认证失败
 
 **响应**：
+
 ```json
 {
   "success": false,
@@ -497,21 +328,23 @@ interface HealthCheckResponse {
 
 ```typescript
 const RETRY_CONFIG = {
-  MAX_RETRIES: 3,           // 最大重试次数
-  BASE_DELAY_MS: 1000,      // 基础延迟（毫秒）
-  BACKOFF_MULTIPLIER: 2     // 指数退避倍数
+  MAX_RETRIES: 3, // 最大重试次数
+  BASE_DELAY_MS: 1000, // 基础延迟（毫秒）
+  BACKOFF_MULTIPLIER: 2, // 指数退避倍数
 };
 ```
 
 ### 重试策略
 
 **可重试错误**：
+
 - 网络错误
 - 超时
 - 临时故障
 - 5xx 服务器错误
 
 **不可重试错误**：
+
 - 配置错误（环境变量缺失）
 - 认证失败
 - 表不存在（Supabase）
@@ -524,6 +357,7 @@ const RETRY_CONFIG = {
 ```
 
 **示例**：
+
 - 第 1 次重试：1000ms
 - 第 2 次重试：2000ms
 - 第 3 次重试：4000ms
@@ -544,14 +378,14 @@ const RETRY_CONFIG = {
 
 ### Supabase vs LeanCloud
 
-| 特性 | Supabase | LeanCloud |
-|------|----------|-----------|
-| **手动触发端点** | `POST /api/manual-trigger` | `GET /api/leancloud-keep-alive?trigger=manual` |
+| 特性             | Supabase                                    | LeanCloud                                    |
+| ---------------- | ------------------------------------------- | -------------------------------------------- |
+| **手动触发端点** | `POST /api/supabase-keep-alive`             | `POST /api/leancloud-keep-alive`             |
 | **自动触发端点** | `GET /api/supabase-keep-alive?trigger=auto` | `GET /api/leancloud-keep-alive?trigger=auto` |
-| **表/类不存在** | 返回错误，需手动创建 | 自动创建 |
-| **统计查询** | 通过 `/api/health` | 支持 `?mode=status` |
-| **HTTP 方法** | POST（手动）/ GET（自动） | GET（统一） |
-| **ACL 权限** | 通过 RLS 策略 | 自动设置公开读写 |
+| **表/类不存在**  | 返回错误，需手动创建                        | 自动创建                                     |
+| **统计查询**     | 通过 `/api/health`                          | 支持 `?mode=status`                          |
+| **HTTP 方法**    | POST（手动）/ GET（自动）                   | POST（手动）/ GET（自动）                    |
+| **ACL 权限**     | 通过 RLS 策略                               | 自动设置公开读写                             |
 
 ---
 
@@ -559,72 +393,65 @@ const RETRY_CONFIG = {
 
 ### JavaScript/TypeScript
 
-```typescript
+```javascript
 // 获取健康状态
 async function getHealth() {
   const response = await fetch('/api/health');
   const data = await response.json();
   console.log('System Status:', data.status);
-  console.log('Supabase:', data.services.supabase);
-  console.log('LeanCloud:', data.services.leancloud);
 }
 
 // Supabase 手动触发
-async function triggerSupabase() {
-  const response = await fetch('/api/manual-trigger', {
-    method: 'POST'
+async function triggerSupabase(appKey: string) {
+  const response = await fetch('/api/supabase-keep-alive', {
+    method: 'POST',
+    headers: {
+      'X-App-Key': appKey,
+    },
   });
   const data = await response.json();
-  
-  if (data.success) {
-    console.log('Success:', data.message);
-    console.log('Stats:', data.data);
-  } else {
-    console.error('Error:', data.message);
-  }
+  console.log(data.success ? 'Success' : 'Error', data.message);
 }
 
 // LeanCloud 手动触发
-async function triggerLeanCloud() {
-  const response = await fetch('/api/leancloud-keep-alive?trigger=manual');
+async function triggerLeanCloud(appKey: string) {
+  const response = await fetch('/api/leancloud-keep-alive', {
+    method: 'POST',
+    headers: {
+      'X-App-Key': appKey,
+    },
+  });
   const data = await response.json();
-  
-  if (data.success) {
-    console.log('Success:', data.message);
-    console.log('Stats:', data.data);
-  } else {
-    console.error('Error:', data.error);
-  }
+  console.log(data.success ? 'Success' : 'Error', data.message);
 }
 
-// 获取 LeanCloud 统计数据
-async function getLeanCloudStats() {
-  const response = await fetch('/api/leancloud-keep-alive?mode=status');
+// 获取服务统计 (公开接口)
+async function getStats(servicePath: string) {
+  const response = await fetch(`${servicePath}?mode=status`);
   const stats = await response.json();
-  console.log('Auto count:', stats.auto_count);
-  console.log('Manual count:', stats.manual_count);
+  console.log('Stats:', stats);
 }
 ```
 
-### cURL
+### cURL 示例
 
 ```bash
-# 健康检查
+# 健康检查 (不鉴权)
 curl http://localhost:3000/api/health | jq
 
 # Supabase 手动触发
-curl -X POST "http://localhost:3000/api/manual-trigger" | jq
+curl -X POST "http://localhost:3000/api/supabase-keep-alive" \
+     -H "X-App-Key: your_app_key" | jq
 
-# Supabase 自动触发
-curl "http://localhost:3000/api/supabase-keep-alive?trigger=auto" | jq
+# Supabase 自动触发 (模拟 Cron)
+curl "http://localhost:3000/api/supabase-keep-alive?trigger=auto" \
+     -H "Authorization: Bearer your_cron_secret" | jq
 
 # LeanCloud 手动触发
-curl "http://localhost:3000/api/leancloud-keep-alive?trigger=manual" | jq
+curl -X POST "http://localhost:3000/api/leancloud-keep-alive" \
+     -H "X-App-Key: your_app_key" | jq
 
-# LeanCloud 自动触发
-curl "http://localhost:3000/api/leancloud-keep-alive?trigger=auto" | jq
-
-# LeanCloud 统计数据
+# 统计数据查询 (不鉴权)
 curl "http://localhost:3000/api/leancloud-keep-alive?mode=status" | jq
 ```
 
@@ -641,16 +468,16 @@ print(f"Supabase: {data['services']['supabase']}")
 print(f"LeanCloud: {data['services']['leancloud']}")
 
 # Supabase 手动触发
-response = requests.post('http://localhost:3000/api/manual-trigger')
+response = requests.post('http://localhost:3000/api/supabase-keep-alive')
 result = response.json()
 if result['success']:
     print(f"Success: {result['message']}")
     print(f"Stats: {result['data']}")
 
 # LeanCloud 手动触发
-response = requests.get(
+response = requests.post(
     'http://localhost:3000/api/leancloud-keep-alive',
-    params={'trigger': 'manual'}
+    headers={'X-App-Key': 'your_app_key'}
 )
 result = response.json()
 if result['success']:
@@ -683,15 +510,37 @@ if result['success']:
 - API 路由默认允许同源请求
 - 跨域请求需要额外配置
 
-### 认证
+### 认证 (v0.4.0 增强)
 
-- 当前版本没有实施用户认证
-- Supabase 和 LeanCloud 使用各自的 API 密钥
-- 建议在生产环境配置 RLS 策略
+为了保护系统资源，所有涉及保活操作的 API 都强制执行身份验证。
+
+#### 1. 自动化任务鉴权 (Cron)
+
+- **Header**: `Authorization: Bearer <CRON_SECRET>`
+- **适用场景**: Vercel Cron Job 自动调用。
+- **获取方式**: 在 Vercel 项目设置中定义 `CRON_SECRET`。
+
+#### 2. 手动操作鉴权 (Dashboard)
+
+- **Header**: `X-App-Key: <APP_KEY>`
+- **适用场景**: 控制台网页手动触发按钮。
+- **获取方式**: 在 Vercel 项目设置中定义 `APP_KEY`，并在网页端相应面板输入。
+
+> [!NOTE]
+> 健康检查接口 `/api/health` 以及统计查询 `?mode=status` 保持公开访问，以便于状态监控。
 
 ---
 
 ## 变更日志
+
+### v0.4.1 (2026-01-02)
+
+- ✅ **重构**: 统一保活端点，支持基于 HTTP 方法的触发模式自动识别（POST 为手动，GET 为自动）
+- ✅ **重构**: 使用 `api-helper` 统一 API 响应格式和鉴权流程
+- ✅ **安全**: 引入 API 访问控制机制 (APP_KEY, CRON_SECRET)
+- ✅ **前端**: 增加密钥设置与持久化存储面板
+- ✅ **变更**: 废弃并移除冗余的 `/api/manual-trigger` 中转路径
+- ✅ **文档**: 重构全站文档以匹配最新的 API 交互规范
 
 ### v0.3.0 (2025-12-23)
 
@@ -714,4 +563,4 @@ if result['success']:
 
 ---
 
-**最后更新**: 2025-12-23
+**最后更新**: 2026-01-02 (v0.4.1)
