@@ -150,6 +150,10 @@ export default function Home() {
           version={APP_VERSION}
           systemStatus={systemStatus}
           failingServices={failingServices}
+          serviceStatuses={{
+            supabase: supabaseHealth.status,
+            leancloud: leanCloudHealth.status,
+          }}
         />
       </div>
     </main>
