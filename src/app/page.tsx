@@ -7,7 +7,7 @@ import { Footer } from '@/components/Footer';
 import { TaskCard } from '@/components/TaskCard';
 import { APP_VERSION } from '@/config/constants';
 import type { HealthCheckResponse, ServiceHealth } from '@/types';
-import { Check, Key, Save } from 'lucide-react';
+import { Check, Eye, EyeOff, Key, Save } from 'lucide-react';
 
 // SWR fetcher 函数
 const fetcher = (url: string) => fetch(url).then(res => res.json());
@@ -15,6 +15,7 @@ const fetcher = (url: string) => fetch(url).then(res => res.json());
 export default function Home() {
   const [appKey, setAppKey] = useState('');
   const [isKeySaved, setIsKeySaved] = useState(false);
+  const [showKey, setShowKey] = useState(false);
 
   // 初始化时从 localStorage 加载密钥
   useEffect(() => {
@@ -91,16 +92,26 @@ export default function Home() {
               <span>App Key</span>
             </div>
             <div className="flex flex-1 gap-2 w-full">
-              <input
-                type="password"
-                value={appKey}
-                onChange={e => {
-                  setAppKey(e.target.value);
-                  setIsKeySaved(false);
-                }}
-                placeholder="Enter access key for manual tasks..."
-                className="flex-1 px-3 py-1.5 bg-[#f9f9f9] border border-[#e5e5e0] rounded text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 placeholder:text-[#999999]"
-              />
+              <div className="relative flex-1 flex items-center">
+                <input
+                  type={showKey ? 'text' : 'password'}
+                  value={appKey}
+                  onChange={e => {
+                    setAppKey(e.target.value);
+                    setIsKeySaved(false);
+                  }}
+                  placeholder="Enter access key for manual tasks..."
+                  className="w-full pl-3 pr-10 py-1.5 bg-[#f9f9f9] border border-[#e5e5e0] rounded text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 placeholder:text-[#999999]"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowKey(!showKey)}
+                  className="absolute right-3 text-[#888888] hover:text-[#191919] transition-colors"
+                  title={showKey ? 'Hide key' : 'Show key'}
+                >
+                  {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
               <button
                 onClick={saveKey}
                 className={`px-4 py-1.5 rounded text-sm font-medium flex items-center gap-2 transition-all ${
