@@ -16,30 +16,31 @@ workflow/
 │   │   │   ├── health/        # 健康检查 API
 │   │   │   ├── supabase-keep-alive/
 │   │   │   └── leancloud-keep-alive/
-│   │   ├── layout.tsx         # 根布局（包含 ErrorBoundary）
+│   │   ├── layout.tsx         # 根布局
 │   │   ├── page.tsx           # 主页面
 │   │   └── globals.css        # 全局样式
 │   ├── components/            # React 组件
 │   │   ├── ErrorBoundary.tsx  # 错误边界
-│   │   ├── TaskCard.tsx       # 任务卡片（已优化）
-│   │   ├── RollingNumber.tsx  # 滚动数字动画
-│   │   ├── SystemStatus.tsx   # 系统状态徽章
+│   │   ├── ErrorTest.tsx      # 错误测试组件
+│   │   ├── TaskCard.tsx       # 任务卡片
 │   │   ├── CreateGuide.tsx    # 表创建引导
 │   │   └── Footer.tsx         # 页脚
+│   ├── config/                # 配置文件
+│   │   └── constants.ts       # 全局常量
 │   ├── lib/                   # 核心逻辑
-│   │   ├── services/          # 服务层 (v0.4.0 引入)
+│   │   ├── services/          # 服务层
 │   │   │   ├── BaseService.ts # 服务基类
 │   │   │   ├── SupabaseService.ts
 │   │   │   └── LeanCloudService.ts
-│   │   ├── api-helper.ts      # API 统一处理工具 (v0.4.0)
-│   │   ├── utils.ts           # 工具函数（含重试逻辑）
-│   │   ├── health-check.ts    # 健康检查核心逻辑
-│   │   ├── supabase.ts        # Supabase 客户端初始化
+│   │   ├── api-helper.ts      # API 统一处理工具
+│   │   ├── utils.ts           # 工具函数
+│   │   ├── health-check.ts    # 健康检查逻辑
+│   │   ├── supabase.ts        # Supabase 客户端
 │   │   ├── bark.ts            # Bark 通知推送
 │   │   ├── env.ts             # 环境变量验证
-│   │   └── __tests__/         # 单元测试 (Jest)
+│   │   └── __tests__/         # 单元测试
 ├── docs/                      # 文档
-│   ├── DEVELOPMENT.md         # 开发文档（本文件）
+│   ├── DEVELOPMENT.md         # 开发文档
 │   └── API.md                 # API 文档
 ├── jest.config.js             # Jest 配置
 ├── next.config.ts             # Next.js 配置
@@ -104,18 +105,28 @@ workflow/
 
    填写必需的环境变量：
 
+   ````bash
    ```bash
-   # Supabase
-   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+   # Supabase Configuration
+   NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+   SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
-   # LeanCloud
-   LEANCLOUD_APP_ID=your_app_id
-   LEANCLOUD_APP_KEY=your_app_key
-   LEANCLOUD_SERVER_URL=your_server_url
+   # Bark Configuration
+   BARK_DEVICE_KEY=your-bark-key
 
-   # Bark（可选）
-   NEXT_PUBLIC_BARK_URL=your_bark_url
+   # LeanCloud Configuration
+   LEANCLOUD_APP_ID=your-leancloud-app-id
+   LEANCLOUD_APP_KEY=your-leancloud-app-key
+   LEANCLOUD_MASTER_KEY=your-leancloud-master-key
+   LEANCLOUD_API_SERVER=https://your-prefix.api.lncldglobal.com
+
+   # Cron & Access Configuration
+   CRON_SECRET=your-cron-secret
+   APP_KEY=your-app-secret-for-dashboard
+   ````
+
+   ```
+
    ```
 
 4. **启动开发服务器**
@@ -404,7 +415,3 @@ curl -X POST http://localhost:3000/api/supabase-keep-alive -H "X-App-Key: your_k
 ---
 
 **最后更新**: 2026-01-02 (v0.4.1)
-
-```
-
-```
