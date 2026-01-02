@@ -22,6 +22,7 @@ interface EnvConfig {
   cron?: {
     secret: string;
   };
+  appKey?: string;
 }
 
 /**
@@ -58,6 +59,12 @@ function validateEnv(): EnvConfig {
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret) {
     warnings.push('CRON_SECRET is not set. Cron endpoints will not be protected.');
+  }
+
+  // 可选的应用访问密钥
+  const appKey = process.env.APP_KEY;
+  if (!appKey) {
+    warnings.push('APP_KEY is not set. Dashboard operations will not be protected.');
   }
 
   // 如果有缺失的必需变量,抛出错误
@@ -109,6 +116,7 @@ function validateEnv(): EnvConfig {
         secret: cronSecret,
       },
     }),
+    appKey,
   };
 }
 
