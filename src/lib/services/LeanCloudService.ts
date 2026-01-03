@@ -1,4 +1,5 @@
 import { env } from '@/lib/env';
+import { logger } from '@/lib/logger';
 import { getBeijingTime } from '@/lib/utils';
 import type { KeepAliveResult, StatsQueryResult } from '@/types';
 import { BaseService } from './BaseService';
@@ -6,6 +7,7 @@ import { BaseService } from './BaseService';
 export class LeanCloudService extends BaseService {
   constructor() {
     super('LeanCloud');
+    this.notificationLevel = 'failure-only';
   }
 
   private get headers(): HeadersInit {
@@ -19,7 +21,6 @@ export class LeanCloudService extends BaseService {
   }
 
   protected async executeKeepAlive(trigger: 'auto' | 'manual' = 'auto'): Promise<KeepAliveResult> {
-    const start = Date.now();
     try {
       const queryUrl = `${env.leancloud.serverUrl}/1.1/classes/keep_alive?limit=1`;
       const queryRes = await fetch(queryUrl, { headers: this.headers });
@@ -91,25 +92,24 @@ export class LeanCloudService extends BaseService {
         finalManual = trigger === 'manual' ? 1 : 0;
       }
 
-      const duration = Date.now() - start;
       const beijingTime = getBeijingTime();
       const baseAction = action === 'created' ? 'Created new record' : 'Updated record';
-      const message = `LeanCloud Keep-Alive Success: ${baseAction} at ${beijingTime} (${trigger} run). Counts: Auto=${finalAuto}, Manual=${finalManual}. Duration: ${duration}ms.`;
+      const message = `LeanCloud Success: ${baseAction} at ${beijingTime} (${trigger}). Auto=${finalAuto}, Manual=${finalManual}.`;
 
       return {
         success: true,
         action,
         message,
-        duration,
+        duration: 0,
         data: {
           auto_count: finalAuto,
           manual_count: finalManual,
         },
       };
     } catch (error: unknown) {
-      const duration = Date.now() - start;
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      return { success: false, message: errorMessage, duration, error: errorMessage };
+      logger.error(`[LeanCloud] executeKeepAlive error:`, errorMessage);
+      return { success: false, message: errorMessage, duration: 0, error: errorMessage };
     }
   }
 
@@ -143,6 +143,7 @@ export class LeanCloudService extends BaseService {
       };
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error(`[LeanCloud] getStats error:`, errorMessage);
       return { success: false, error: errorMessage };
     }
   }

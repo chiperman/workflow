@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { supabase } from '@/lib/supabase';
 import { getBeijingTime } from '@/lib/utils';
 import type { KeepAliveResult, StatsQueryResult } from '@/types';
@@ -6,10 +7,11 @@ import { BaseService } from './BaseService';
 export class SupabaseService extends BaseService {
   constructor() {
     super('Supabase');
+    // 对于这类高频保活任务，建议主要在失败或手动运行时通过 Bark 发送成功通知
+    this.notificationLevel = 'failure-only';
   }
 
   protected async executeKeepAlive(trigger: 'auto' | 'manual' = 'auto'): Promise<KeepAliveResult> {
-    const start = Date.now();
     try {
       const { data: existing, error: fetchError } = await supabase
         .from('keep_alive')
@@ -42,31 +44,29 @@ export class SupabaseService extends BaseService {
         throw upsertError;
       }
 
-      const duration = Date.now() - start;
       const beijingTime = getBeijingTime();
-
       const action = existing ? 'updated' : 'created';
       const baseAction = action === 'created' ? 'Created new record' : 'Updated record';
-      const message = `Supabase Keep-Alive Success: ${baseAction} at ${beijingTime} (${trigger} run). Counts: Auto=${autoCount}, Manual=${manualCount}. Duration: ${duration}ms.`;
+      const message = `Supabase Success: ${baseAction} at ${beijingTime} (${trigger}). Auto=${autoCount}, Manual=${manualCount}.`;
 
       return {
         success: true,
         action,
         message,
-        duration,
+        duration: 0, // 基类会重新计算总耗时
         data: {
           manual_count: manualCount,
           auto_count: autoCount,
         },
       };
     } catch (error: unknown) {
-      const duration = Date.now() - start;
       let customMsg = error instanceof Error ? error.message : 'Unknown error';
       if (error && typeof error === 'object' && 'code' in error && error.code === '42P01') {
         customMsg = "Table 'keep_alive' does not exist.";
       }
+      logger.error(`[Supabase] executeKeepAlive error:`, customMsg);
 
-      return { success: false, message: customMsg, duration, error: customMsg };
+      return { success: false, message: customMsg, duration: 0, error: customMsg };
     }
   }
 
@@ -106,6 +106,7 @@ export class SupabaseService extends BaseService {
       };
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error(`[Supabase] getStats error:`, errorMessage);
       return { success: false, error: errorMessage };
     }
   }

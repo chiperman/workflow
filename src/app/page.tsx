@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
 
 import { Footer } from '@/components/Footer';
@@ -21,54 +21,60 @@ export default function Home() {
   useEffect(() => {
     const savedKey = localStorage.getItem('app-key');
     if (savedKey) {
-      // 避免同步调用以满足 Lint 规则 (react-hooks/set-state-in-effect)
-      Promise.resolve().then(() => {
+      // 满足 lint 规则：避免在 Effect 中同步触发渲染级联
+      setTimeout(() => {
         setAppKey(savedKey);
         setIsKeySaved(true);
-      });
+      }, 0);
     }
   }, []);
 
-  const saveKey = () => {
+  const saveKey = useCallback(() => {
     localStorage.setItem('app-key', appKey);
     setIsKeySaved(true);
-  };
-  // 使用 SWR 获取健康数据（仅首次加载和手动触发时刷新）
+  }, [appKey]);
+
+  // 使用 SWR 获取健康数据
   const { data, error, mutate } = useSWR<HealthCheckResponse>('/api/health', fetcher, {
-    revalidateOnFocus: false, // 窗口聚焦时不刷新
-    revalidateOnReconnect: false, // 网络重连时不刷新
-    revalidateIfStale: false, // 数据过期时不自动刷新
-    revalidateOnMount: true, // 仅组件挂载时获取一次
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false,
+    revalidateIfStale: false,
+    revalidateOnMount: true,
   });
 
-  // 直接从 data 派生状态,避免不必要的 useState 和 useEffect
-  const supabaseHealth: ServiceHealth = data?.services?.supabase || {
-    status: 'unknown',
-    stats: { auto_count: 0, manual_count: 0 },
-  };
+  // 派生服务健康状态
+  const supabaseHealth: ServiceHealth = useMemo(
+    () =>
+      data?.services?.supabase || {
+        status: 'unknown',
+        stats: { auto_count: 0, manual_count: 0 },
+      },
+    [data]
+  );
 
-  const leanCloudHealth: ServiceHealth = data?.services?.leancloud || {
-    status: 'unknown',
-    stats: { auto_count: 0, manual_count: 0 },
-  };
+  const leanCloudHealth: ServiceHealth = useMemo(
+    () =>
+      data?.services?.leancloud || {
+        status: 'unknown',
+        stats: { auto_count: 0, manual_count: 0 },
+      },
+    [data]
+  );
 
   // 计算系统状态和失败服务
   const systemStatus = data?.status || 'Checking';
-  const failingServices: string[] = [];
-
-  if (supabaseHealth.status !== 'operational' && supabaseHealth.status !== 'unknown') {
-    failingServices.push('Supabase');
-  }
-  if (leanCloudHealth.status !== 'operational' && leanCloudHealth.status !== 'unknown') {
-    failingServices.push('LeanCloud');
-  }
-
-  // 错误处理
-  useEffect(() => {
-    if (error) {
-      console.error('Failed to fetch health data:', error);
+  const failingServices = useMemo(() => {
+    const failing: string[] = [];
+    if (supabaseHealth.status === 'outage' || supabaseHealth.status === 'misconfigured') {
+      failing.push('Supabase');
     }
-  }, [error]);
+    if (leanCloudHealth.status === 'outage' || leanCloudHealth.status === 'misconfigured') {
+      failing.push('LeanCloud');
+    }
+    return failing;
+  }, [supabaseHealth.status, leanCloudHealth.status]);
+
+  if (error) console.error('Health check failed:', error);
 
   return (
     <main className="min-h-screen py-8 px-6 sm:px-12 bg-[#fdfcf8] flex flex-col justify-center">
@@ -95,6 +101,7 @@ export default function Home() {
               <div className="relative flex-1 flex items-center">
                 <input
                   type={showKey ? 'text' : 'password'}
+                  id="app-key-input"
                   value={appKey}
                   onChange={e => {
                     setAppKey(e.target.value);
@@ -141,7 +148,7 @@ export default function Home() {
             method="POST"
             serviceHealth={supabaseHealth}
             appKey={appKey}
-            onStatsUpdate={() => mutate()} // 操作完成后刷新健康数据
+            onStatsUpdate={() => mutate()}
           />
 
           <TaskCard
@@ -152,7 +159,7 @@ export default function Home() {
             method="POST"
             serviceHealth={leanCloudHealth}
             appKey={appKey}
-            onStatsUpdate={() => mutate()} // 操作完成后刷新健康数据
+            onStatsUpdate={() => mutate()}
           />
         </div>
 
