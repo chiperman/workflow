@@ -2,7 +2,7 @@
 
 import type { ServiceHealth } from '@/types';
 import { AlertCircle, Check, Loader2, Play } from 'lucide-react';
-import { memo, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import { CreateGuide } from './CreateGuide';
 import { RollingNumber } from './RollingNumber';
 
@@ -17,73 +17,13 @@ interface TaskCardProps {
   onStatsUpdate: (newHealth: ServiceHealth) => void;
 }
 
-// 辅助函数：根据 serviceHealth 计算状态
-function getDerivedState(
-  serviceHealth: ServiceHealth,
-  currentStatus: 'idle' | 'loading' | 'success' | 'error',
-  title: string
-): {
-  status?: 'idle' | 'loading' | 'success' | 'error';
-  message?: string;
-  showCreateGuide: boolean;
-} | null {
-  if (serviceHealth.status === 'outage' || serviceHealth.status === 'misconfigured') {
-    // 如果正在加载中，不更新状态，只返回 null 表示无变更
-    if (currentStatus === 'loading') {
-      return null;
-    }
-
-    const isTableMissing = serviceHealth.tableExists === false;
-    let message = '';
-    let showCreateGuide = false;
-
-    if (isTableMissing) {
-      showCreateGuide = true;
-      if (title === 'Supabase') {
-        message = 'Table does not exist. Click the copy button below to get the SQL statement.';
-      } else if (title === 'LeanCloud') {
-        message = 'Class does not exist. Click "Run Task" to create it automatically.';
-      }
-    } else if (serviceHealth.message) {
-      message = serviceHealth.message;
-    } else {
-      message =
-        serviceHealth.status === 'misconfigured'
-          ? 'Configuration error: Please check your settings.'
-          : 'Service is currently unavailable.';
-    }
-
-    return {
-      status: 'error',
-      message,
-      showCreateGuide,
-    };
-  } else if (serviceHealth.status === 'operational') {
-    // 服务正常时
-    // 如果当前是错误状态，但 message 包含特定背景错误关键词，则说明需要从背景错误恢复
-    const isBackgroundError =
-      currentStatus === 'error' && (serviceHealth.message || '').includes('not exist');
-
-    if (isBackgroundError) {
-      return {
-        status: 'idle',
-        message: '',
-        showCreateGuide: false,
-      };
-    }
-
-    // 否则，保持现状（保留手动执行产生的 success 或 error 状态及消息）
-    return {
-      showCreateGuide: false,
-    };
-  }
-  return null;
-}
-
 /**
  * 任务卡片组件
  *
- * 显示服务状态、统计数据和操作按钮
+ * 优化后的版本：
+ * 1. 简化了 derived state 逻辑
+ * 2. 统一了手动触发与自动刷新的反馈逻辑
+ * 3. 使用 useCallback 保证性能
  */
 function TaskCardComponent({
   title,
@@ -95,41 +35,37 @@ function TaskCardComponent({
   appKey,
   onStatsUpdate,
 }: TaskCardProps) {
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const [message, setMessage] = useState('');
-  const [showCreateGuide, setShowCreateGuide] = useState(false);
-  const [prevServiceHealth, setPrevServiceHealth] = useState(serviceHealth);
+  const [localStatus, setLocalStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [localMessage, setLocalMessage] = useState('');
 
-  // 响应全局健康状态变化 - 使用 render-phase state update
-  if (serviceHealth !== prevServiceHealth) {
-    setPrevServiceHealth(serviceHealth);
-    const derived = getDerivedState(serviceHealth, status, title);
-    if (derived) {
-      if (derived.status) setStatus(derived.status);
-      if (derived.message !== undefined) setMessage(derived.message);
-      setShowCreateGuide(derived.showCreateGuide);
-    }
-  }
+  // 计算最终状态
+  const displayStatus = useMemo(() => {
+    if (localStatus !== 'idle') return localStatus;
+    if (serviceHealth.status === 'outage' || serviceHealth.status === 'misconfigured')
+      return 'error';
+    if (serviceHealth.status === 'operational') return 'idle'; // 正常时，手动操作前显示 idle
+    return 'idle';
+  }, [localStatus, serviceHealth.status]);
 
-  // 复制到剪贴板
-  const copyToClipboard = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setMessage('✓ SQL copied to clipboard!');
-      setTimeout(() => setMessage(''), 2000);
-    } catch (_err) {
-      setMessage('Failed to copy SQL');
-    }
-  };
+  // 计算最终消息
+  const displayMessage = useMemo(() => {
+    if (localMessage) return localMessage;
+    if (serviceHealth.message) return serviceHealth.message;
+    if (serviceHealth.status === 'misconfigured') return 'Configuration error detected.';
+    if (serviceHealth.status === 'outage') return 'Service is currently unavailable.';
+    return '';
+  }, [localMessage, serviceHealth.message, serviceHealth.status]);
 
-  const handleRun = async () => {
-    // 防止多个同时请求
-    if (status === 'loading') {
-      return;
-    }
+  const showCreateGuide = useMemo(() => {
+    return serviceHealth.tableExists === false && serviceHealth.status !== 'operational';
+  }, [serviceHealth.tableExists, serviceHealth.status]);
 
-    setStatus('loading');
-    setMessage('');
+  const handleRun = useCallback(async () => {
+    if (localStatus === 'loading') return;
+
+    setLocalStatus('loading');
+    setLocalMessage('');
+
     try {
       const url = `${endpoint}${endpoint.includes('?') ? '&' : '?'}trigger=manual`;
       const response = await fetch(url, {
@@ -140,11 +76,16 @@ function TaskCardComponent({
       });
       const data = await response.json();
 
-      if (response.ok && (data.success || data.status === 'success' || data.data)) {
-        setStatus('success');
-        setMessage(data.message || 'Task completed successfully');
+      if (response.ok && data.success) {
+        setLocalStatus('success');
+        setLocalMessage(data.message || 'Task completed successfully');
 
-        // 更新统计数据和服务健康状态
+        // 延迟清除局部成功状态，让用户看到反馈
+        setTimeout(() => {
+          setLocalStatus('idle');
+          setLocalMessage('');
+        }, 3000);
+
         if (data.data) {
           onStatsUpdate({
             status: 'operational',
@@ -152,34 +93,26 @@ function TaskCardComponent({
             stats: data.data,
             message: undefined,
           });
-          setShowCreateGuide(false);
         }
       } else {
-        setStatus('error');
-        setMessage(data.message || data.error || 'Unknown error occurred');
-
-        // 更新服务健康状态以反映失败
-        onStatsUpdate({
-          status: response.status === 500 ? 'outage' : 'misconfigured',
-          tableExists: false,
-          stats: { auto_count: 0, manual_count: 0 },
-          message: data.message || data.error,
-        });
+        setLocalStatus('error');
+        setLocalMessage(data.message || data.error || 'Execution failed');
       }
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Network error';
-      setStatus('error');
-      setMessage(errorMessage);
-
-      // 更新服务健康状态以反映网络错误
-      onStatsUpdate({
-        status: 'outage',
-        tableExists: false,
-        stats: { auto_count: 0, manual_count: 0 },
-        message: errorMessage,
-      });
+      setLocalStatus('error');
+      setLocalMessage(error instanceof Error ? error.message : 'Network failure');
     }
-  };
+  }, [endpoint, method, appKey, localStatus, onStatsUpdate]);
+
+  const copyToClipboard = useCallback(async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setLocalMessage('✓ SQL copied to clipboard!');
+      setTimeout(() => setLocalMessage(''), 2000);
+    } catch (_err) {
+      setLocalMessage('Failed to copy SQL');
+    }
+  }, []);
 
   return (
     <div className="flex flex-col h-full bg-white border border-[#e5e5e0] p-6 rounded-lg transition-shadow hover:shadow-sm">
@@ -188,11 +121,21 @@ function TaskCardComponent({
           <span className="text-[10px] font-medium tracking-wider uppercase text-[#6b6b6b] block">
             {category}
           </span>
-          {status !== 'idle' && (
+          {displayStatus !== 'idle' && (
             <span
-              className={`text-[10px] uppercase font-bold tracking-wider ${status === 'error' ? 'text-red-500' : status === 'success' ? 'text-emerald-600' : 'text-amber-500'}`}
+              className={`text-[10px] uppercase font-bold tracking-wider ${
+                displayStatus === 'error'
+                  ? 'text-red-500'
+                  : displayStatus === 'success'
+                    ? 'text-emerald-600'
+                    : 'text-amber-500'
+              }`}
             >
-              {status === 'loading' ? 'Running...' : status === 'error' ? 'Failed' : 'Operational'}
+              {displayStatus === 'loading'
+                ? 'Running...'
+                : displayStatus === 'error'
+                  ? 'Failed'
+                  : 'Success'}
             </span>
           )}
         </div>
@@ -202,7 +145,7 @@ function TaskCardComponent({
         <div className="flex gap-4 mt-4 text-xs font-mono text-[#888888] uppercase tracking-wider">
           <div className="flex items-center gap-1.5">
             <span
-              className={`w-1.5 h-1.5 rounded-full ${status === 'error' ? 'bg-red-500' : 'bg-blue-400'}`}
+              className={`w-1.5 h-1.5 rounded-full ${displayStatus === 'error' ? 'bg-red-500' : 'bg-blue-400'}`}
             ></span>
             <span>
               Auto: <RollingNumber value={serviceHealth.stats.auto_count} />
@@ -210,7 +153,7 @@ function TaskCardComponent({
           </div>
           <div className="flex items-center gap-1.5">
             <span
-              className={`w-1.5 h-1.5 rounded-full ${status === 'error' ? 'bg-red-500' : 'bg-emerald-400'}`}
+              className={`w-1.5 h-1.5 rounded-full ${displayStatus === 'error' ? 'bg-red-500' : 'bg-emerald-400'}`}
             ></span>
             <span>
               Manual: <RollingNumber value={serviceHealth.stats.manual_count} />
@@ -223,17 +166,17 @@ function TaskCardComponent({
         <div className="flex items-center gap-4">
           <button
             onClick={handleRun}
-            disabled={status === 'loading'}
+            disabled={displayStatus === 'loading'}
             className={`
               group flex items-center gap-2 px-5 py-2.5 rounded-md text-sm font-medium transition-all duration-200
               ${
-                status === 'loading'
+                displayStatus === 'loading'
                   ? 'bg-[#e5e5e0] text-[#888888] cursor-not-allowed'
                   : 'bg-[#191919] text-[#fdfcf8] hover:bg-[#333333] active:translate-y-0.5'
               }
             `}
           >
-            {status === 'loading' ? (
+            {displayStatus === 'loading' ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               <Play className="w-4 h-4 fill-current" />
@@ -242,19 +185,21 @@ function TaskCardComponent({
           </button>
         </div>
 
-        {message && status !== 'idle' && (
+        {displayMessage && (
           <div
-            className={`mt-4 flex items-start gap-2 text-sm font-mono ${status === 'error' ? 'text-[#9f3e3e]' : 'text-[#3f6212]'}`}
+            className={`mt-4 flex items-start gap-2 text-sm font-mono ${displayStatus === 'error' ? 'text-[#9f3e3e]' : 'text-[#3f6212]'}`}
           >
             <span className="mt-[2px] shrink-0">
-              {status === 'success' && <Check className="w-4 h-4" />}
-              {status === 'error' && <AlertCircle className="w-4 h-4" />}
+              {(displayStatus === 'success' ||
+                (displayStatus === 'idle' && displayMessage.includes('✓'))) && (
+                <Check className="w-4 h-4" />
+              )}
+              {displayStatus === 'error' && <AlertCircle className="w-4 h-4" />}
             </span>
-            <p className="leading-relaxed">{message}</p>
+            <p className="leading-relaxed">{displayMessage}</p>
           </div>
         )}
 
-        {/* 表创建引导 */}
         <CreateGuide
           service={title === 'Supabase' ? 'supabase' : 'leancloud'}
           show={showCreateGuide}
@@ -265,5 +210,4 @@ function TaskCardComponent({
   );
 }
 
-// 使用 React.memo 优化组件，避免不必要的重新渲染
 export const TaskCard = memo(TaskCardComponent);
