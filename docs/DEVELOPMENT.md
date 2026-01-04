@@ -57,7 +57,7 @@ workflow/
 │   ├── DEVELOPMENT.md         # 开发文档
 │   ├── API.md                 # API 文档
 │   ├── TESTING.md             # 测试文档
-│   └── glados-setup.sql       # 数据库初始化脚本
+│   └── database-setup.sql     # 数据库初始化脚本
 ├── public/                    # 静态资源
 │   ├── file.svg
 │   ├── claude-color.svg
