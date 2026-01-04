@@ -7,6 +7,10 @@
     {
       "path": "/api/leancloud-keep-alive",
       "schedule": "0 1 * * *"
+    },
+    {
+      "path": "/api/glados-checkin",
+      "schedule": "0 2 * * *"
     }
   ]
 }

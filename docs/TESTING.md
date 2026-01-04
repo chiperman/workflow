@@ -33,7 +33,7 @@ npm run build # 构建过程会自动执行 lint 和类型检查
 ### 2. 测试覆盖范围
 
 - **BaseService**: 测试重试机制、状态流转和通知触发逻辑。
-- **SupabaseService / LeanCloudService**: 测试数据库操作流程。
+- **SupabaseService / LeanCloudService / GladosService**: 测试数据库操作流程。
 - **Utils**: 测试通用工具函数。
 
 ---
@@ -42,12 +42,12 @@ npm run build # 构建过程会自动执行 lint 和类型检查
 
 ### ✅ TaskCard（任务卡片）
 
-**位置**：主页面的两个卡片
+**位置**：主页面的三个卡片
 
 **测试方法**：
 
 1. 访问 http://localhost:3000
-2. 观察两个任务卡片（Supabase 和 LeanCloud）
+2. 观察三个任务卡片（Supabase、LeanCloud 和 GLaDOS）
 3. 点击 "Run Task" 按钮
 4. 观察状态变化：
    - Loading 状态（按钮显示 "Running..."）
@@ -116,7 +116,7 @@ npm run build # 构建过程会自动执行 lint 和类型检查
 **测试点**：
 
 - ✅ 版本号显示正确
-- ✅ 系统状态指示器（小圆点）显示
+- ✅ 系统状态指示器（小圆点）显示（Supabase、LeanCloud、GLaDOS）
 - ✅ 失败服务（如有）红色文字提示
 - ✅ 链接可点击且在新标签页打开
 - ✅ Vercel Logo 加载无闪烁 (Priority)
@@ -401,7 +401,7 @@ npm run build # 构建过程会自动执行 lint 和类型检查
 **5 分钟快速测试**：
 
 1. ✅ 访问 http://localhost:3000
-2. ✅ 点击两个 "Run Task" 按钮
+2. ✅ 点击三个 "Run Task" 按钮
 3. ✅ 观察数字滚动动画
 4. ✅ 点击 "🧪 Trigger Error" 测试错误边界
 5. ✅ 点击 "Retry" 返回正常
@@ -420,4 +420,4 @@ npm run build # 构建过程会自动执行 lint 和类型检查
 
 ---
 
-**最后更新**: 2026-01-02
+**最后更新**: 2026-01-04 (v0.5.0)

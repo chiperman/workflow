@@ -57,7 +57,10 @@ function TaskCardComponent({
   }, [localMessage, serviceHealth.message, serviceHealth.status]);
 
   const showCreateGuide = useMemo(() => {
-    return serviceHealth.tableExists === false && serviceHealth.status !== 'operational';
+    return (
+      (serviceHealth.tableExists === false || serviceHealth.status === 'misconfigured') &&
+      serviceHealth.status !== 'operational'
+    );
   }, [serviceHealth.tableExists, serviceHealth.status]);
 
   const handleRun = useCallback(async () => {
@@ -201,7 +204,7 @@ function TaskCardComponent({
         )}
 
         <CreateGuide
-          service={title === 'Supabase' ? 'supabase' : 'leancloud'}
+          service={title === 'Supabase' || title === 'GLaDOS' ? 'supabase' : 'leancloud'}
           show={showCreateGuide}
           onCopy={copyToClipboard}
         />

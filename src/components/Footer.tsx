@@ -8,6 +8,7 @@ interface FooterProps {
   serviceStatuses?: {
     supabase: ServiceStatus;
     leancloud: ServiceStatus;
+    glados: ServiceStatus;
   };
 }
 
@@ -40,6 +41,18 @@ export function Footer({ version, systemStatus, failingServices, serviceStatuses
               className={`w-2 h-2 rounded-full ${
                 serviceStatuses
                   ? getStatusColor(serviceStatuses.leancloud)
+                  : systemStatus === 'Operational'
+                    ? 'bg-emerald-500'
+                    : systemStatus === 'Checking'
+                      ? 'bg-gray-400 animate-pulse'
+                      : 'bg-amber-500'
+              }`}
+            ></span>
+            <span
+              title="GLaDOS"
+              className={`w-2 h-2 rounded-full ${
+                serviceStatuses
+                  ? getStatusColor(serviceStatuses.glados)
                   : systemStatus === 'Operational'
                     ? 'bg-emerald-500'
                     : systemStatus === 'Checking'
