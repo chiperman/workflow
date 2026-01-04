@@ -128,7 +128,7 @@ export class GladosService extends BaseService {
 
       let message: string;
       if (isAlreadyCheckedIn) {
-        message = `GLaDOS Already Checked-in: ${checkinMessage} at ${beijingTime} (${trigger}). Count unchanged.`;
+        message = `GLaDOS Checked-in: "${checkinMessage}" [Executed at ${beijingTime} (${trigger})]`;
       } else {
         message = `GLaDOS Success: ${baseAction} at ${beijingTime} (${trigger}). Auto=${autoCount}, Manual=${manualCount}.`;
       }

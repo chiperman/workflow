@@ -121,7 +121,7 @@ GET /api/health
   ```json
   {
     "success": true,
-    "message": "GLaDOS Already Checked-in: Checkin Repeats! Please Try Tomorrow at 北京时间 10:00 (auto). Count unchanged.",
+    "message": "GLaDOS Checked-in: \"Checkin Repeats! Please Try Tomorrow\" [Executed at 北京时间 10:00 (auto)]",
     "duration": 180,
     "data": { "auto_count": 25, "manual_count": 5 }
   }

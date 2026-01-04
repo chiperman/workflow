@@ -83,12 +83,6 @@ function TaskCardComponent({
         setLocalStatus('success');
         setLocalMessage(data.message || 'Task completed successfully');
 
-        // 延迟清除局部成功状态，让用户看到反馈
-        setTimeout(() => {
-          setLocalStatus('idle');
-          setLocalMessage('');
-        }, 3000);
-
         if (data.data) {
           onStatsUpdate({
             status: 'operational',
