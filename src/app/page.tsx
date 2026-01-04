@@ -159,6 +159,7 @@ export default function Home() {
             endpoint="/api/supabase-keep-alive"
             method="POST"
             serviceHealth={supabaseHealth}
+            serviceName="supabase"
             appKey={appKey}
             onStatsUpdate={() => mutate()}
           />
@@ -170,6 +171,7 @@ export default function Home() {
             endpoint="/api/leancloud-keep-alive"
             method="POST"
             serviceHealth={leanCloudHealth}
+            serviceName="leancloud"
             appKey={appKey}
             onStatsUpdate={() => mutate()}
           />
@@ -181,6 +183,7 @@ export default function Home() {
             endpoint="/api/glados-checkin"
             method="POST"
             serviceHealth={gladosHealth}
+            serviceName="glados"
             appKey={appKey}
             onStatsUpdate={() => mutate()}
           />

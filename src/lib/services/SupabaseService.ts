@@ -84,7 +84,7 @@ export class SupabaseService extends BaseService {
     try {
       const { data: existing, error } = await supabase
         .from('keep_alive')
-        .select('manual_count, auto_count')
+        .select('manual_count, auto_count, enabled')
         .eq('service', 'supabase')
         .single();
 
@@ -94,6 +94,7 @@ export class SupabaseService extends BaseService {
             success: true,
             data: { manual_count: 0, auto_count: 0 },
             tableExists: true,
+            enabled: true,
           };
         }
         if (error.code === '42P01') {
@@ -114,6 +115,7 @@ export class SupabaseService extends BaseService {
           auto_count: existing?.auto_count || 0,
         },
         tableExists: true,
+        enabled: existing?.enabled ?? true,
       };
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';

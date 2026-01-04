@@ -4,7 +4,8 @@ CREATE TABLE IF NOT EXISTS keep_alive (
   service TEXT PRIMARY KEY,
   timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   manual_count INTEGER NOT NULL DEFAULT 0,
-  auto_count INTEGER NOT NULL DEFAULT 0
+  auto_count INTEGER NOT NULL DEFAULT 0,
+  enabled BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 -- 初始化服务记录
