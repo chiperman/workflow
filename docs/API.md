@@ -45,6 +45,10 @@ GET /api/health
     "leancloud": {
       "status": "operational",
       "stats": { "auto_count": 38, "manual_count": 12 }
+    },
+    "glados": {
+      "status": "operational",
+      "stats": { "auto_count": 25, "manual_count": 5 }
     }
   }
 }
@@ -73,9 +77,65 @@ GET /api/health
 - **端点**: `/api/leancloud-keep-alive`
 - **方法**: POST (手动) / GET (自动)
 
+### GLaDOS 签到
+
+- **端点**: `/api/glados-checkin`
+- **方法**: POST (手动) / GET (自动)
+- **响应** (首次签到成功):
+  ```json
+  {
+    "success": true,
+    "message": "GLaDOS Success: Updated record at 北京时间 10:00 (auto). Auto=26, Manual=5.",
+    "duration": 250,
+    "data": { "auto_count": 26, "manual_count": 5 }
+  }
+  ```
+- **响应** (重复签到):
+  ```json
+  {
+    "success": true,
+    "message": "GLaDOS Already Checked-in: Checkin Repeats! Please Try Tomorrow at 北京时间 10:00 (auto). Count unchanged.",
+    "duration": 180,
+    "data": { "auto_count": 25, "manual_count": 5 }
+  }
+  ```
+
+---
+
+## 数据库设置
+
+首次部署时，需要在 Supabase Dashboard → SQL Editor 执行以下脚本：
+
+```sql
+-- 创建 keep_alive 表
+-- 如果已有旧表，请先删除后再执行此脚本
+CREATE TABLE IF NOT EXISTS keep_alive (
+  service TEXT PRIMARY KEY,
+  timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  manual_count INTEGER NOT NULL DEFAULT 0,
+  auto_count INTEGER NOT NULL DEFAULT 0
+);
+
+-- 初始化服务记录
+INSERT INTO keep_alive (service, timestamp, manual_count, auto_count)
+VALUES
+  ('supabase', NOW(), 0, 0),
+  ('glados', NOW(), 0, 0)
+ON CONFLICT (service) DO NOTHING;
+```
+
+**注意：** 如果之前已存在 `keep_alive` 表（旧结构），请先删除该表再执行上述脚本。
+
 ---
 
 ## 变更日志
+
+### v0.5.0 (2026-01-04)
+
+- ✅ **新增**: GLaDOS 每日签到功能
+- ✅ **新增**: `/api/glados-checkin` 端点
+- ✅ **增强**: 健康检查 API 包含 GLaDOS 服务状态
+- ✅ **优化**: GLaDOS 数据合并到 `keep_alive` 表，通过 `service` 字段区分，减少表数量
 
 ### v0.4.5 (2026-01-03)
 
@@ -89,4 +149,4 @@ GET /api/health
 
 ---
 
-**最后更新**: 2026-01-03 (v0.4.5)
+**最后更新**: 2026-01-04 (v0.5.0)

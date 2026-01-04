@@ -8,24 +8,22 @@ interface CreateGuideProps {
   onCopy: (text: string) => void;
 }
 
-// Supabase table creation SQL
-const supabaseCreateTableSQL = `-- Create keep_alive table
+// Supabase keep_alive 表创建脚本
+// 如果已有旧表，请先删除后再执行此脚本
+const supabaseMigrateSQL = `-- 创建 keep_alive 表
 CREATE TABLE IF NOT EXISTS keep_alive (
-  id INTEGER PRIMARY KEY,
+  service TEXT PRIMARY KEY,
   timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   manual_count INTEGER NOT NULL DEFAULT 0,
   auto_count INTEGER NOT NULL DEFAULT 0
 );
 
--- Insert initial record
-INSERT INTO keep_alive (id, timestamp, manual_count, auto_count)
-VALUES (1, NOW(), 0, 0)
-ON CONFLICT (id) DO NOTHING;
-
--- Enable RLS (without creating policies)
--- Service role automatically bypasses RLS
--- Anon key and regular users cannot access this table
-ALTER TABLE keep_alive ENABLE ROW LEVEL SECURITY;`;
+-- 初始化服务记录
+INSERT INTO keep_alive (service, timestamp, manual_count, auto_count)
+VALUES 
+  ('supabase', NOW(), 0, 0),
+  ('glados', NOW(), 0, 0)
+ON CONFLICT (service) DO NOTHING;`;
 
 // LeanCloud class creation REST API command
 const leanCloudCreateClassCommand = `# Create keep_alive class using REST API
@@ -55,16 +53,17 @@ export function CreateGuide({ service, show, onCopy }: CreateGuideProps) {
         <div className="flex items-start gap-2 mb-2">
           <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
           <div className="flex-1">
-            <p className="text-sm font-medium text-amber-900 mb-1">Table Setup Required</p>
+            <p className="text-sm font-medium text-amber-900 mb-1">Database Setup Required</p>
             <p className="text-xs text-amber-700 leading-relaxed">
               The{' '}
               <code className="px-1 py-0.5 bg-amber-100 rounded text-amber-900">keep_alive</code>{' '}
-              table does not exist. Copy the SQL below and execute it in your Supabase SQL Editor.
+              table needs to be set up or migrated. Copy the SQL below and execute it in your
+              Supabase SQL Editor.
             </p>
           </div>
         </div>
         <button
-          onClick={() => onCopy(supabaseCreateTableSQL)}
+          onClick={() => onCopy(supabaseMigrateSQL)}
           className="mt-2 flex items-center gap-2 px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-medium rounded border border-amber-300 transition-colors"
         >
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -75,7 +74,7 @@ export function CreateGuide({ service, show, onCopy }: CreateGuideProps) {
               d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
             />
           </svg>
-          Copy SQL Statement
+          Copy Migration SQL
         </button>
       </div>
     );

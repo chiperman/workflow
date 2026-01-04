@@ -1,18 +1,19 @@
-import { checkLeanCloudHealth, checkSupabaseHealth } from '@/lib/health-check';
+import { checkGladosHealth, checkLeanCloudHealth, checkSupabaseHealth } from '@/lib/health-check';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  // 并行检查两个服务
-  const [supabaseCheck, leancloudCheck] = await Promise.all([
+  const [supabaseCheck, leancloudCheck, gladosCheck] = await Promise.all([
     checkSupabaseHealth(),
     checkLeanCloudHealth(),
+    checkGladosHealth(),
   ]);
 
-  // 确定整体状态
   const isHealthy =
-    supabaseCheck.status === 'operational' && leancloudCheck.status === 'operational';
+    supabaseCheck.status === 'operational' &&
+    leancloudCheck.status === 'operational' &&
+    gladosCheck.status === 'operational';
 
   const overallStatus = isHealthy ? 'Operational' : 'Degraded';
 
@@ -22,6 +23,7 @@ export async function GET() {
     services: {
       supabase: supabaseCheck,
       leancloud: leancloudCheck,
+      glados: gladosCheck,
     },
   });
 }

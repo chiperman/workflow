@@ -61,6 +61,15 @@ export default function Home() {
     [data]
   );
 
+  const gladosHealth: ServiceHealth = useMemo(
+    () =>
+      data?.services?.glados || {
+        status: 'unknown',
+        stats: { auto_count: 0, manual_count: 0 },
+      },
+    [data]
+  );
+
   // 计算系统状态和失败服务
   const systemStatus = data?.status || 'Checking';
   const failingServices = useMemo(() => {
@@ -71,8 +80,11 @@ export default function Home() {
     if (leanCloudHealth.status === 'outage' || leanCloudHealth.status === 'misconfigured') {
       failing.push('LeanCloud');
     }
+    if (gladosHealth.status === 'outage' || gladosHealth.status === 'misconfigured') {
+      failing.push('GLaDOS');
+    }
     return failing;
-  }, [supabaseHealth.status, leanCloudHealth.status]);
+  }, [supabaseHealth.status, leanCloudHealth.status, gladosHealth.status]);
 
   if (error) console.error('Health check failed:', error);
 
@@ -161,6 +173,17 @@ export default function Home() {
             appKey={appKey}
             onStatsUpdate={() => mutate()}
           />
+
+          <TaskCard
+            category="Daily Check-in"
+            title="GLaDOS"
+            description="Automated daily check-in service for GLaDOS network access."
+            endpoint="/api/glados-checkin"
+            method="POST"
+            serviceHealth={gladosHealth}
+            appKey={appKey}
+            onStatsUpdate={() => mutate()}
+          />
         </div>
 
         {/* Footer */}
@@ -171,6 +194,7 @@ export default function Home() {
           serviceStatuses={{
             supabase: supabaseHealth.status,
             leancloud: leanCloudHealth.status,
+            glados: gladosHealth.status,
           }}
         />
       </div>

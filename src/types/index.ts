@@ -40,6 +40,7 @@ export interface HealthCheckResponse {
   services: {
     supabase: ServiceHealth;
     leancloud: ServiceHealth;
+    glados: ServiceHealth;
   };
 }
 

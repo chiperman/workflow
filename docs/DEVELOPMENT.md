@@ -15,7 +15,8 @@ workflow/
 │   │   ├── api/               # API 路由
 │   │   │   ├── health/        # 健康检查 API
 │   │   │   ├── supabase-keep-alive/
-│   │   │   └── leancloud-keep-alive/
+│   │   │   ├── leancloud-keep-alive/
+│   │   │   └── glados-checkin/
 │   │   ├── favicon.ico
 │   │   ├── layout.tsx         # 根布局
 │   │   ├── page.tsx           # 主页面
@@ -164,4 +165,4 @@ export class YourService extends BaseService {
 
 ---
 
-**最后更新**: 2026-01-03 (v0.4.5)
+**最后更新**: 2026-01-04 (v0.5.0)
