@@ -14,6 +14,7 @@ workflow/
 │   ├── app/                    # Next.js App Router
 │   │   ├── api/               # API 路由
 │   │   │   ├── health/        # 健康检查 API
+│   │   │   ├── cron-all/      # 统一 Cron 入口
 │   │   │   ├── supabase-keep-alive/
 │   │   │   ├── leancloud-keep-alive/
 │   │   │   └── glados-checkin/
@@ -163,6 +164,14 @@ export class YourService extends BaseService {
 }
 ```
 
+### 步骤 2：数据库适配
+
+确保你的服务在 `keep_alive` 表中有对应的记录。注意 v0.5.0 后主键为 `service` (TEXT 类型)。
+
+```sql
+INSERT INTO keep_alive (service) VALUES ('your-service-name') ON CONFLICT DO NOTHING;
+```
+
 ---
 
-**最后更新**: 2026-01-04 (v0.5.0)
+**最后更新**: 2026-01-05 (v0.5.0)
