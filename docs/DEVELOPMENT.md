@@ -15,6 +15,7 @@ workflow/
 │   │   ├── api/               # API 路由
 │   │   │   ├── health/        # 健康检查 API
 │   │   │   ├── cron-all/      # 统一 Cron 入口
+│   │   │   ├── service-config/ # 服务配置 API (v0.6.0)
 │   │   │   ├── supabase-keep-alive/
 │   │   │   ├── leancloud-keep-alive/
 │   │   │   └── glados-checkin/
@@ -36,7 +37,8 @@ workflow/
 │   │   ├── services/          # 服务层
 │   │   │   ├── BaseService.ts # 服务基类
 │   │   │   ├── SupabaseService.ts
-│   │   │   └── LeanCloudService.ts
+│   │   │   ├── LeanCloudService.ts
+│   │   │   └── GladosService.ts # GLaDOS 服务 (v0.5.0)
 │   │   ├── api-helper.ts      # API 统一处理工具
 │   │   ├── logger.ts          # 统一日志工具 (v0.4.5)
 │   │   ├── utils.ts           # 工具函数
@@ -54,7 +56,8 @@ workflow/
 ├── docs/                      # 文档
 │   ├── DEVELOPMENT.md         # 开发文档
 │   ├── API.md                 # API 文档
-│   └── TESTING.md             # 测试文档
+│   ├── TESTING.md             # 测试文档
+│   └── glados-setup.sql       # 数据库初始化脚本
 ├── public/                    # 静态资源
 │   ├── file.svg
 │   ├── claude-color.svg
@@ -174,4 +177,4 @@ INSERT INTO keep_alive (service) VALUES ('your-service-name') ON CONFLICT DO NOT
 
 ---
 
-**最后更新**: 2026-01-05 (v0.5.0)
+**最后更新**: 2026-01-05 (v0.6.0)

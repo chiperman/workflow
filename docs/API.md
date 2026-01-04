@@ -56,6 +56,29 @@ GET /api/health
 
 ---
 
+## 服务配置 API
+
+### 更新服务开关状态
+
+- **端点**: `/api/service-config`
+- **方法**: PATCH
+- **鉴权**: `X-App-Key` Header（必须）
+- **请求体**:
+  ```json
+  { "service": "supabase", "enabled": false }
+  ```
+- **响应**:
+  ```json
+  { "success": true, "service": "supabase", "enabled": false }
+  ```
+
+**说明**：
+
+- `service` 必须是 `supabase`、`leancloud` 或 `glados` 之一。
+- `enabled: false` 时，该服务的自动 Cron 任务将被跳过，但手动触发不受影响。
+
+---
+
 ## 统一 Cron Job
 
 所有服务的定时任务统一由一个 cron job 触发（免费版 Vercel 限制 2 个 cron job）：
@@ -157,12 +180,18 @@ ON CONFLICT (service) DO NOTHING;
 
 ## 变更日志
 
+### v0.6.0 (2026-01-05)
+
+- ✅ **新增**: 服务开关功能，可通过 UI 控制每个服务的自动执行（`/api/service-config`）
+- ✅ **增强**: 健康检查 API 返回 `enabled` 字段
+- ✅ **增强**: `keep_alive` 表增加 `enabled` 字段
+
 ### v0.5.0 (2026-01-04)
 
 - ✅ **新增**: GLaDOS 每日签到功能
 - ✅ **新增**: `/api/glados-checkin` 端点
 - ✅ **增强**: 健康检查 API 包含 GLaDOS 服务状态
-- ✅ **优化**: GLaDOS 数据合并到 `keep_alive` 表，通过 `service` 字段区分，减少表数量
+- ✅ **优化**: GLaDOS 数据合并到 `keep_alive` 表，通过 `service` 字段区分
 - ✅ **优化**: 统一 cron job 触发所有服务（并行执行），解决免费版 Vercel 限制
 
 ### v0.4.5 (2026-01-03)
@@ -177,4 +206,4 @@ ON CONFLICT (service) DO NOTHING;
 
 ---
 
-**最后更新**: 2026-01-05 (v0.5.0)
+**最后更新**: 2026-01-05 (v0.6.0)
