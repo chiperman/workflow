@@ -17,3 +17,6 @@ VALUES
   ('leancloud', NOW(), 0, 0, TRUE),
   ('glados', NOW(), 0, 0, TRUE)
 ON CONFLICT (service) DO NOTHING;
+
+-- 启用行级安全策略 (RLS)
+ALTER TABLE keep_alive ENABLE ROW LEVEL SECURITY;
