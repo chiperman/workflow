@@ -56,7 +56,34 @@ GET /api/health
 
 ---
 
-## 执行接口
+## 统一 Cron Job
+
+所有服务的定时任务统一由一个 cron job 触发（免费版 Vercel 限制 2 个 cron job）：
+
+- **端点**: `/api/cron-all`
+- **方法**: GET
+- **时间**: 每天 UTC 01:00 (北京时间 09:00)
+- **执行方式**: 并行执行三个服务
+
+**响应示例：**
+
+```json
+{
+  "supabase": { "success": true, "message": "..." },
+  "leancloud": { "success": true, "message": "..." },
+  "glados": { "success": true, "message": "..." }
+}
+```
+
+**特点：**
+
+- 三个服务并行执行，互不影响
+- 一个失败不影响其他服务
+- 手动触发仍可使用独立端点
+
+---
+
+## 手动触发接口
 
 ### Supabase 保活
 
@@ -136,6 +163,7 @@ ON CONFLICT (service) DO NOTHING;
 - ✅ **新增**: `/api/glados-checkin` 端点
 - ✅ **增强**: 健康检查 API 包含 GLaDOS 服务状态
 - ✅ **优化**: GLaDOS 数据合并到 `keep_alive` 表，通过 `service` 字段区分，减少表数量
+- ✅ **优化**: 统一 cron job 触发所有服务（并行执行），解决免费版 Vercel 限制
 
 ### v0.4.5 (2026-01-03)
 
@@ -149,4 +177,4 @@ ON CONFLICT (service) DO NOTHING;
 
 ---
 
-**最后更新**: 2026-01-04 (v0.5.0)
+**最后更新**: 2026-01-05 (v0.5.0)

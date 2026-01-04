@@ -1,16 +1,8 @@
 {
   "crons": [
     {
-      "path": "/api/supabase-keep-alive",
-      "schedule": "0 0 * * *"
-    },
-    {
-      "path": "/api/leancloud-keep-alive",
+      "path": "/api/cron-all",
       "schedule": "0 1 * * *"
-    },
-    {
-      "path": "/api/glados-checkin",
-      "schedule": "0 2 * * *"
     }
   ]
 }
