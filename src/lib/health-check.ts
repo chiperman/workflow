@@ -31,6 +31,7 @@ export async function checkSupabaseHealth(): Promise<ServiceHealth> {
     status: 'operational',
     tableExists: true,
     stats: result.data || { auto_count: 0, manual_count: 0 },
+    enabled: result.enabled,
   };
 }
 
@@ -54,6 +55,7 @@ export async function checkLeanCloudHealth(): Promise<ServiceHealth> {
     tableExists: result.tableExists,
     stats: result.data || { auto_count: 0, manual_count: 0 },
     message: result.tableExists ? undefined : 'Class "keep_alive" does not exist',
+    enabled: result.enabled,
   };
 }
 
@@ -85,5 +87,6 @@ export async function checkGladosHealth(): Promise<ServiceHealth> {
     status: 'operational',
     tableExists: true,
     stats: result.data || { auto_count: 0, manual_count: 0 },
+    enabled: result.enabled,
   };
 }

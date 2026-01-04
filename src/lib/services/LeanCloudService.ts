@@ -124,6 +124,7 @@ export class LeanCloudService extends BaseService {
             success: true,
             data: { manual_count: 0, auto_count: 0 },
             tableExists: false,
+            enabled: true,
           };
         }
         throw new Error(`Query failed: ${queryRes.status}`);
@@ -140,6 +141,7 @@ export class LeanCloudService extends BaseService {
           auto_count: record?.auto_count || 0,
         },
         tableExists: true,
+        enabled: true,
       };
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';

@@ -25,6 +25,7 @@ export interface ServiceHealth {
   tableExists?: boolean;
   stats: ServiceStats;
   message?: string;
+  enabled?: boolean;
 }
 
 /**
@@ -63,5 +64,6 @@ export interface StatsQueryResult {
   success: boolean;
   data?: ServiceStats;
   tableExists?: boolean;
+  enabled?: boolean;
   error?: string;
 }
