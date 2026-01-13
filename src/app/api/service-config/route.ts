@@ -9,10 +9,14 @@ export const dynamic = 'force-dynamic';
  * PATCH: 更新服务的 enabled 状态
  */
 export async function PATCH(request: Request) {
-  // 验证 APP_KEY
+  // 验证权限：支持 App Key 或 Session Cookie
   const appKey = request.headers.get('x-app-key');
-  if (!env.appKey || appKey !== env.appKey) {
-    return NextResponse.json({ success: false, message: 'Invalid App Key' }, { status: 401 });
+  const hasCookieSession = request.headers
+    .get('cookie')
+    ?.includes('workflow_session=authenticated');
+
+  if (env.appKey && appKey !== env.appKey && !hasCookieSession) {
+    return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
   }
 
   try {

@@ -17,13 +17,20 @@ export async function GET() {
 
   const overallStatus = isHealthy ? 'Operational' : 'Degraded';
 
-  return NextResponse.json({
-    status: overallStatus,
-    timestamp: new Date().toISOString(),
-    services: {
-      supabase: supabaseCheck,
-      leancloud: leancloudCheck,
-      glados: gladosCheck,
+  return NextResponse.json(
+    {
+      status: overallStatus,
+      timestamp: new Date().toISOString(),
+      services: {
+        supabase: supabaseCheck,
+        leancloud: leancloudCheck,
+        glados: gladosCheck,
+      },
     },
-  });
+    {
+      headers: {
+        'Cache-Control': 's-maxage=60, stale-while-revalidate=30',
+      },
+    }
+  );
 }

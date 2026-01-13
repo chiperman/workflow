@@ -1,42 +1,27 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import useSWR from 'swr';
 
 import { Footer } from '@/components/Footer';
 import { TaskCard } from '@/components/TaskCard';
 import { APP_VERSION } from '@/config/constants';
 import type { HealthCheckResponse, ServiceHealth } from '@/types';
-import { Check, Eye, EyeOff, Key, Save } from 'lucide-react';
+import { LogOut } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 // SWR fetcher 函数
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export default function Home() {
-  const [appKey, setAppKey] = useState(''); // 输入框中的值
-  const [savedKey, setSavedKey] = useState(''); // 已保存的值（用于 API 请求）
-  const [isKeySaved, setIsKeySaved] = useState(false);
-  const [showKey, setShowKey] = useState(false);
+  const router = useRouter();
 
-  // 初始化时从 localStorage 加载密钥
-  useEffect(() => {
-    const storedKey = localStorage.getItem('app-key');
-    if (storedKey) {
-      // 满足 lint 规则：避免在 Effect 中同步触发渲染级联
-      setTimeout(() => {
-        setAppKey(storedKey);
-        setSavedKey(storedKey);
-        setIsKeySaved(true);
-      }, 0);
-    }
-  }, []);
-
-  const saveKey = useCallback(() => {
-    localStorage.setItem('app-key', appKey);
-    setSavedKey(appKey);
-    setIsKeySaved(true);
-  }, [appKey]);
-
+  const handleLogout = async () => {
+    if (!confirm('Are you sure you want to log out?')) return;
+    await fetch('/api/auth', { method: 'DELETE' });
+    router.push('/login');
+    router.refresh();
+  };
   // 使用 SWR 获取健康数据
   const { data, error, mutate } = useSWR<HealthCheckResponse>('/api/health', fetcher, {
     revalidateOnFocus: false,
@@ -95,64 +80,25 @@ export default function Home() {
     <main className="min-h-screen py-8 px-6 sm:px-12 bg-[#fdfcf8] flex flex-col justify-center">
       <div className="w-full max-w-3xl mx-auto">
         {/* Header Section */}
-        <header className="mb-8 text-center sm:text-left">
-          <h1 className="text-3xl sm:text-4xl font-medium text-[#191919] mb-3 font-serif tracking-tight leading-tight">
-            System Operations
-          </h1>
-          <p className="text-base text-[#555555] max-w-xl leading-relaxed font-light mx-auto sm:mx-0">
+        <header className="mb-8 relative">
+          <div className="flex justify-between items-start mb-4">
+            <h1 className="text-3xl sm:text-4xl font-medium text-[#191919] font-serif tracking-tight leading-tight">
+              System Operations
+            </h1>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-3 py-1 text-[10px] font-medium tracking-tight text-[#888888] border border-[#e5e5e0] rounded-full hover:bg-white hover:text-[#191919] hover:border-[#d97757]/30 transition-all duration-300"
+              title="End session"
+            >
+              <LogOut className="w-3 h-3" />
+              <span>Sign out</span>
+            </button>
+          </div>
+          <p className="text-base text-[#555555] max-w-xl leading-relaxed font-light text-center sm:text-left">
             Control center for automated maintenance protocols and cross-service data
             synchronization.
           </p>
         </header>
-
-        {/* Key Configuration Section */}
-        <section className="mb-8 p-4 bg-white border border-[#e5e5e0] rounded-lg">
-          <div className="flex flex-col sm:flex-row items-center gap-4">
-            <div className="flex items-center gap-2 text-sm text-[#191919] font-medium min-w-[100px]">
-              <Key className="w-4 h-4" />
-              <span>App Key</span>
-            </div>
-            <div className="flex flex-1 gap-2 w-full">
-              <div className="relative flex-1 flex items-center">
-                <input
-                  type={showKey ? 'text' : 'password'}
-                  id="app-key-input"
-                  value={appKey}
-                  onChange={e => {
-                    setAppKey(e.target.value);
-                    setIsKeySaved(false);
-                  }}
-                  placeholder="Enter access key for manual tasks..."
-                  className="w-full pl-3 pr-10 py-1.5 bg-[#f9f9f9] border border-[#e5e5e0] rounded text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 placeholder:text-[#999999]"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowKey(!showKey)}
-                  className="absolute right-3 text-[#888888] hover:text-[#191919] transition-colors"
-                  title={showKey ? 'Hide key' : 'Show key'}
-                >
-                  {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-              <button
-                onClick={saveKey}
-                className={`px-4 py-1.5 rounded text-sm font-medium flex items-center gap-2 transition-all ${
-                  isKeySaved
-                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                    : 'bg-[#191919] text-white hover:bg-[#333333]'
-                }`}
-              >
-                {isKeySaved ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
-                {isKeySaved ? 'Saved' : 'Save'}
-              </button>
-            </div>
-          </div>
-          {!isKeySaved && appKey && (
-            <p className="text-[11px] text-amber-600 mt-2 font-medium">
-              You have unsaved changes. Remember to click save to update your local session.
-            </p>
-          )}
-        </section>
 
         <div className="grid grid-cols-1 gap-6">
           <TaskCard
@@ -163,7 +109,6 @@ export default function Home() {
             method="POST"
             serviceHealth={supabaseHealth}
             serviceName="supabase"
-            appKey={savedKey}
             onStatsUpdate={() => mutate()}
           />
 
@@ -175,7 +120,6 @@ export default function Home() {
             method="POST"
             serviceHealth={leanCloudHealth}
             serviceName="leancloud"
-            appKey={savedKey}
             onStatsUpdate={() => mutate()}
           />
 
@@ -187,7 +131,6 @@ export default function Home() {
             method="POST"
             serviceHealth={gladosHealth}
             serviceName="glados"
-            appKey={savedKey}
             onStatsUpdate={() => mutate()}
           />
         </div>

@@ -14,7 +14,6 @@ interface TaskCardProps {
   method: 'GET' | 'POST';
   serviceHealth: ServiceHealth;
   serviceName: string;
-  appKey?: string;
   onStatsUpdate: (newHealth: ServiceHealth) => void;
 }
 
@@ -34,7 +33,6 @@ function TaskCardComponent({
   method,
   serviceHealth,
   serviceName,
-  appKey,
   onStatsUpdate,
 }: TaskCardProps) {
   const [localStatus, setLocalStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -49,11 +47,10 @@ function TaskCardComponent({
     }
   }, [serviceHealth.enabled]);
 
-  // 当 appKey 变化时，清除之前的操作状态
+  // 当本地状态变化时，可以选择性清除消息
   useEffect(() => {
-    setLocalStatus('idle');
-    setLocalMessage('');
-  }, [appKey]);
+    // 逻辑保持
+  }, []);
 
   // 计算最终状态
   const displayStatus = useMemo(() => {
@@ -90,9 +87,6 @@ function TaskCardComponent({
       const url = `${endpoint}${endpoint.includes('?') ? '&' : '?'}trigger=manual`;
       const response = await fetch(url, {
         method,
-        headers: {
-          ...(appKey && { 'X-App-Key': appKey }),
-        },
       });
       const data = await response.json();
 
@@ -116,7 +110,7 @@ function TaskCardComponent({
       setLocalStatus('error');
       setLocalMessage(error instanceof Error ? error.message : 'Network failure');
     }
-  }, [endpoint, method, appKey, localStatus, onStatsUpdate]);
+  }, [endpoint, method, localStatus, onStatsUpdate]);
 
   const copyToClipboard = useCallback(async (text: string) => {
     try {
@@ -129,7 +123,7 @@ function TaskCardComponent({
   }, []);
 
   const handleToggle = useCallback(async () => {
-    if (isToggling || !appKey) return;
+    if (isToggling) return;
     setIsToggling(true);
     setLocalMessage('');
     const newEnabled = !localEnabled;
@@ -138,7 +132,6 @@ function TaskCardComponent({
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'X-App-Key': appKey,
         },
         body: JSON.stringify({ service: serviceName, enabled: newEnabled }),
       });
@@ -158,7 +151,7 @@ function TaskCardComponent({
     } finally {
       setIsToggling(false);
     }
-  }, [isToggling, appKey, localEnabled, serviceName, serviceHealth, onStatsUpdate]);
+  }, [isToggling, localEnabled, serviceName, serviceHealth, onStatsUpdate]);
 
   return (
     <div className="flex flex-col h-full bg-white border border-[#e5e5e0] p-6 rounded-lg transition-all hover:shadow-sm">
@@ -192,18 +185,16 @@ function TaskCardComponent({
                     : 'Success'}
               </span>
             )}
-            {appKey && (
-              <button
-                onClick={handleToggle}
-                disabled={isToggling}
-                className={`relative w-9 h-5 rounded-full transition-colors duration-200 ${localEnabled ? 'bg-emerald-500' : 'bg-gray-300'} ${isToggling ? 'opacity-50' : ''}`}
-                title={localEnabled ? 'Disable auto cron' : 'Enable auto cron'}
-              >
-                <span
-                  className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${localEnabled ? 'translate-x-4' : 'translate-x-0'}`}
-                />
-              </button>
-            )}
+            <button
+              onClick={handleToggle}
+              disabled={isToggling}
+              className={`relative w-9 h-5 rounded-full transition-colors duration-200 ${localEnabled ? 'bg-emerald-500' : 'bg-gray-300'} ${isToggling ? 'opacity-50' : ''}`}
+              title={localEnabled ? 'Disable auto cron' : 'Enable auto cron'}
+            >
+              <span
+                className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${localEnabled ? 'translate-x-4' : 'translate-x-0'}`}
+              />
+            </button>
           </div>
         </div>
         <h2 className="text-xl font-medium text-[#191919] mb-2 font-serif">{title}</h2>
