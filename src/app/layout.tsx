@@ -1,11 +1,13 @@
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import type { Metadata } from 'next';
 import './globals.css';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export const metadata: Metadata = {
   title: 'Workflow Operations',
   description: 'Automated maintenance and synchronization control center.',
 };
+
+import { PageBackground } from '@/components/PageBackground';
 
 export default function RootLayout({
   children,
@@ -14,8 +16,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased">
-        <ErrorBoundary>{children}</ErrorBoundary>
+      <body className="antialiased min-h-screen bg-[#fdfcf8] text-[#191919]">
+        <PageBackground />
+        <div className="relative z-10">
+          <ErrorBoundary>{children}</ErrorBoundary>
+        </div>
       </body>
     </html>
   );
