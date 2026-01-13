@@ -31,10 +31,7 @@ export async function handleKeepAliveRequest(request: Request, service: BaseServ
       }
     } else if (trigger === 'manual' && env.appKey) {
       if (xAppKey !== env.appKey) {
-        return NextResponse.json(
-          { success: false, message: 'Unauthorized (App)' },
-          { status: 401 }
-        );
+        return NextResponse.json({ success: false, message: 'Invalid App Key' }, { status: 401 });
       }
     }
   }

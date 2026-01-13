@@ -2,7 +2,7 @@
 
 import type { ServiceHealth } from '@/types';
 import { AlertCircle, Check, Loader2, Play } from 'lucide-react';
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { CreateGuide } from './CreateGuide';
 import { RollingNumber } from './RollingNumber';
 
@@ -41,6 +41,19 @@ function TaskCardComponent({
   const [localMessage, setLocalMessage] = useState('');
   const [isToggling, setIsToggling] = useState(false);
   const [localEnabled, setLocalEnabled] = useState(serviceHealth.enabled ?? true);
+
+  // 同步 props 变化到 local state
+  useEffect(() => {
+    if (serviceHealth.enabled !== undefined) {
+      setLocalEnabled(serviceHealth.enabled);
+    }
+  }, [serviceHealth.enabled]);
+
+  // 当 appKey 变化时，清除之前的操作状态
+  useEffect(() => {
+    setLocalStatus('idle');
+    setLocalMessage('');
+  }, [appKey]);
 
   // 计算最终状态
   const displayStatus = useMemo(() => {
@@ -118,6 +131,7 @@ function TaskCardComponent({
   const handleToggle = useCallback(async () => {
     if (isToggling || !appKey) return;
     setIsToggling(true);
+    setLocalMessage('');
     const newEnabled = !localEnabled;
     try {
       const res = await fetch('/api/service-config', {
@@ -128,19 +142,26 @@ function TaskCardComponent({
         },
         body: JSON.stringify({ service: serviceName, enabled: newEnabled }),
       });
-      if (res.ok) {
+      const data = await res.json();
+      if (res.ok && data.success) {
         setLocalEnabled(newEnabled);
+        setLocalStatus('success');
+        setLocalMessage(newEnabled ? 'Auto cron enabled' : 'Auto cron disabled');
         onStatsUpdate({ ...serviceHealth, enabled: newEnabled });
+      } else {
+        setLocalStatus('error');
+        setLocalMessage(data.message || 'Failed to toggle service');
       }
+    } catch (error: unknown) {
+      setLocalStatus('error');
+      setLocalMessage(error instanceof Error ? error.message : 'Network failure');
     } finally {
       setIsToggling(false);
     }
   }, [isToggling, appKey, localEnabled, serviceName, serviceHealth, onStatsUpdate]);
 
   return (
-    <div
-      className={`flex flex-col h-full bg-white border border-[#e5e5e0] p-6 rounded-lg transition-all hover:shadow-sm ${!localEnabled ? 'opacity-60' : ''}`}
-    >
+    <div className="flex flex-col h-full bg-white border border-[#e5e5e0] p-6 rounded-lg transition-all hover:shadow-sm">
       <div className="mb-4">
         <div className="flex justify-between items-center mb-1.5">
           <div className="flex items-center gap-2">
@@ -148,7 +169,7 @@ function TaskCardComponent({
               {category}
             </span>
             {!localEnabled && (
-              <span className="text-[9px] font-bold tracking-wider uppercase text-orange-500 bg-orange-50 px-1.5 py-0.5 rounded">
+              <span className="text-[9px] font-bold tracking-wider uppercase text-orange-600 bg-orange-100 px-2 py-0.5 rounded border border-orange-200">
                 Auto: OFF
               </span>
             )}
