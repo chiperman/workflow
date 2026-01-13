@@ -1,7 +1,7 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowRight, Loader2, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Eye, EyeOff, Loader2, ShieldCheck } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -9,6 +9,7 @@ export default function LoginPage() {
   const [key, setKey] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
   const router = useRouter();
 
@@ -44,31 +45,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#fdfcf8] text-[#191919] p-6 overflow-hidden">
-      {/* Background Decorative Element */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.03, 0.06, 0.03],
-            x: [0, 50, 0],
-            y: [0, -30, 0],
-          }}
-          transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute top-[5%] left-[5%] w-[50%] h-[50%] bg-[#d97757] blur-[140px] rounded-full mix-blend-multiply"
-        />
-        <motion.div
-          animate={{
-            scale: [1, 1.3, 1],
-            opacity: [0.02, 0.05, 0.02],
-            x: [0, -40, 0],
-            y: [0, 40, 0],
-          }}
-          transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute bottom-[5%] right-[5%] w-[60%] h-[60%] bg-[#3f6212] blur-[160px] rounded-full mix-blend-multiply"
-        />
-      </div>
-
+    <div className="min-h-screen flex flex-col items-center justify-center bg-transparent text-[#191919] p-6 overflow-hidden">
       <AnimatePresence>
         {!isExiting && (
           <motion.main
@@ -99,26 +76,37 @@ export default function LoginPage() {
               <div className="space-y-2">
                 <div className="relative group">
                   <input
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     value={key}
                     onChange={e => setKey(e.target.value)}
                     placeholder="Access Key"
-                    className="w-full h-12 bg-white border border-[#e5e5e0] rounded-lg px-4 outline-none focus:border-[#d97757] focus:ring-4 focus:ring-[#d97757]/5 transition-all duration-300 placeholder:text-zinc-300 text-sm disabled:opacity-50"
+                    className="w-full h-12 bg-white border border-[#e5e5e0] rounded-lg pl-4 pr-24 outline-none focus:border-[#d97757] focus:ring-4 focus:ring-[#d97757]/5 transition-all duration-300 placeholder:text-zinc-300 text-sm disabled:opacity-50"
                     autoFocus
                     required
                     disabled={loading}
                   />
-                  <button
-                    type="submit"
-                    disabled={loading || !key}
-                    className="absolute right-1.5 top-1.5 h-9 px-3 bg-[#191919] text-white hover:bg-[#333333] disabled:bg-zinc-100 disabled:text-zinc-400 rounded-md transition-all duration-300 flex items-center justify-center outline-none focus:ring-2 focus:ring-[#d97757]"
-                  >
-                    {loading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <ArrowRight className="w-4 h-4" />
-                    )}
-                  </button>
+                  <div className="absolute right-1.5 top-1.5 flex gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      disabled={loading || !key}
+                      className="h-9 w-9 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-50 disabled:opacity-30 rounded-md transition-all duration-200 flex items-center justify-center outline-none focus:ring-2 focus:ring-[#d97757]/20"
+                      title={showPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={loading || !key}
+                      className="h-9 px-3 bg-[#191919] text-white hover:bg-[#333333] disabled:bg-zinc-100 disabled:text-zinc-400 rounded-md transition-all duration-300 flex items-center justify-center outline-none focus:ring-2 focus:ring-[#d97757]"
+                    >
+                      {loading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <ArrowRight className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
 
