@@ -85,31 +85,7 @@ export default function Home() {
   if (error) console.error('Health check failed:', error);
 
   return (
-    <div className="min-h-screen bg-[#fdfcf8] overflow-hidden relative">
-      {/* Background Decorative Element */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div
-          animate={{
-            scale: [1, 1.3, 1],
-            opacity: [0.02, 0.04, 0.02],
-            x: [0, -60, 0],
-            y: [0, 40, 0],
-          }}
-          transition={{ duration: 25, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute -top-[10%] -right-[10%] w-[70%] h-[70%] bg-[#d97757] blur-[160px] rounded-full mix-blend-multiply"
-        />
-        <motion.div
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.01, 0.03, 0.01],
-            x: [0, 70, 0],
-            y: [0, -50, 0],
-          }}
-          transition={{ duration: 30, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute -bottom-[10%] -left-[10%] w-[60%] h-[60%] bg-[#3f6212] blur-[140px] rounded-full mix-blend-multiply"
-        />
-      </div>
-
+    <div className="min-h-screen bg-transparent overflow-hidden relative">
       <AnimatePresence>
         {!isExiting && (
           <motion.main
@@ -155,43 +131,64 @@ export default function Home() {
               </header>
 
               <motion.div
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.3 }}
+                variants={{
+                  hidden: { opacity: 0 },
+                  show: {
+                    opacity: 1,
+                    transition: {
+                      staggerChildren: 0.1,
+                      delayChildren: 0.3,
+                    },
+                  },
+                }}
+                initial="hidden"
+                animate="show"
                 className="grid grid-cols-1 gap-6"
               >
-                <TaskCard
-                  category="Database Maintenance"
-                  title="Supabase"
-                  description="Triggers the daily activity signal to prevent project suspension."
-                  endpoint="/api/supabase-keep-alive"
-                  method="POST"
-                  serviceHealth={supabaseHealth}
-                  serviceName="supabase"
-                  onStatsUpdate={() => mutate()}
-                />
-
-                <TaskCard
-                  category="Data Synchronization"
-                  title="LeanCloud"
-                  description="Initiates a connection to the international data cluster."
-                  endpoint="/api/leancloud-keep-alive"
-                  method="POST"
-                  serviceHealth={leanCloudHealth}
-                  serviceName="leancloud"
-                  onStatsUpdate={() => mutate()}
-                />
-
-                <TaskCard
-                  category="Daily Check-in"
-                  title="GLaDOS"
-                  description="Automated daily check-in service for GLaDOS network access."
-                  endpoint="/api/glados-checkin"
-                  method="POST"
-                  serviceHealth={gladosHealth}
-                  serviceName="glados"
-                  onStatsUpdate={() => mutate()}
-                />
+                {[
+                  {
+                    category: 'Database Maintenance',
+                    title: 'Supabase',
+                    description:
+                      'Triggers the daily activity signal to prevent project suspension.',
+                    endpoint: '/api/supabase-keep-alive',
+                    method: 'POST' as const,
+                    serviceHealth: supabaseHealth,
+                    serviceName: 'supabase',
+                  },
+                  {
+                    category: 'Data Synchronization',
+                    title: 'LeanCloud',
+                    description: 'Initiates a connection to the international data cluster.',
+                    endpoint: '/api/leancloud-keep-alive',
+                    method: 'POST' as const,
+                    serviceHealth: leanCloudHealth,
+                    serviceName: 'leancloud',
+                  },
+                  {
+                    category: 'Daily Check-in',
+                    title: 'GLaDOS',
+                    description: 'Automated daily check-in service for GLaDOS network access.',
+                    endpoint: '/api/glados-checkin',
+                    method: 'POST' as const,
+                    serviceHealth: gladosHealth,
+                    serviceName: 'glados',
+                  },
+                ].map(task => (
+                  <motion.div
+                    key={task.title}
+                    variants={{
+                      hidden: { opacity: 0, y: 15 },
+                      show: {
+                        opacity: 1,
+                        y: 0,
+                        transition: { duration: 0.5, ease: [0.215, 0.61, 0.355, 1] },
+                      },
+                    }}
+                  >
+                    <TaskCard {...task} onStatsUpdate={() => mutate()} />
+                  </motion.div>
+                ))}
               </motion.div>
 
               {/* Footer */}
