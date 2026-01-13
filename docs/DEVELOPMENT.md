@@ -177,4 +177,4 @@ INSERT INTO keep_alive (service) VALUES ('your-service-name') ON CONFLICT DO NOT
 
 ---
 
-**最后更新**: 2026-01-05 (v0.6.0)
+**最后更新**: 2026-01-14 (v0.6.1)
