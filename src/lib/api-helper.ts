@@ -30,8 +30,16 @@ export async function handleKeepAliveRequest(request: Request, service: BaseServ
         );
       }
     } else if (trigger === 'manual' && env.appKey) {
-      if (xAppKey !== env.appKey) {
-        return NextResponse.json({ success: false, message: 'Invalid App Key' }, { status: 401 });
+      // v0.6.2: 同时支持 Key 验证和 Session Cookie 验证
+      const hasCookieSession = request.headers
+        .get('cookie')
+        ?.includes('workflow_session=authenticated');
+
+      if (xAppKey !== env.appKey && !hasCookieSession) {
+        return NextResponse.json(
+          { success: false, message: 'Invalid App Key or Session' },
+          { status: 401 }
+        );
       }
     }
   }
@@ -39,7 +47,11 @@ export async function handleKeepAliveRequest(request: Request, service: BaseServ
   // 2. 如果请求统计数据
   if (mode === 'status') {
     const stats = await service.getStats();
-    return NextResponse.json(stats);
+    return NextResponse.json(stats, {
+      headers: {
+        'Cache-Control': 's-maxage=60, stale-while-revalidate=30',
+      },
+    });
   }
 
   // 3. 执行保活逻辑
