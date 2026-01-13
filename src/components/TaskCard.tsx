@@ -118,6 +118,7 @@ function TaskCardComponent({
   const handleToggle = useCallback(async () => {
     if (isToggling || !appKey) return;
     setIsToggling(true);
+    setLocalMessage('');
     const newEnabled = !localEnabled;
     try {
       const res = await fetch('/api/service-config', {
@@ -128,10 +129,19 @@ function TaskCardComponent({
         },
         body: JSON.stringify({ service: serviceName, enabled: newEnabled }),
       });
-      if (res.ok) {
+      const data = await res.json();
+      if (res.ok && data.success) {
         setLocalEnabled(newEnabled);
+        setLocalStatus('success');
+        setLocalMessage(newEnabled ? 'Auto cron enabled' : 'Auto cron disabled');
         onStatsUpdate({ ...serviceHealth, enabled: newEnabled });
+      } else {
+        setLocalStatus('error');
+        setLocalMessage(data.message || 'Failed to toggle service');
       }
+    } catch (error: unknown) {
+      setLocalStatus('error');
+      setLocalMessage(error instanceof Error ? error.message : 'Network failure');
     } finally {
       setIsToggling(false);
     }

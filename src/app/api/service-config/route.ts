@@ -12,7 +12,7 @@ export async function PATCH(request: Request) {
   // 验证 APP_KEY
   const appKey = request.headers.get('x-app-key');
   if (!env.appKey || appKey !== env.appKey) {
-    return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ success: false, message: 'Invalid App Key' }, { status: 401 });
   }
 
   try {
