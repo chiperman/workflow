@@ -1,5 +1,6 @@
 import { env } from '@/lib/env';
 import { logger } from '@/lib/logger';
+import { supabase } from '@/lib/supabase';
 import { getBeijingTime } from '@/lib/utils';
 import type { KeepAliveResult, StatsQueryResult } from '@/types';
 import { BaseService } from './BaseService';
@@ -115,6 +116,21 @@ export class LeanCloudService extends BaseService {
 
   public async getStats(): Promise<StatsQueryResult> {
     try {
+      // 从 Supabase 获取 leancloud 服务的 enabled 状态
+      let enabled = true;
+      try {
+        const { data: configData } = await supabase
+          .from('keep_alive')
+          .select('enabled')
+          .eq('service', 'leancloud')
+          .single();
+        if (configData?.enabled !== undefined) {
+          enabled = configData.enabled;
+        }
+      } catch {
+        // 如果查询失败，默认为 true
+      }
+
       const queryUrl = `${env.leancloud.serverUrl}/1.1/classes/keep_alive?limit=1`;
       const queryRes = await fetch(queryUrl, { headers: this.headers });
 
@@ -124,7 +140,7 @@ export class LeanCloudService extends BaseService {
             success: true,
             data: { manual_count: 0, auto_count: 0 },
             tableExists: false,
-            enabled: true,
+            enabled,
           };
         }
         throw new Error(`Query failed: ${queryRes.status}`);
@@ -141,7 +157,7 @@ export class LeanCloudService extends BaseService {
           auto_count: record?.auto_count || 0,
         },
         tableExists: true,
-        enabled: true,
+        enabled,
       };
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
