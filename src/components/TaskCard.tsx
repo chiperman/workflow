@@ -49,6 +49,12 @@ function TaskCardComponent({
     }
   }, [serviceHealth.enabled]);
 
+  // 当 appKey 变化时，清除之前的操作状态
+  useEffect(() => {
+    setLocalStatus('idle');
+    setLocalMessage('');
+  }, [appKey]);
+
   // 计算最终状态
   const displayStatus = useMemo(() => {
     if (localStatus !== 'idle') return localStatus;
