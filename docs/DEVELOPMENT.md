@@ -30,6 +30,7 @@ workflow/
 │   │   ├── CreateGuide.tsx    # 表创建引导
 │   │   ├── RollingNumber.tsx  # 数字滚动动画
 │   │   ├── SystemStatus.tsx   # 系统状态显示
+│   │   ├── PageBackground.tsx # 全局背景组件 (v0.7.0)
 │   │   └── Footer.tsx         # 页脚
 │   ├── config/                # 配置文件
 │   │   └── constants.ts       # 全局常量
@@ -111,6 +112,21 @@ workflow/
 
 ---
 
+## 🎨 UI 与视觉开发规范 (v0.7.0)
+
+### 背景持久化原则
+
+为了保证全站视觉的极致流畅，项目采用了 **Persistent Background Layer** 模式。所有全局装饰性元素（如极光动画）必须放置在 `src/app/layout.tsx` 及其子组件 `PageBackground` 中。这确保了在 Next.js APP Router 切换页面时，动画状态不会因为组件销毁而重置，从而避免闪烁。
+
+### 动效排版指南
+
+项目统一使用 `framer-motion`。列表类组件推荐使用 Staggered 模式：
+
+- **父容器**: 负责调度。设置 `staggerChildren` 控制子项入场节奏。
+- **子元素**: 负责执行。建议统一使用 `y: 15` 的位移偏移配合 `opacity` 实现呼吸感淡入。
+
+---
+
 ## 🚀 开发指南
 
 ### 环境设置
@@ -177,4 +193,4 @@ INSERT INTO keep_alive (service) VALUES ('your-service-name') ON CONFLICT DO NOT
 
 ---
 
-**最后更新**: 2026-01-14 (v0.6.1)
+**最后更新**: 2026-01-14 (v0.7.0)
