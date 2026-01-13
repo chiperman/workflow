@@ -25,6 +25,7 @@ export interface ServiceHealth {
   tableExists?: boolean;
   stats: ServiceStats;
   message?: string;
+  enabled?: boolean;
 }
 
 /**
@@ -40,6 +41,7 @@ export interface HealthCheckResponse {
   services: {
     supabase: ServiceHealth;
     leancloud: ServiceHealth;
+    glados: ServiceHealth;
   };
 }
 
@@ -62,5 +64,6 @@ export interface StatsQueryResult {
   success: boolean;
   data?: ServiceStats;
   tableExists?: boolean;
+  enabled?: boolean;
   error?: string;
 }

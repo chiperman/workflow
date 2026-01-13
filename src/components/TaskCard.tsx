@@ -2,7 +2,7 @@
 
 import type { ServiceHealth } from '@/types';
 import { AlertCircle, Check, Loader2, Play } from 'lucide-react';
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { CreateGuide } from './CreateGuide';
 import { RollingNumber } from './RollingNumber';
 
@@ -13,6 +13,7 @@ interface TaskCardProps {
   category: string;
   method: 'GET' | 'POST';
   serviceHealth: ServiceHealth;
+  serviceName: string;
   appKey?: string;
   onStatsUpdate: (newHealth: ServiceHealth) => void;
 }
@@ -32,11 +33,27 @@ function TaskCardComponent({
   category,
   method,
   serviceHealth,
+  serviceName,
   appKey,
   onStatsUpdate,
 }: TaskCardProps) {
   const [localStatus, setLocalStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [localMessage, setLocalMessage] = useState('');
+  const [isToggling, setIsToggling] = useState(false);
+  const [localEnabled, setLocalEnabled] = useState(serviceHealth.enabled ?? true);
+
+  // 同步 props 变化到 local state
+  useEffect(() => {
+    if (serviceHealth.enabled !== undefined) {
+      setLocalEnabled(serviceHealth.enabled);
+    }
+  }, [serviceHealth.enabled]);
+
+  // 当 appKey 变化时，清除之前的操作状态
+  useEffect(() => {
+    setLocalStatus('idle');
+    setLocalMessage('');
+  }, [appKey]);
 
   // 计算最终状态
   const displayStatus = useMemo(() => {
@@ -57,7 +74,10 @@ function TaskCardComponent({
   }, [localMessage, serviceHealth.message, serviceHealth.status]);
 
   const showCreateGuide = useMemo(() => {
-    return serviceHealth.tableExists === false && serviceHealth.status !== 'operational';
+    return (
+      (serviceHealth.tableExists === false || serviceHealth.status === 'misconfigured') &&
+      serviceHealth.status !== 'operational'
+    );
   }, [serviceHealth.tableExists, serviceHealth.status]);
 
   const handleRun = useCallback(async () => {
@@ -79,12 +99,6 @@ function TaskCardComponent({
       if (response.ok && data.success) {
         setLocalStatus('success');
         setLocalMessage(data.message || 'Task completed successfully');
-
-        // 延迟清除局部成功状态，让用户看到反馈
-        setTimeout(() => {
-          setLocalStatus('idle');
-          setLocalMessage('');
-        }, 3000);
 
         if (data.data) {
           onStatsUpdate({
@@ -114,30 +128,83 @@ function TaskCardComponent({
     }
   }, []);
 
+  const handleToggle = useCallback(async () => {
+    if (isToggling || !appKey) return;
+    setIsToggling(true);
+    setLocalMessage('');
+    const newEnabled = !localEnabled;
+    try {
+      const res = await fetch('/api/service-config', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-App-Key': appKey,
+        },
+        body: JSON.stringify({ service: serviceName, enabled: newEnabled }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setLocalEnabled(newEnabled);
+        setLocalStatus('success');
+        setLocalMessage(newEnabled ? 'Auto cron enabled' : 'Auto cron disabled');
+        onStatsUpdate({ ...serviceHealth, enabled: newEnabled });
+      } else {
+        setLocalStatus('error');
+        setLocalMessage(data.message || 'Failed to toggle service');
+      }
+    } catch (error: unknown) {
+      setLocalStatus('error');
+      setLocalMessage(error instanceof Error ? error.message : 'Network failure');
+    } finally {
+      setIsToggling(false);
+    }
+  }, [isToggling, appKey, localEnabled, serviceName, serviceHealth, onStatsUpdate]);
+
   return (
-    <div className="flex flex-col h-full bg-white border border-[#e5e5e0] p-6 rounded-lg transition-shadow hover:shadow-sm">
+    <div className="flex flex-col h-full bg-white border border-[#e5e5e0] p-6 rounded-lg transition-all hover:shadow-sm">
       <div className="mb-4">
         <div className="flex justify-between items-center mb-1.5">
-          <span className="text-[10px] font-medium tracking-wider uppercase text-[#6b6b6b] block">
-            {category}
-          </span>
-          {displayStatus !== 'idle' && (
-            <span
-              className={`text-[10px] uppercase font-bold tracking-wider ${
-                displayStatus === 'error'
-                  ? 'text-red-500'
-                  : displayStatus === 'success'
-                    ? 'text-emerald-600'
-                    : 'text-amber-500'
-              }`}
-            >
-              {displayStatus === 'loading'
-                ? 'Running...'
-                : displayStatus === 'error'
-                  ? 'Failed'
-                  : 'Success'}
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-medium tracking-wider uppercase text-[#6b6b6b] block">
+              {category}
             </span>
-          )}
+            {!localEnabled && (
+              <span className="text-[9px] font-bold tracking-wider uppercase text-orange-600 bg-orange-100 px-2 py-0.5 rounded border border-orange-200">
+                Auto: OFF
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {displayStatus !== 'idle' && (
+              <span
+                className={`text-[10px] uppercase font-bold tracking-wider ${
+                  displayStatus === 'error'
+                    ? 'text-red-500'
+                    : displayStatus === 'success'
+                      ? 'text-emerald-600'
+                      : 'text-amber-500'
+                }`}
+              >
+                {displayStatus === 'loading'
+                  ? 'Running...'
+                  : displayStatus === 'error'
+                    ? 'Failed'
+                    : 'Success'}
+              </span>
+            )}
+            {appKey && (
+              <button
+                onClick={handleToggle}
+                disabled={isToggling}
+                className={`relative w-9 h-5 rounded-full transition-colors duration-200 ${localEnabled ? 'bg-emerald-500' : 'bg-gray-300'} ${isToggling ? 'opacity-50' : ''}`}
+                title={localEnabled ? 'Disable auto cron' : 'Enable auto cron'}
+              >
+                <span
+                  className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${localEnabled ? 'translate-x-4' : 'translate-x-0'}`}
+                />
+              </button>
+            )}
+          </div>
         </div>
         <h2 className="text-xl font-medium text-[#191919] mb-2 font-serif">{title}</h2>
         <p className="text-[#555555] leading-relaxed text-sm">{description}</p>
@@ -201,7 +268,7 @@ function TaskCardComponent({
         )}
 
         <CreateGuide
-          service={title === 'Supabase' ? 'supabase' : 'leancloud'}
+          service={title === 'Supabase' || title === 'GLaDOS' ? 'supabase' : 'leancloud'}
           show={showCreateGuide}
           onCopy={copyToClipboard}
         />

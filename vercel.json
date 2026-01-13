@@ -1,11 +1,7 @@
 {
   "crons": [
     {
-      "path": "/api/supabase-keep-alive",
-      "schedule": "0 0 * * *"
-    },
-    {
-      "path": "/api/leancloud-keep-alive",
+      "path": "/api/cron-all",
       "schedule": "0 1 * * *"
     }
   ]

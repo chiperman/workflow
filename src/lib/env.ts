@@ -16,6 +16,10 @@ interface EnvConfig {
     serverUrl: string;
     masterKey?: string;
   };
+  glados: {
+    cookie: string;
+    apiUrl?: string;
+  };
   bark?: {
     deviceKey: string;
   };
@@ -48,6 +52,19 @@ function validateEnv(): EnvConfig {
   if (!leancloudAppId) missing.push('LEANCLOUD_APP_ID');
   if (!leancloudAppKey) missing.push('LEANCLOUD_APP_KEY');
   if (!leancloudServerUrl) missing.push('LEANCLOUD_API_SERVER');
+
+  // 必需的 GLaDOS 环境变量
+  const gladosCookie = process.env.GLADOS_COOKIE;
+  const gladosApiUrl = process.env.GLADOS_API_URL;
+
+  if (!gladosCookie) missing.push('GLADOS_COOKIE');
+
+  // 可选的 GLaDOS API URL（使用默认值）
+  if (!gladosApiUrl) {
+    warnings.push(
+      'GLADOS_API_URL is not set. Using default: https://glados.rocks/api/user/checkin'
+    );
+  }
 
   // 可选的 Bark 环境变量
   const barkDeviceKey = process.env.BARK_DEVICE_KEY;
@@ -105,6 +122,10 @@ function validateEnv(): EnvConfig {
       appKey: leancloudAppKey!,
       serverUrl: leancloudServerUrl!,
       masterKey: leancloudMasterKey,
+    },
+    glados: {
+      cookie: gladosCookie!,
+      apiUrl: gladosApiUrl,
     },
     ...(barkDeviceKey && {
       bark: {

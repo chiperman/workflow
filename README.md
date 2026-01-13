@@ -1,12 +1,14 @@
 # Workflow Operations System
 
-**v0.4.5**
+**v0.6.1**
 
 这是一个用于防止云服务（Supabase, LeanCloud）因不活跃而被暂停的全栈自动化解决方案。它包含每日自动运行的定时任务，具备自动重试机制，以及一个现代化的手动控制台。
 
 ## 🚀 功能特性
 
 - **Supabase & LeanCloud 自动保活**: 每日定时自动触发活跃信号。
+- **GLaDOS 每日签到 (v0.5.0)**: 自动签到以保持网络访问权限。
+- **服务开关控制 (v0.6.0)**: 通过 UI 开关控制每个服务的自动执行，手动触发不受影响。
 - **智能化通知策略 (v0.4.5)**:
   - 支持 `always | failure-only | none` 三种通知级别。
   - 默认仅在执行失败或手动运行时通过 Bark 推送通知，彻底解决“通知疲劳”。
@@ -35,15 +37,18 @@
 
 ```sql
 CREATE TABLE IF NOT EXISTS keep_alive (
-  id INTEGER PRIMARY KEY,
+  service TEXT PRIMARY KEY,
   timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   manual_count INTEGER NOT NULL DEFAULT 0,
   auto_count INTEGER NOT NULL DEFAULT 0
 );
 
-INSERT INTO keep_alive (id, timestamp, manual_count, auto_count)
-VALUES (1, NOW(), 0, 0)
-ON CONFLICT (id) DO NOTHING;
+-- 初始化服务记录（注意：如果已有旧数据，请先自行备份或清理）
+INSERT INTO keep_alive (service, timestamp, manual_count, auto_count)
+VALUES
+  ('supabase', NOW(), 0, 0),
+  ('glados', NOW(), 0, 0)
+ON CONFLICT (service) DO NOTHING;
 
 ALTER TABLE keep_alive ENABLE ROW LEVEL SECURITY;
 ```

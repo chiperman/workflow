@@ -33,7 +33,7 @@ npm run build # 构建过程会自动执行 lint 和类型检查
 ### 2. 测试覆盖范围
 
 - **BaseService**: 测试重试机制、状态流转和通知触发逻辑。
-- **SupabaseService / LeanCloudService**: 测试数据库操作流程。
+- **SupabaseService / LeanCloudService / GladosService**: 测试数据库操作流程。
 - **Utils**: 测试通用工具函数。
 
 ---
@@ -42,12 +42,12 @@ npm run build # 构建过程会自动执行 lint 和类型检查
 
 ### ✅ TaskCard（任务卡片）
 
-**位置**：主页面的两个卡片
+**位置**：主页面的三个卡片
 
 **测试方法**：
 
 1. 访问 http://localhost:3000
-2. 观察两个任务卡片（Supabase 和 LeanCloud）
+2. 观察三个任务卡片（Supabase、LeanCloud 和 GLaDOS）
 3. 点击 "Run Task" 按钮
 4. 观察状态变化：
    - Loading 状态（按钮显示 "Running..."）
@@ -59,7 +59,7 @@ npm run build # 构建过程会自动执行 lint 和类型检查
 - ✅ 卡片布局和样式
 - ✅ 按钮点击响应
 - ✅ 加载状态显示
-- ✅ 成功/失败消息
+- ✅ 成功/失败消息（**注意**：消息不应自动消失）
 - ✅ 统计数字更新
 
 ---
@@ -101,6 +101,8 @@ npm run build # 构建过程会自动执行 lint 和类型检查
 - ✅ 显隐切换功能正常
 - ✅ 明文状态下可复制
 - ✅ 保存按钮状态逻辑（输入变更时变为 "Save"）
+- ✅ 编辑中未保存时，操作仍使用旧 key（v0.6.1）
+- ✅ 操作失败时显示 "Invalid App Key" 错误提示（v0.6.1）
 
 ---
 
@@ -116,7 +118,7 @@ npm run build # 构建过程会自动执行 lint 和类型检查
 **测试点**：
 
 - ✅ 版本号显示正确
-- ✅ 系统状态指示器（小圆点）显示
+- ✅ 系统状态指示器（小圆点）显示（Supabase、LeanCloud、GLaDOS）
 - ✅ 失败服务（如有）红色文字提示
 - ✅ 链接可点击且在新标签页打开
 - ✅ Vercel Logo 加载无闪烁 (Priority)
@@ -257,6 +259,23 @@ npm run build # 构建过程会自动执行 lint 和类型检查
 - ✅ 响应数据正确
 - ✅ 错误处理正确
 - ✅ 重试机制工作
+
+---
+
+### 统一 Cron Job 测试 (New)
+
+**端点**: `/api/cron-all`
+
+**测试方法**:
+
+1. 访问 `/api/cron-all` (在 Postman 或浏览器中)
+2. 观察返回结果，应包含三个服务的执行状态
+
+**测试点**:
+
+- ✅ 响应包含 `supabase`, `leancloud`, `glados` 三个字段
+- ✅ 服务并行执行
+- ✅ 任意一个服务失败不影响整体状态返回 200
 
 ---
 
@@ -401,7 +420,7 @@ npm run build # 构建过程会自动执行 lint 和类型检查
 **5 分钟快速测试**：
 
 1. ✅ 访问 http://localhost:3000
-2. ✅ 点击两个 "Run Task" 按钮
+2. ✅ 点击三个 "Run Task" 按钮
 3. ✅ 观察数字滚动动画
 4. ✅ 点击 "🧪 Trigger Error" 测试错误边界
 5. ✅ 点击 "Retry" 返回正常
@@ -420,4 +439,4 @@ npm run build # 构建过程会自动执行 lint 和类型检查
 
 ---
 
-**最后更新**: 2026-01-02
+**最后更新**: 2026-01-14 (v0.6.1)

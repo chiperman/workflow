@@ -13,17 +13,19 @@ import { Check, Eye, EyeOff, Key, Save } from 'lucide-react';
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export default function Home() {
-  const [appKey, setAppKey] = useState('');
+  const [appKey, setAppKey] = useState(''); // 输入框中的值
+  const [savedKey, setSavedKey] = useState(''); // 已保存的值（用于 API 请求）
   const [isKeySaved, setIsKeySaved] = useState(false);
   const [showKey, setShowKey] = useState(false);
 
   // 初始化时从 localStorage 加载密钥
   useEffect(() => {
-    const savedKey = localStorage.getItem('app-key');
-    if (savedKey) {
+    const storedKey = localStorage.getItem('app-key');
+    if (storedKey) {
       // 满足 lint 规则：避免在 Effect 中同步触发渲染级联
       setTimeout(() => {
-        setAppKey(savedKey);
+        setAppKey(storedKey);
+        setSavedKey(storedKey);
         setIsKeySaved(true);
       }, 0);
     }
@@ -31,6 +33,7 @@ export default function Home() {
 
   const saveKey = useCallback(() => {
     localStorage.setItem('app-key', appKey);
+    setSavedKey(appKey);
     setIsKeySaved(true);
   }, [appKey]);
 
@@ -61,6 +64,15 @@ export default function Home() {
     [data]
   );
 
+  const gladosHealth: ServiceHealth = useMemo(
+    () =>
+      data?.services?.glados || {
+        status: 'unknown',
+        stats: { auto_count: 0, manual_count: 0 },
+      },
+    [data]
+  );
+
   // 计算系统状态和失败服务
   const systemStatus = data?.status || 'Checking';
   const failingServices = useMemo(() => {
@@ -71,8 +83,11 @@ export default function Home() {
     if (leanCloudHealth.status === 'outage' || leanCloudHealth.status === 'misconfigured') {
       failing.push('LeanCloud');
     }
+    if (gladosHealth.status === 'outage' || gladosHealth.status === 'misconfigured') {
+      failing.push('GLaDOS');
+    }
     return failing;
-  }, [supabaseHealth.status, leanCloudHealth.status]);
+  }, [supabaseHealth.status, leanCloudHealth.status, gladosHealth.status]);
 
   if (error) console.error('Health check failed:', error);
 
@@ -147,7 +162,8 @@ export default function Home() {
             endpoint="/api/supabase-keep-alive"
             method="POST"
             serviceHealth={supabaseHealth}
-            appKey={appKey}
+            serviceName="supabase"
+            appKey={savedKey}
             onStatsUpdate={() => mutate()}
           />
 
@@ -158,7 +174,20 @@ export default function Home() {
             endpoint="/api/leancloud-keep-alive"
             method="POST"
             serviceHealth={leanCloudHealth}
-            appKey={appKey}
+            serviceName="leancloud"
+            appKey={savedKey}
+            onStatsUpdate={() => mutate()}
+          />
+
+          <TaskCard
+            category="Daily Check-in"
+            title="GLaDOS"
+            description="Automated daily check-in service for GLaDOS network access."
+            endpoint="/api/glados-checkin"
+            method="POST"
+            serviceHealth={gladosHealth}
+            serviceName="glados"
+            appKey={savedKey}
             onStatsUpdate={() => mutate()}
           />
         </div>
@@ -171,6 +200,7 @@ export default function Home() {
           serviceStatuses={{
             supabase: supabaseHealth.status,
             leancloud: leanCloudHealth.status,
+            glados: gladosHealth.status,
           }}
         />
       </div>

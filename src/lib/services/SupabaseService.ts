@@ -7,20 +7,31 @@ import { BaseService } from './BaseService';
 export class SupabaseService extends BaseService {
   constructor() {
     super('Supabase');
-    // 对于这类高频保活任务，建议主要在失败或手动运行时通过 Bark 发送成功通知
     this.notificationLevel = 'failure-only';
   }
 
   protected async executeKeepAlive(trigger: 'auto' | 'manual' = 'auto'): Promise<KeepAliveResult> {
     try {
+      logger.info(`[Supabase] Selecting existing record...`);
       const { data: existing, error: fetchError } = await supabase
         .from('keep_alive')
         .select('*')
-        .eq('id', 1)
+        .eq('service', 'supabase')
         .single();
 
-      if (fetchError && fetchError.code !== 'PGRST116') {
-        throw fetchError;
+      if (fetchError) {
+        if (fetchError.code === 'PGRST116') {
+          // No record yet
+        } else if (fetchError.code === '42P01') {
+          return {
+            success: false,
+            message: "Table 'keep_alive' does not exist. Please execute the SQL setup.",
+            duration: 0,
+            error: fetchError.message,
+          };
+        } else {
+          throw fetchError;
+        }
       }
 
       let manualCount = existing?.manual_count || 0;
@@ -29,10 +40,11 @@ export class SupabaseService extends BaseService {
       if (trigger === 'manual') manualCount++;
       else autoCount++;
 
+      logger.info(`[Supabase] Upserting record...`);
       const { error: upsertError } = await supabase
         .from('keep_alive')
         .upsert({
-          id: 1,
+          service: 'supabase',
           timestamp: new Date().toISOString(),
           manual_count: manualCount,
           auto_count: autoCount,
@@ -41,7 +53,8 @@ export class SupabaseService extends BaseService {
         .single();
 
       if (upsertError) {
-        throw upsertError;
+        logger.error(`[Supabase] Upsert error:`, upsertError);
+        throw new Error(`Supabase upsert failed: ${upsertError.message}`);
       }
 
       const beijingTime = getBeijingTime();
@@ -49,24 +62,21 @@ export class SupabaseService extends BaseService {
       const baseAction = action === 'created' ? 'Created new record' : 'Updated record';
       const message = `Supabase Success: ${baseAction} at ${beijingTime} (${trigger}). Auto=${autoCount}, Manual=${manualCount}.`;
 
+      logger.info(`[Supabase] Complete: ${message}`);
       return {
         success: true,
         action,
         message,
-        duration: 0, // 基类会重新计算总耗时
+        duration: 0,
         data: {
           manual_count: manualCount,
           auto_count: autoCount,
         },
       };
     } catch (error: unknown) {
-      let customMsg = error instanceof Error ? error.message : 'Unknown error';
-      if (error && typeof error === 'object' && 'code' in error && error.code === '42P01') {
-        customMsg = "Table 'keep_alive' does not exist.";
-      }
-      logger.error(`[Supabase] executeKeepAlive error:`, customMsg);
-
-      return { success: false, message: customMsg, duration: 0, error: customMsg };
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error(`[Supabase] executeKeepAlive error:`, errorMessage);
+      return { success: false, message: errorMessage, duration: 0, error: errorMessage };
     }
   }
 
@@ -74,8 +84,8 @@ export class SupabaseService extends BaseService {
     try {
       const { data: existing, error } = await supabase
         .from('keep_alive')
-        .select('manual_count, auto_count')
-        .eq('id', 1)
+        .select('manual_count, auto_count, enabled')
+        .eq('service', 'supabase')
         .single();
 
       if (error) {
@@ -84,13 +94,15 @@ export class SupabaseService extends BaseService {
             success: true,
             data: { manual_count: 0, auto_count: 0 },
             tableExists: true,
+            enabled: true,
           };
         }
         if (error.code === '42P01') {
           return {
-            success: true,
+            success: false,
             data: { manual_count: 0, auto_count: 0 },
             tableExists: false,
+            error: "Table 'keep_alive' does not exist",
           };
         }
         throw error;
@@ -103,6 +115,7 @@ export class SupabaseService extends BaseService {
           auto_count: existing?.auto_count || 0,
         },
         tableExists: true,
+        enabled: existing?.enabled ?? true,
       };
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
