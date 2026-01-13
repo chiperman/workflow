@@ -13,17 +13,19 @@ import { Check, Eye, EyeOff, Key, Save } from 'lucide-react';
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export default function Home() {
-  const [appKey, setAppKey] = useState('');
+  const [appKey, setAppKey] = useState(''); // 输入框中的值
+  const [savedKey, setSavedKey] = useState(''); // 已保存的值（用于 API 请求）
   const [isKeySaved, setIsKeySaved] = useState(false);
   const [showKey, setShowKey] = useState(false);
 
   // 初始化时从 localStorage 加载密钥
   useEffect(() => {
-    const savedKey = localStorage.getItem('app-key');
-    if (savedKey) {
+    const storedKey = localStorage.getItem('app-key');
+    if (storedKey) {
       // 满足 lint 规则：避免在 Effect 中同步触发渲染级联
       setTimeout(() => {
-        setAppKey(savedKey);
+        setAppKey(storedKey);
+        setSavedKey(storedKey);
         setIsKeySaved(true);
       }, 0);
     }
@@ -31,6 +33,7 @@ export default function Home() {
 
   const saveKey = useCallback(() => {
     localStorage.setItem('app-key', appKey);
+    setSavedKey(appKey);
     setIsKeySaved(true);
   }, [appKey]);
 
@@ -160,7 +163,7 @@ export default function Home() {
             method="POST"
             serviceHealth={supabaseHealth}
             serviceName="supabase"
-            appKey={appKey}
+            appKey={savedKey}
             onStatsUpdate={() => mutate()}
           />
 
@@ -172,7 +175,7 @@ export default function Home() {
             method="POST"
             serviceHealth={leanCloudHealth}
             serviceName="leancloud"
-            appKey={appKey}
+            appKey={savedKey}
             onStatsUpdate={() => mutate()}
           />
 
@@ -184,7 +187,7 @@ export default function Home() {
             method="POST"
             serviceHealth={gladosHealth}
             serviceName="glados"
-            appKey={appKey}
+            appKey={savedKey}
             onStatsUpdate={() => mutate()}
           />
         </div>
