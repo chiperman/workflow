@@ -7,6 +7,7 @@ export function PageBackground() {
     <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 bg-[#fdfcf8]">
       {/* Subtle Aurora Layer 1 - Mint */}
       <motion.div
+        initial={{ opacity: 0.02 }}
         animate={{
           x: [0, 80, 0],
           y: [0, 40, 0],
@@ -19,6 +20,7 @@ export function PageBackground() {
 
       {/* Subtle Aurora Layer 2 - Terracotta/Soft Orange */}
       <motion.div
+        initial={{ opacity: 0.03 }}
         animate={{
           x: [0, -60, 0],
           y: [0, 30, 0],

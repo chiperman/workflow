@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useMemo, useState } from 'react';
 import useSWR from 'swr';
 
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { Footer } from '@/components/Footer';
 import { TaskCard } from '@/components/TaskCard';
 import { APP_VERSION } from '@/config/constants';
@@ -17,9 +18,10 @@ const fetcher = (url: string) => fetch(url).then(res => res.json());
 export default function Home() {
   const router = useRouter();
   const [isExiting, setIsExiting] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const handleLogout = async () => {
-    if (!confirm('Are you sure you want to log out?')) return;
+    setShowLogoutConfirm(false);
     setIsExiting(true);
     await fetch('/api/auth', { method: 'DELETE' });
 
@@ -111,7 +113,7 @@ export default function Home() {
                     initial={{ x: 20, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     transition={{ delay: 0.1 }}
-                    onClick={handleLogout}
+                    onClick={() => setShowLogoutConfirm(true)}
                     className="flex items-center gap-2 px-3 py-1 text-[10px] font-medium tracking-tight text-[#888888] border border-[#e5e5e0] rounded-full hover:bg-white hover:text-[#191919] hover:border-[#d97757]/30 transition-all duration-300"
                     title="End session"
                   >
@@ -212,6 +214,18 @@ export default function Home() {
           </motion.main>
         )}
       </AnimatePresence>
+
+      {/* Logout Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showLogoutConfirm}
+        title="End Session"
+        message="You're about to sign out. Any unsaved progress may be lost."
+        confirmText="Sign out"
+        cancelText="Stay"
+        variant="danger"
+        onConfirm={handleLogout}
+        onCancel={() => setShowLogoutConfirm(false)}
+      />
     </div>
   );
 }
