@@ -7,25 +7,10 @@ import useSWR from 'swr';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { Footer } from '@/components/Footer';
 import { TaskCard } from '@/components/TaskCard';
-import { APP_VERSION } from '@/config/constants';
+import { APP_VERSION, MOTION_CONFIG as MOTION } from '@/config/constants';
 import type { HealthCheckResponse, ServiceHealth } from '@/types';
 import { LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-
-// 动效配置
-const MOTION = {
-  duration: 0.8,
-  ease: [0.25, 0.1, 0.25, 1] as const,
-  delay: {
-    header: 0.15,
-    description: 0.35,
-    cards: 0.5,
-    cardStagger: 0.15,
-    get footer() {
-      return this.cards + this.cardStagger * 2 + 0.15;
-    },
-  },
-};
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 

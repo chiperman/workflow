@@ -40,3 +40,21 @@ export const DATABASE_CONFIG = {
   /** LeanCloud 查询限制 */
   QUERY_LIMIT: 1,
 } as const;
+
+/**
+ * 动效时序配置 - Anthropic 风格：温柔、舒缓
+ */
+export const MOTION_CONFIG = {
+  duration: 0.8,
+  ease: [0.25, 0.1, 0.25, 1] as const,
+  delay: {
+    header: 0.15,
+    description: 0.35,
+    cards: 0.5,
+    cardStagger: 0.15,
+    get footer() {
+      // cards(0.5) + stagger(0.15) * 2 + buffer(0.15) = 0.95
+      return 0.95;
+    },
+  },
+} as const;

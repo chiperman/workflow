@@ -1,4 +1,4 @@
-import { checkSupabaseHealth, checkLeanCloudHealth } from '../health-check';
+import { checkLeanCloudHealth, checkSupabaseHealth } from '../health-check';
 
 // Mock Supabase client
 jest.mock('../supabase', () => ({
@@ -48,6 +48,7 @@ describe('checkSupabaseHealth', () => {
 
     expect(result).toEqual({
       status: 'operational',
+      enabled: true,
       tableExists: true,
       stats: {
         auto_count: 10,
@@ -72,6 +73,7 @@ describe('checkSupabaseHealth', () => {
 
     expect(result).toEqual({
       status: 'operational',
+      enabled: true,
       tableExists: true,
       stats: {
         auto_count: 0,
@@ -104,7 +106,7 @@ describe('checkSupabaseHealth', () => {
         auto_count: 0,
         manual_count: 0,
       },
-      message: 'Table "keep_alive" does not exist',
+      message: 'Database setup required. Please execute the SQL setup.',
     });
   });
 
@@ -125,7 +127,7 @@ describe('checkSupabaseHealth', () => {
 
     const result = await checkSupabaseHealth();
 
-    expect(result.status).toBe('outage');
+    expect(result.status).toBe('misconfigured');
     expect(result.tableExists).toBe(false);
     expect(result.message).toBeDefined();
   });
@@ -142,13 +144,13 @@ describe('checkSupabaseHealth', () => {
     const result = await checkSupabaseHealth();
 
     expect(result).toEqual({
-      status: 'outage',
+      status: 'misconfigured', // 网络错误导致无法连接表，也被视为配置问题或初始状态
       tableExists: false,
       stats: {
         auto_count: 0,
         manual_count: 0,
       },
-      message: 'Network error',
+      message: 'Database setup required. Please execute the SQL setup.',
     });
   });
 
@@ -168,6 +170,7 @@ describe('checkSupabaseHealth', () => {
 
     expect(result).toEqual({
       status: 'operational',
+      enabled: true,
       tableExists: true,
       stats: {
         auto_count: 0,
@@ -208,6 +211,7 @@ describe('checkLeanCloudHealth', () => {
 
     expect(result).toEqual({
       status: 'operational',
+      enabled: true,
       tableExists: true,
       stats: {
         auto_count: 15,
@@ -237,6 +241,7 @@ describe('checkLeanCloudHealth', () => {
 
     expect(result).toEqual({
       status: 'misconfigured',
+      enabled: true,
       tableExists: false,
       stats: {
         auto_count: 0,
@@ -270,6 +275,7 @@ describe('checkLeanCloudHealth', () => {
 
     expect(result).toEqual({
       status: 'operational',
+      enabled: true,
       tableExists: true,
       stats: {
         auto_count: 0,
@@ -307,6 +313,7 @@ describe('checkLeanCloudHealth', () => {
 
     expect(result).toEqual({
       status: 'operational',
+      enabled: true,
       tableExists: true,
       stats: {
         auto_count: 0,

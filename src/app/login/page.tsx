@@ -1,5 +1,6 @@
 'use client';
 
+import { MOTION_CONFIG } from '@/config/constants';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowRight, Eye, EyeOff, Loader2, ShieldCheck } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -52,14 +53,14 @@ export default function LoginPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, filter: 'blur(8px)' }}
-            transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
+            transition={{ duration: MOTION_CONFIG.duration, ease: MOTION_CONFIG.ease }}
             className="relative z-10 w-full max-w-sm"
           >
             <div className="mb-12 text-center">
               <motion.div
                 initial={{ scale: 0.8 }}
                 animate={{ scale: 1 }}
-                transition={{ delay: 0.2, duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+                transition={{ delay: 0.2, duration: 0.6, ease: MOTION_CONFIG.ease }}
                 className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-white border border-[#e5e5e0] mb-6 shadow-sm"
               >
                 <ShieldCheck className="w-5 h-5 text-[#3f6212]" />
