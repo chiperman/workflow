@@ -12,7 +12,21 @@ import type { HealthCheckResponse, ServiceHealth } from '@/types';
 import { LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-// SWR fetcher 函数
+// 动效配置
+const MOTION = {
+  duration: 0.8,
+  ease: [0.25, 0.1, 0.25, 1] as const,
+  delay: {
+    header: 0.15,
+    description: 0.35,
+    cards: 0.5,
+    cardStagger: 0.15,
+    get footer() {
+      return this.cards + this.cardStagger * 2 + 0.15;
+    },
+  },
+};
+
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export default function Home() {
@@ -93,28 +107,36 @@ export default function Home() {
           <motion.main
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0, y: -20, filter: 'blur(10px)' }}
-            transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+            exit={{ opacity: 0, filter: 'blur(8px)' }}
+            transition={{ duration: MOTION.duration, ease: MOTION.ease }}
             className="py-8 px-6 sm:px-12 flex flex-col justify-center min-h-screen"
           >
             <div className="w-full max-w-3xl mx-auto">
               {/* Header Section */}
               <header className="mb-8 relative">
-                <div className="flex justify-between items-start mb-4">
+                <div className="flex justify-between items-center mb-4">
                   <motion.h1
-                    initial={{ x: -20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: 0.1 }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{
+                      delay: MOTION.delay.header,
+                      duration: MOTION.duration,
+                      ease: MOTION.ease,
+                    }}
                     className="text-3xl sm:text-4xl font-medium text-[#191919] font-serif tracking-tight leading-tight"
                   >
                     System Operations
                   </motion.h1>
                   <motion.button
-                    initial={{ x: 20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: 0.1 }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{
+                      delay: MOTION.delay.header,
+                      duration: MOTION.duration,
+                      ease: MOTION.ease,
+                    }}
                     onClick={() => setShowLogoutConfirm(true)}
-                    className="flex items-center gap-2 px-3 py-1 text-[10px] font-medium tracking-tight text-[#888888] border border-[#e5e5e0] rounded-full hover:bg-white hover:text-[#191919] hover:border-[#d97757]/30 transition-all duration-300"
+                    className="flex items-center gap-2 px-3 py-1 text-[10px] font-medium tracking-tight text-[#888888] border border-[#e5e5e0] rounded-lg hover:bg-white hover:text-[#191919] hover:border-[#d97757]/30 transition-all duration-300"
                     title="End session"
                   >
                     <LogOut className="w-3 h-3" />
@@ -124,7 +146,11 @@ export default function Home() {
                 <motion.p
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ delay: 0.2 }}
+                  transition={{
+                    delay: MOTION.delay.description,
+                    duration: MOTION.duration,
+                    ease: MOTION.ease,
+                  }}
                   className="text-base text-[#555555] max-w-xl leading-relaxed font-light text-center sm:text-left"
                 >
                   Control center for automated maintenance protocols and cross-service data
@@ -138,8 +164,8 @@ export default function Home() {
                   show: {
                     opacity: 1,
                     transition: {
-                      staggerChildren: 0.1,
-                      delayChildren: 0.3,
+                      staggerChildren: MOTION.delay.cardStagger,
+                      delayChildren: MOTION.delay.cards,
                     },
                   },
                 }}
@@ -180,11 +206,10 @@ export default function Home() {
                   <motion.div
                     key={task.title}
                     variants={{
-                      hidden: { opacity: 0, y: 15 },
+                      hidden: { opacity: 0 },
                       show: {
                         opacity: 1,
-                        y: 0,
-                        transition: { duration: 0.5, ease: [0.215, 0.61, 0.355, 1] },
+                        transition: { duration: MOTION.duration, ease: MOTION.ease },
                       },
                     }}
                   >
@@ -197,7 +222,11 @@ export default function Home() {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.4 }}
+                transition={{
+                  delay: MOTION.delay.footer,
+                  duration: MOTION.duration,
+                  ease: MOTION.ease,
+                }}
               >
                 <Footer
                   version={APP_VERSION}
