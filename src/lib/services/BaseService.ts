@@ -1,5 +1,6 @@
 import { sendBarkNotification } from '@/lib/bark';
 import { logger } from '@/lib/logger';
+import { supabase } from '@/lib/supabase';
 import { withRetry } from '@/lib/utils';
 import type { KeepAliveResult, StatsQueryResult } from '@/types';
 
@@ -27,14 +28,65 @@ export abstract class BaseService {
   public abstract getStats(): Promise<StatsQueryResult>;
 
   /**
+   * 记录签到日志到 keep_alive_logs 表
+   * 此方法设计为"尽力而为"，失败不影响主逻辑
+   */
+  private async logKeepAliveResult(result: KeepAliveResult, duration: number): Promise<void> {
+    try {
+      const serviceKey = this.serviceName.toLowerCase();
+
+      // 如果任务成功，检查今天是否已经有成功的记录
+      if (result.success) {
+        // 获取北京时间当天的 00:00:00 (ISO String)
+        // 简单实现：使用 sv-SE locale + Asia/Shanghai
+        const todayStr = new Date().toLocaleDateString('sv-SE', {
+          timeZone: 'Asia/Shanghai',
+        });
+        const todayStart = new Date(`${todayStr}T00:00:00.000+08:00`).toISOString();
+
+        const { count } = await supabase
+          .from('keep_alive_logs')
+          .select('*', { count: 'exact', head: true })
+          .eq('service', serviceKey)
+          .eq('status', 'success')
+          .gte('timestamp', todayStart);
+
+        if (count && count > 0) {
+          logger.info(`[${this.serviceName}] Skipping duplicate log (already succeeded today).`);
+          return;
+        }
+      }
+
+      const { error } = await supabase.from('keep_alive_logs').insert({
+        service: serviceKey,
+        status: result.success ? 'success' : 'failure',
+        message: result.message,
+        duration,
+      });
+
+      if (error) {
+        logger.warn(`[${this.serviceName}] Failed to log keep-alive result:`, error.message);
+      }
+    } catch (err) {
+      // 静默失败，不影响主流程
+      logger.warn(
+        `[${this.serviceName}] Exception while logging:`,
+        err instanceof Error ? err.message : 'Unknown error'
+      );
+    }
+  }
+
+  /**
    * 带重试、通知和计时功能的执行入口
    */
   public async run(trigger: 'auto' | 'manual' = 'auto'): Promise<KeepAliveResult> {
     const startTime = Date.now();
+    let result: KeepAliveResult;
+
     try {
       logger.info(`[${this.serviceName}] Starting keep-alive run (trigger: ${trigger})`);
 
-      const result = await withRetry(async () => {
+      result = await withRetry(async () => {
         const res = await this.executeKeepAlive(trigger);
         if (!res.success) {
           throw new Error(res.message || 'Service reported failure');
@@ -58,11 +110,22 @@ export abstract class BaseService {
       }
 
       logger.info(`[${this.serviceName}] Completed successfully in ${duration}ms`);
+
+      // 记录日志（异步，不阻塞）
+      this.logKeepAliveResult(result, duration);
+
       return { ...result, duration };
     } catch (error: unknown) {
       const duration = Date.now() - startTime;
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logger.error(`[${this.serviceName}] Execution failed after retries:`, errorMessage);
+
+      result = {
+        success: false,
+        message: `Failed after max retries: ${errorMessage}`,
+        duration,
+        error: errorMessage,
+      };
 
       // 失败总是通知开关（除非级别设为 none 且明确要求静默，但通常失败需要知晓）
       if (this.notificationLevel !== 'none') {
@@ -73,12 +136,46 @@ export abstract class BaseService {
         );
       }
 
-      return {
-        success: false,
-        message: `Failed after max retries: ${errorMessage}`,
-        duration,
-        error: errorMessage,
-      };
+      // 记录失败日志
+      this.logKeepAliveResult(result, duration);
+
+      // 记录失败统计 (Fail-safe)
+      await this.recordFailure(trigger);
+
+      return result;
+    }
+  }
+
+  /**
+   * 记录失败统计到 Supabase keep_alive 表
+   */
+  protected async recordFailure(_trigger: 'auto' | 'manual'): Promise<void> {
+    try {
+      const serviceKey = this.serviceName.toLowerCase();
+      // 获取当前统计
+      const { data: existing } = await supabase
+        .from('keep_alive')
+        .select('*')
+        .eq('service', serviceKey)
+        .single();
+
+      const currentFail = existing?.failure_count || 0;
+
+      // 更新统计 (保留原有成功计数)
+      await supabase.from('keep_alive').upsert({
+        service: serviceKey,
+        timestamp: new Date().toISOString(),
+        manual_count: existing?.manual_count || 0,
+        auto_count: existing?.auto_count || 0,
+        failure_count: currentFail + 1,
+        enabled: existing?.enabled ?? true,
+      });
+    } catch (err) {
+      // 统计更新失败不应影响主逻辑，仅记录警告
+      logger.warn(
+        `[${this.serviceName}] Failed to record failure stats:`,
+        err instanceof Error ? err.message : 'Unknown error'
+      );
     }
   }
 }

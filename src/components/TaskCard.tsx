@@ -200,8 +200,8 @@ function TaskCardComponent({
         <h2 className="text-xl font-medium text-[#191919] mb-2 font-serif">{title}</h2>
         <p className="text-[#555555] leading-relaxed text-sm">{description}</p>
 
-        <div className="flex gap-4 mt-4 text-xs font-mono text-[#888888] uppercase tracking-wider">
-          <div className="flex items-center gap-1.5">
+        <div className="flex mt-4 text-xs font-mono text-[#888888] uppercase tracking-wider">
+          <div className="flex items-center gap-1.5 w-24 shrink-0">
             <span
               className={`w-1.5 h-1.5 rounded-full ${displayStatus === 'error' ? 'bg-red-500' : 'bg-blue-400'}`}
             ></span>
@@ -209,12 +209,18 @@ function TaskCardComponent({
               Auto: <RollingNumber value={serviceHealth.stats.auto_count} />
             </span>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 w-28 shrink-0">
             <span
               className={`w-1.5 h-1.5 rounded-full ${displayStatus === 'error' ? 'bg-red-500' : 'bg-emerald-400'}`}
             ></span>
             <span>
               Manual: <RollingNumber value={serviceHealth.stats.manual_count} />
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 w-28 shrink-0">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+            <span>
+              Failed: <RollingNumber value={serviceHealth.stats.failure_count} />
             </span>
           </div>
         </div>

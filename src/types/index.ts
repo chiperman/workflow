@@ -10,6 +10,7 @@
 export interface ServiceStats {
   auto_count: number;
   manual_count: number;
+  failure_count: number;
 }
 
 /**

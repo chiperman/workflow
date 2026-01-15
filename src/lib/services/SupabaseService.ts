@@ -71,6 +71,7 @@ export class SupabaseService extends BaseService {
         data: {
           manual_count: manualCount,
           auto_count: autoCount,
+          failure_count: existing?.failure_count || 0,
         },
       };
     } catch (error: unknown) {
@@ -84,7 +85,7 @@ export class SupabaseService extends BaseService {
     try {
       const { data: existing, error } = await supabase
         .from('keep_alive')
-        .select('manual_count, auto_count, enabled')
+        .select('manual_count, auto_count, failure_count, enabled')
         .eq('service', 'supabase')
         .single();
 
@@ -92,7 +93,7 @@ export class SupabaseService extends BaseService {
         if (error.code === 'PGRST116') {
           return {
             success: true,
-            data: { manual_count: 0, auto_count: 0 },
+            data: { manual_count: 0, auto_count: 0, failure_count: 0 },
             tableExists: true,
             enabled: true,
           };
@@ -100,7 +101,7 @@ export class SupabaseService extends BaseService {
         if (error.code === '42P01') {
           return {
             success: false,
-            data: { manual_count: 0, auto_count: 0 },
+            data: { manual_count: 0, auto_count: 0, failure_count: 0 },
             tableExists: false,
             error: "Table 'keep_alive' does not exist",
           };
@@ -113,6 +114,7 @@ export class SupabaseService extends BaseService {
         data: {
           manual_count: existing?.manual_count || 0,
           auto_count: existing?.auto_count || 0,
+          failure_count: existing?.failure_count || 0,
         },
         tableExists: true,
         enabled: existing?.enabled ?? true,

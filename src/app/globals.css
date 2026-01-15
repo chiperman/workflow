@@ -50,3 +50,181 @@ h6 {
   font-weight: 500;
   /* Regular-ish weight for serif feels more academic */
 }
+
+/* ========== Heatmap Styles (GitHub Style) ========== */
+.heatmap-container {
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  margin-top: 1.5rem;
+  /* overflow handled by resizing now, but keep auto for safety on tiny screens */
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.heatmap-wrapper {
+  width: 100%;
+  min-width: 600px; /* Prevent it from getting too small and squished */
+}
+
+/* 月份标签行 */
+.heatmap-months {
+  display: grid;
+  /* width(weekdays) 28px + gap(body) 8px = 36px */
+  padding-left: 36px;
+  width: 100%;
+  box-sizing: border-box;
+  /* Need to account for the gap in the grid vs the weekdays sidebar */
+  /* Actually, easiest is to make the heatmap-body a grid too, or keep padding matches */
+}
+
+.heatmap-month-label {
+  font-size: 13px; /* Increased from 11px */
+  color: #666;
+  white-space: nowrap;
+}
+
+/* 主体区域（星期标签 + 网格） */
+.heatmap-body {
+  display: flex;
+  gap: 8px; /* Increased gap between labels and grid */
+  width: 100%;
+}
+
+/* 星期标签列 */
+.heatmap-weekdays {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* Distribute evenly to match grid rows */
+  padding-right: 4px;
+  flex-shrink: 0;
+  width: 28px; /* Slightly wider */
+  padding-bottom: 6px; /* Adjust for cell visual height if needed */
+}
+
+.heatmap-weekday-label {
+  font-size: 11px; /* Increased from 9px */
+  color: #666;
+  height: auto; /* Let it flow */
+  line-height: 1;
+  text-align: right;
+  /* We might need to manually align specific days or rely on flex distribution */
+}
+
+/* 热力图网格 */
+.heatmap-grid {
+  display: grid;
+  /* columns set via inline style */
+  gap: 3px; /* Slightly increase gap */
+  flex: 1; /* Take up remaining space */
+  width: 100%;
+}
+
+.heatmap-week {
+  display: flex;
+  flex-direction: column;
+  gap: 3px; /* Match horizontal gap */
+}
+
+.heatmap-cell {
+  width: 100%;
+  aspect-ratio: 1 / 1; /* Keep perfect square */
+  border-radius: 2px;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.heatmap-cell:hover {
+  transform: scale(1.15);
+}
+
+/* Color levels - Simplified 3 States */
+.heatmap-level-0 {
+  background: #ebedf0;
+}
+
+.heatmap-level-success {
+  background: #40c463; /* Standard Green */
+}
+
+/* failure handled below */
+
+.heatmap-level-failure {
+  background: #ff6b6b;
+}
+
+/* Footer with legend */
+.heatmap-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+  padding-top: 8px;
+}
+
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #666;
+}
+
+/* Fix for legend cells disappearing due to responsive 100% width */
+.heatmap-legend .heatmap-cell {
+  width: 10px;
+  height: 10px;
+  min-width: 10px; /* prevent shrinking */
+  aspect-ratio: auto; /* reset aspect ratio */
+  cursor: default;
+}
+
+.heatmap-legend .heatmap-cell:hover {
+  transform: none;
+}
+
+/* Tooltip */
+.heatmap-tooltip {
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  z-index: 1000;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.tooltip-date {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.tooltip-stats {
+  opacity: 0.9;
+}
+
+.tooltip-services {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.service-success {
+  color: #9be9a8;
+}
+
+.service-failure {
+  color: #ff6b6b;
+}
+
+.heatmap-loading,
+.heatmap-error {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+}
+
+.heatmap-error {
+  color: #ff6b6b;
+}

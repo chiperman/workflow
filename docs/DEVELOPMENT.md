@@ -16,6 +16,8 @@ workflow/
 │   │   │   ├── health/        # 健康检查 API
 │   │   │   ├── cron-all/      # 统一 Cron 入口
 │   │   │   ├── service-config/ # 服务配置 API (v0.6.0)
+│   │   │   ├── stats/         # 统计 API (v0.8.0)
+│   │   │   │   └── heatmap/   # 热力图数据聚合
 │   │   │   ├── supabase-keep-alive/
 │   │   │   ├── leancloud-keep-alive/
 │   │   │   └── glados-checkin/
@@ -28,6 +30,7 @@ workflow/
 │   │   ├── ErrorTest.tsx      # 错误测试组件
 │   │   ├── TaskCard.tsx       # 任务卡片
 │   │   ├── CreateGuide.tsx    # 表创建引导
+│   │   ├── Heatmap.tsx        # 签到热力图 (v0.8.0)
 │   │   ├── RollingNumber.tsx  # 数字滚动动画
 │   │   ├── SystemStatus.tsx   # 系统状态显示
 │   │   ├── PageBackground.tsx # 全局背景组件 (v0.7.0)
@@ -41,6 +44,7 @@ workflow/
 │   │   │   ├── LeanCloudService.ts
 │   │   │   └── GladosService.ts # GLaDOS 服务 (v0.5.0)
 │   │   ├── api-helper.ts      # API 统一处理工具
+│   │   ├── heatmap-utils.ts   # 热力图聚合逻辑 (v0.8.0)
 │   │   ├── logger.ts          # 统一日志工具 (v0.4.5)
 │   │   ├── utils.ts           # 工具函数
 │   │   ├── health-check.ts    # 健康检查逻辑
@@ -50,6 +54,7 @@ workflow/
 │   │   └── __tests__/         # 单元测试
 │   │       ├── setup.ts
 │   │       ├── health-check.test.ts
+│   │       ├── heatmap-utils.test.ts # 热力图逻辑测试 (v0.8.0)
 │   │       ├── services.test.ts
 │   │       └── utils.test.ts
 │   └── types/                 # 类型定义
@@ -193,4 +198,4 @@ INSERT INTO keep_alive (service) VALUES ('your-service-name') ON CONFLICT DO NOT
 
 ---
 
-**最后更新**: 2026-01-14 (v0.7.0)
+**最后更新**: 2026-01-16 (v0.8.0)

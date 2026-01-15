@@ -105,6 +105,10 @@ export class LeanCloudService extends BaseService {
         data: {
           auto_count: finalAuto,
           manual_count: finalManual,
+          // Since failure counts are stored in Supabase and we didn't fetch them here,
+          // we realistically should fetch them or just accept 0 if this return value is just for immediate feedback.
+          // However, to be type safe:
+          failure_count: 0,
         },
       };
     } catch (error: unknown) {
@@ -116,19 +120,21 @@ export class LeanCloudService extends BaseService {
 
   public async getStats(): Promise<StatsQueryResult> {
     try {
-      // 从 Supabase 获取 leancloud 服务的 enabled 状态
+      // 从 Supabase 获取 leancloud 服务的附加信息 (enabled, failure counts)
       let enabled = true;
+      let existing: { enabled: boolean; failure_count: number } | null = null;
       try {
-        const { data: configData } = await supabase
+        const { data } = await supabase
           .from('keep_alive')
-          .select('enabled')
+          .select('enabled, failure_count')
           .eq('service', 'leancloud')
           .single();
-        if (configData?.enabled !== undefined) {
-          enabled = configData.enabled;
+        if (data) {
+          existing = data;
+          if (data.enabled !== undefined) enabled = data.enabled;
         }
       } catch {
-        // 如果查询失败，默认为 true
+        // Ignore
       }
 
       const queryUrl = `${env.leancloud.serverUrl}/1.1/classes/keep_alive?limit=1`;
@@ -138,7 +144,11 @@ export class LeanCloudService extends BaseService {
         if (queryRes.status === 404) {
           return {
             success: true,
-            data: { manual_count: 0, auto_count: 0 },
+            data: {
+              manual_count: 0,
+              auto_count: 0,
+              failure_count: existing?.failure_count || 0,
+            },
             tableExists: false,
             enabled,
           };
@@ -155,6 +165,7 @@ export class LeanCloudService extends BaseService {
         data: {
           manual_count: record?.manual_count || 0,
           auto_count: record?.auto_count || 0,
+          failure_count: existing?.failure_count || 0,
         },
         tableExists: true,
         enabled,

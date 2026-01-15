@@ -6,6 +6,7 @@ import useSWR from 'swr';
 
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { Footer } from '@/components/Footer';
+import { Heatmap } from '@/components/Heatmap';
 import { TaskCard } from '@/components/TaskCard';
 import { APP_VERSION, MOTION_CONFIG as MOTION } from '@/config/constants';
 import type { HealthCheckResponse, ServiceHealth } from '@/types';
@@ -201,6 +202,19 @@ export default function Home() {
                     <TaskCard {...task} onStatsUpdate={() => mutate()} />
                   </motion.div>
                 ))}
+              </motion.div>
+
+              {/* Heatmap Section */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{
+                  delay: MOTION.delay.cards + 0.3,
+                  duration: MOTION.duration,
+                  ease: MOTION.ease,
+                }}
+              >
+                <Heatmap />
               </motion.div>
 
               {/* Footer */}

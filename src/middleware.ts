@@ -9,6 +9,7 @@ export function middleware(request: NextRequest) {
     pathname === '/login' ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api/auth') ||
+    pathname.startsWith('/api/stats') ||
     pathname.includes('favicon.ico');
 
   // 2. 识别请求类型与特殊凭证
