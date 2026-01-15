@@ -1,6 +1,6 @@
 export interface LogEntry {
   service: string;
-  status: string;
+  status: boolean;
   timestamp: string;
 }
 
@@ -20,7 +20,7 @@ interface DayServiceStatus {
  * 逻辑：
  * 1. 按日期分组
  * 2. 在每一天内，按服务分组
- * 3. 如果某服务当天有任何一条 success 记录，则该服务当天视为 success
+ * 3. 如果某服务当天有任何一条 success 记录 (status=true)，则该服务当天视为 success
  * 4. 仅当某服务当天只有 failure 记录时，该服务当天视为 failure
  */
 export function aggregateByDay(logs: LogEntry[]): HeatmapDay[] {
@@ -29,7 +29,6 @@ export function aggregateByDay(logs: LogEntry[]): HeatmapDay[] {
   // 1. 遍历日志，确定每个服务在每一天的最终状态
   for (const log of logs) {
     // 转换为北京时间并取日期部分
-    // timestamp 必须是 ISO 格式或其他一般可解析格式
     const beijingDate = new Date(log.timestamp).toLocaleDateString('sv-SE', {
       timeZone: 'Asia/Shanghai',
     });
@@ -47,7 +46,7 @@ export function aggregateByDay(logs: LogEntry[]): HeatmapDay[] {
     }
 
     // 如果是 success 记录，更新为 success
-    if (log.status === 'success') {
+    if (log.status === true) {
       dayServices[log.service] = 'success';
     }
     // 如果是 failure 记录，且当前没有状态，或者是 failure，则标记为 failure

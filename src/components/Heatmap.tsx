@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 interface HeatmapDay {
   date: string;
@@ -12,6 +12,13 @@ interface HeatmapDay {
 interface HeatmapData {
   success: boolean;
   data?: HeatmapDay[];
+  year?: number;
+  error?: string;
+}
+
+interface YearsData {
+  success: boolean;
+  years?: number[];
   error?: string;
 }
 
@@ -26,28 +33,50 @@ export function Heatmap() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tooltip, setTooltip] = useState<{ day: HeatmapDay; x: number; y: number } | null>(null);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [availableYears, setAvailableYears] = useState<number[]>([new Date().getFullYear()]);
 
+  // 获取有数据的年份列表
   useEffect(() => {
-    async function fetchData() {
+    async function fetchYears() {
       try {
-        const res = await fetch('/api/stats/heatmap');
-        const json: HeatmapData = await res.json();
-        if (json.success && json.data) {
-          setData(json.data);
-        } else {
-          setError(json.error || 'Failed to load heatmap data');
+        const res = await fetch('/api/stats/heatmap/years');
+        const json: YearsData = await res.json();
+        if (json.success && json.years) {
+          setAvailableYears(json.years);
         }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error');
-      } finally {
-        setLoading(false);
+      } catch {
+        // 忽略错误，使用默认当前年份
       }
     }
-    fetchData();
+    fetchYears();
   }, []);
 
-  // 生成当前年份的日期数组 (Jan 1 - Dec 31)
-  const days = generateYearDays(new Date().getFullYear());
+  // 获取指定年份的热力图数据
+  const fetchHeatmapData = useCallback(async (year: number) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/stats/heatmap?year=${year}`);
+      const json: HeatmapData = await res.json();
+      if (json.success && json.data) {
+        setData(json.data);
+        setError(null);
+      } else {
+        setError(json.error || 'Failed to load heatmap data');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchHeatmapData(selectedYear);
+  }, [selectedYear, fetchHeatmapData]);
+
+  // 生成选中年份的日期数组 (Jan 1 - Dec 31)
+  const days = generateYearDays(selectedYear);
   const dataMap = new Map(data.map(d => [d.date, d]));
 
   // 计算颜色等级 (Simplified 3-State Logic)
@@ -83,14 +112,7 @@ export function Heatmap() {
     setTooltip(null);
   };
 
-  if (loading) {
-    return (
-      <div className="heatmap-container">
-        <div className="heatmap-loading">加载中...</div>
-      </div>
-    );
-  }
-
+  // 错误时显示错误信息
   if (error) {
     return (
       <div className="heatmap-container">
@@ -98,6 +120,8 @@ export function Heatmap() {
       </div>
     );
   }
+
+  // 始终渲染格子结构，数据加载完成后自动更新颜色
 
   // 按周分组
   const weeks = groupByWeeks(days);
@@ -107,74 +131,95 @@ export function Heatmap() {
 
   return (
     <div className="heatmap-container">
-      <div className="heatmap-wrapper">
-        {/* 月份标签 */}
-        <div
-          className="heatmap-months"
-          style={{
-            gridTemplateColumns: `repeat(${weeks.length}, 1fr)`,
-          }}
-        >
-          {monthLabels.map((label, i) => (
-            <span
-              key={i}
-              className="heatmap-month-label"
-              style={{ gridColumnStart: label.weekIndex + 1 }}
+      <div className="heatmap-layout">
+        {/* 左侧：热力图主体 */}
+        <div className="heatmap-main">
+          <div className="heatmap-wrapper">
+            {/* 月份标签 */}
+            <div
+              className="heatmap-months"
+              style={{
+                gridTemplateColumns: `repeat(${weeks.length}, 1fr)`,
+              }}
             >
-              {label.name}
-            </span>
-          ))}
-        </div>
+              {monthLabels.map((label, i) => (
+                <span
+                  key={i}
+                  className="heatmap-month-label"
+                  style={{ gridColumnStart: label.weekIndex + 1 }}
+                >
+                  {label.name}
+                </span>
+              ))}
+            </div>
 
-        <div className="heatmap-body">
-          {/* 星期标签 */}
-          <div className="heatmap-weekdays">
-            {WEEKDAYS.map((day, i) => (
-              <span
-                key={day}
-                className="heatmap-weekday-label"
-                style={{ visibility: i % 2 === 1 ? 'visible' : 'hidden' }}
-              >
-                {day}
-              </span>
-            ))}
-          </div>
-
-          {/* 热力图网格 */}
-          <div
-            className="heatmap-grid"
-            style={{
-              gridTemplateColumns: `repeat(${weeks.length}, 1fr)`,
-            }}
-          >
-            {weeks.map((week, weekIndex) => (
-              <div key={weekIndex} className="heatmap-week">
-                {week.map((date, dayIndex) => (
-                  <div
-                    key={date || `empty-${weekIndex}-${dayIndex}`}
-                    className={`heatmap-cell ${date ? getColorClass(date) : 'heatmap-level-0'}`}
-                    onMouseEnter={e => date && handleMouseEnter(e, date)}
-                    onMouseLeave={handleMouseLeave}
-                    style={{ visibility: date ? 'visible' : 'hidden' }}
-                  />
+            <div className="heatmap-body">
+              {/* 星期标签 */}
+              <div className="heatmap-weekdays">
+                {WEEKDAYS.map((day, i) => (
+                  <div key={day} className="heatmap-weekday-label">
+                    {i % 2 === 1 ? day : ''}
+                  </div>
                 ))}
               </div>
-            ))}
+
+              {/* 热力图网格 */}
+              <div
+                className="heatmap-grid"
+                style={{
+                  gridTemplateColumns: `repeat(${weeks.length}, 1fr)`,
+                }}
+              >
+                {weeks.map((week, weekIndex) => (
+                  <div key={weekIndex} className="heatmap-week">
+                    {week.map((date, dayIndex) => (
+                      <div
+                        key={date || `empty-${weekIndex}-${dayIndex}`}
+                        className={`heatmap-cell ${date ? getColorClass(date) : 'heatmap-level-0'}`}
+                        onMouseEnter={e => date && handleMouseEnter(e, date)}
+                        onMouseLeave={handleMouseLeave}
+                        style={{ visibility: date ? 'visible' : 'hidden' }}
+                      />
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 图例 */}
+            <div className="heatmap-footer">
+              <div className="heatmap-legend">
+                <div className="heatmap-cell heatmap-level-0" />
+                <span>No check-ins</span>
+
+                <div
+                  className="heatmap-cell heatmap-level-success"
+                  style={{ marginLeft: '12px' }}
+                />
+                <span>Success</span>
+
+                <div
+                  className="heatmap-cell heatmap-level-failure"
+                  style={{ marginLeft: '12px' }}
+                />
+                <span>Failure</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* 图例 */}
-        <div className="heatmap-footer">
-          <div className="heatmap-legend">
-            <div className="heatmap-cell heatmap-level-0" />
-            <span>No check-ins</span>
-
-            <div className="heatmap-cell heatmap-level-success" style={{ marginLeft: '12px' }} />
-            <span>Success</span>
-
-            <div className="heatmap-cell heatmap-level-failure" style={{ marginLeft: '12px' }} />
-            <span>Failure</span>
-          </div>
+        {/* 右侧：年份选择器 */}
+        <div className="heatmap-years-sidebar">
+          {availableYears.map(year => (
+            <button
+              key={year}
+              onClick={() => setSelectedYear(year)}
+              className={`heatmap-year-btn ${year === selectedYear ? 'active' : ''}`}
+              disabled={loading}
+            >
+              {year}
+            </button>
+          ))}
         </div>
       </div>
 

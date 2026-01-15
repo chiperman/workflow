@@ -31,7 +31,7 @@ export abstract class BaseService {
    * 记录签到日志到 keep_alive_logs 表
    * 此方法设计为"尽力而为"，失败不影响主逻辑
    */
-  private async logKeepAliveResult(result: KeepAliveResult, duration: number): Promise<void> {
+  private async logKeepAliveResult(result: KeepAliveResult): Promise<void> {
     try {
       const serviceKey = this.serviceName.toLowerCase();
 
@@ -48,7 +48,7 @@ export abstract class BaseService {
           .from('keep_alive_logs')
           .select('*', { count: 'exact', head: true })
           .eq('service', serviceKey)
-          .eq('status', 'success')
+          .eq('status', true)
           .gte('timestamp', todayStart);
 
         if (count && count > 0) {
@@ -59,9 +59,7 @@ export abstract class BaseService {
 
       const { error } = await supabase.from('keep_alive_logs').insert({
         service: serviceKey,
-        status: result.success ? 'success' : 'failure',
-        message: result.message,
-        duration,
+        status: result.success,
       });
 
       if (error) {
@@ -112,7 +110,7 @@ export abstract class BaseService {
       logger.info(`[${this.serviceName}] Completed successfully in ${duration}ms`);
 
       // 记录日志（异步，不阻塞）
-      this.logKeepAliveResult(result, duration);
+      this.logKeepAliveResult(result);
 
       return { ...result, duration };
     } catch (error: unknown) {
@@ -137,7 +135,7 @@ export abstract class BaseService {
       }
 
       // 记录失败日志
-      this.logKeepAliveResult(result, duration);
+      this.logKeepAliveResult(result);
 
       // 记录失败统计 (Fail-safe)
       await this.recordFailure(trigger);

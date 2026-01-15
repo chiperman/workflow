@@ -102,8 +102,8 @@ export default function Home() {
               <header className="mb-8 relative">
                 <div className="flex justify-between items-center mb-4">
                   <motion.h1
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
+                    initial={{ opacity: 0, y: MOTION.yOffset }}
+                    animate={{ opacity: 1, y: 0 }}
                     transition={{
                       delay: MOTION.delay.header,
                       duration: MOTION.duration,
@@ -114,15 +114,15 @@ export default function Home() {
                     System Operations
                   </motion.h1>
                   <motion.button
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
+                    initial={{ opacity: 0, y: MOTION.yOffset }}
+                    animate={{ opacity: 1, y: 0 }}
                     transition={{
                       delay: MOTION.delay.header,
                       duration: MOTION.duration,
                       ease: MOTION.ease,
                     }}
                     onClick={() => setShowLogoutConfirm(true)}
-                    className="flex items-center gap-2 px-3 py-1 text-[10px] font-medium tracking-tight text-[#888888] border border-[#e5e5e0] rounded-lg hover:bg-white hover:text-[#191919] hover:border-[#d97757]/30 transition-all duration-300"
+                    className="flex items-center gap-2 px-3 py-1 text-[10px] font-medium tracking-tight text-[#888888] border border-[#e5e5e0] rounded-lg hover:bg-white hover:text-[#191919] hover:border-[#d97757]/30 transition-colors duration-300"
                     title="End session"
                   >
                     <LogOut className="w-3 h-3" />
@@ -130,8 +130,8 @@ export default function Home() {
                   </motion.button>
                 </div>
                 <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
+                  initial={{ opacity: 0, y: MOTION.yOffset }}
+                  animate={{ opacity: 1, y: 0 }}
                   transition={{
                     delay: MOTION.delay.description,
                     duration: MOTION.duration,
@@ -143,6 +143,20 @@ export default function Home() {
                   synchronization.
                 </motion.p>
               </header>
+
+              {/* Heatmap Section - Now at top for better visibility */}
+              <motion.div
+                initial={{ opacity: 0, y: MOTION.yOffset }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  delay: MOTION.delay.heatmap,
+                  duration: MOTION.duration,
+                  ease: MOTION.ease,
+                }}
+                className="mb-8"
+              >
+                <Heatmap />
+              </motion.div>
 
               <motion.div
                 variants={{
@@ -173,16 +187,16 @@ export default function Home() {
                   {
                     category: 'Data Synchronization',
                     title: 'LeanCloud',
-                    description: 'Initiates a connection to the international data cluster.',
+                    description: 'Maintains the replication link for secondary storage.',
                     endpoint: '/api/leancloud-keep-alive',
                     method: 'POST' as const,
                     serviceHealth: leanCloudHealth,
                     serviceName: 'leancloud',
                   },
                   {
-                    category: 'Daily Check-in',
+                    category: 'Access Protocol',
                     title: 'GLaDOS',
-                    description: 'Automated daily check-in service for GLaDOS network access.',
+                    description: 'Daily check-in to maintain network permissions.',
                     endpoint: '/api/glados-checkin',
                     method: 'POST' as const,
                     serviceHealth: gladosHealth,
@@ -192,10 +206,14 @@ export default function Home() {
                   <motion.div
                     key={task.title}
                     variants={{
-                      hidden: { opacity: 0 },
+                      hidden: { opacity: 0, y: MOTION.yOffset },
                       show: {
                         opacity: 1,
-                        transition: { duration: MOTION.duration, ease: MOTION.ease },
+                        y: 0,
+                        transition: {
+                          duration: MOTION.duration,
+                          ease: MOTION.ease,
+                        },
                       },
                     }}
                   >
@@ -204,23 +222,10 @@ export default function Home() {
                 ))}
               </motion.div>
 
-              {/* Heatmap Section */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{
-                  delay: MOTION.delay.cards + 0.3,
-                  duration: MOTION.duration,
-                  ease: MOTION.ease,
-                }}
-              >
-                <Heatmap />
-              </motion.div>
-
               {/* Footer */}
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+                initial={{ opacity: 0, y: MOTION.yOffset }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{
                   delay: MOTION.delay.footer,
                   duration: MOTION.duration,

@@ -52,15 +52,22 @@ h6 {
 }
 
 /* ========== Heatmap Styles (GitHub Style) ========== */
+
 .heatmap-container {
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.6);
-  border-radius: 12px;
-  border: 1px solid var(--border-color);
-  margin-top: 1.5rem;
-  /* overflow handled by resizing now, but keep auto for safety on tiny screens */
+  position: relative;
+}
+
+.heatmap-layout {
+  display: block; /* Layout handled by absolute positioning */
+}
+
+.heatmap-main {
+  width: 100%;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e5e0;
   overflow-x: auto;
-  max-width: 100%;
 }
 
 .heatmap-wrapper {
@@ -154,10 +161,11 @@ h6 {
   background: #ff6b6b;
 }
 
-/* Footer with legend */
+/* Footer with legend and year selector */
 .heatmap-footer {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
   margin-top: 8px;
   padding-top: 8px;
 }
@@ -181,6 +189,44 @@ h6 {
 
 .heatmap-legend .heatmap-cell:hover {
   transform: none;
+}
+
+.heatmap-years-sidebar {
+  position: absolute;
+  right: -80px; /* Position outside the container to the right */
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 20px; /* align with grid, skip month labels */
+}
+
+.heatmap-year-btn {
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 400;
+  font-family: var(--font-serif), Georgia, serif;
+  color: #888888;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: color 0.3s ease;
+  text-align: right;
+}
+
+.heatmap-year-btn:hover:not(:disabled) {
+  color: #191919;
+}
+
+.heatmap-year-btn.active {
+  color: #d97757;
+  font-weight: 500;
+}
+
+.heatmap-year-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* Tooltip */
