@@ -13,7 +13,7 @@ export async function checkSupabaseHealth(): Promise<ServiceHealth> {
     return {
       status: 'misconfigured',
       tableExists: false,
-      stats: { auto_count: 0, manual_count: 0 },
+      stats: { auto_count: 0, manual_count: 0, failure_count: 0 },
       message: 'Database setup required. Please execute the SQL setup.',
     };
   }
@@ -22,7 +22,7 @@ export async function checkSupabaseHealth(): Promise<ServiceHealth> {
     return {
       status: 'misconfigured',
       tableExists: false,
-      stats: { auto_count: 0, manual_count: 0 },
+      stats: { auto_count: 0, manual_count: 0, failure_count: 0 },
       message: 'Table "keep_alive" does not exist. Please execute the SQL setup.',
     };
   }
@@ -30,7 +30,7 @@ export async function checkSupabaseHealth(): Promise<ServiceHealth> {
   return {
     status: 'operational',
     tableExists: true,
-    stats: result.data || { auto_count: 0, manual_count: 0 },
+    stats: result.data || { auto_count: 0, manual_count: 0, failure_count: 0 },
     enabled: result.enabled,
   };
 }
@@ -45,7 +45,7 @@ export async function checkLeanCloudHealth(): Promise<ServiceHealth> {
     return {
       status: 'outage',
       tableExists: false,
-      stats: { auto_count: 0, manual_count: 0 },
+      stats: { auto_count: 0, manual_count: 0, failure_count: 0 },
       message: result.error,
     };
   }
@@ -53,7 +53,7 @@ export async function checkLeanCloudHealth(): Promise<ServiceHealth> {
   return {
     status: result.tableExists ? 'operational' : 'misconfigured',
     tableExists: result.tableExists,
-    stats: result.data || { auto_count: 0, manual_count: 0 },
+    stats: result.data || { auto_count: 0, manual_count: 0, failure_count: 0 },
     message: result.tableExists ? undefined : 'Class "keep_alive" does not exist',
     enabled: result.enabled,
   };
@@ -69,7 +69,7 @@ export async function checkGladosHealth(): Promise<ServiceHealth> {
     return {
       status: 'misconfigured',
       tableExists: false,
-      stats: { auto_count: 0, manual_count: 0 },
+      stats: { auto_count: 0, manual_count: 0, failure_count: 0 },
       message: 'Database setup required. Please execute the SQL setup.',
     };
   }
@@ -78,7 +78,7 @@ export async function checkGladosHealth(): Promise<ServiceHealth> {
     return {
       status: 'misconfigured',
       tableExists: false,
-      stats: { auto_count: 0, manual_count: 0 },
+      stats: { auto_count: 0, manual_count: 0, failure_count: 0 },
       message: 'Table "keep_alive" does not exist. Please execute the SQL setup.',
     };
   }
@@ -86,7 +86,7 @@ export async function checkGladosHealth(): Promise<ServiceHealth> {
   return {
     status: 'operational',
     tableExists: true,
-    stats: result.data || { auto_count: 0, manual_count: 0 },
+    stats: result.data || { auto_count: 0, manual_count: 0, failure_count: 0 },
     enabled: result.enabled,
   };
 }

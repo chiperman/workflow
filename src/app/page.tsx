@@ -45,7 +45,7 @@ export default function Home() {
     () =>
       data?.services?.supabase || {
         status: 'unknown',
-        stats: { auto_count: 0, manual_count: 0 },
+        stats: { auto_count: 0, manual_count: 0, failure_count: 0 },
       },
     [data]
   );
@@ -54,7 +54,7 @@ export default function Home() {
     () =>
       data?.services?.leancloud || {
         status: 'unknown',
-        stats: { auto_count: 0, manual_count: 0 },
+        stats: { auto_count: 0, manual_count: 0, failure_count: 0 },
       },
     [data]
   );
@@ -63,7 +63,7 @@ export default function Home() {
     () =>
       data?.services?.glados || {
         status: 'unknown',
-        stats: { auto_count: 0, manual_count: 0 },
+        stats: { auto_count: 0, manual_count: 0, failure_count: 0 },
       },
     [data]
   );
