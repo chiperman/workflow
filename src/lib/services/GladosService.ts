@@ -144,6 +144,8 @@ export class GladosService extends BaseService {
           auto_count: autoCount,
           failure_count: existing?.failure_count || 0,
         },
+        // 重复签到时跳过日志记录，避免覆盖真正的签到状态
+        skipLog: isAlreadyCheckedIn,
       };
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';

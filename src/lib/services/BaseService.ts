@@ -32,6 +32,12 @@ export abstract class BaseService {
    * 此方法设计为"尽力而为"，失败不影响主逻辑
    */
   private async logKeepAliveResult(result: KeepAliveResult): Promise<void> {
+    // 如果结果标记为跳过日志（如重复签到），直接返回
+    if (result.skipLog) {
+      logger.info(`[${this.serviceName}] Skipping log (skipLog=true).`);
+      return;
+    }
+
     try {
       const serviceKey = this.serviceName.toLowerCase();
 
@@ -109,8 +115,8 @@ export abstract class BaseService {
 
       logger.info(`[${this.serviceName}] Completed successfully in ${duration}ms`);
 
-      // 记录日志（异步，不阻塞）
-      this.logKeepAliveResult(result);
+      // 记录日志（需等待完成，避免 Serverless 环境下函数提前退出导致日志丢失）
+      await this.logKeepAliveResult(result);
 
       return { ...result, duration };
     } catch (error: unknown) {
@@ -135,7 +141,7 @@ export abstract class BaseService {
       }
 
       // 记录失败日志
-      this.logKeepAliveResult(result);
+      await this.logKeepAliveResult(result);
 
       // 记录失败统计 (Fail-safe)
       await this.recordFailure(trigger);
