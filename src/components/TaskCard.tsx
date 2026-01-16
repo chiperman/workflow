@@ -47,11 +47,6 @@ function TaskCardComponent({
     }
   }, [serviceHealth.enabled]);
 
-  // 当本地状态变化时，可以选择性清除消息
-  useEffect(() => {
-    // 逻辑保持
-  }, []);
-
   // 计算最终状态
   const displayStatus = useMemo(() => {
     if (localStatus !== 'idle') return localStatus;

@@ -35,6 +35,8 @@ npm run build # 构建过程会自动执行 lint 和类型检查
 - **BaseService**: 测试重试机制、状态流转和通知触发逻辑。
 - **SupabaseService / LeanCloudService / GladosService**: 测试数据库操作流程。
 - **heatmap-utils (v0.8.0)**: 测试热力图聚合逻辑，包括服务级最终一致性、跨时区处理。
+- **heatmap-calendar (v0.8.2)**: 测试日历计算函数，包括日期生成、闰年处理、月份标签。
+- **组件测试 (v0.8.2)**: TaskCard 和 Heatmap 组件的渲染、交互测试。
 - **Utils**: 测试通用工具函数。
 
 ---
@@ -461,4 +463,4 @@ npm run build # 构建过程会自动执行 lint 和类型检查
 
 ---
 
-**最后更新**: 2026-01-16 (v0.8.0)
+**最后更新**: 2026-01-16 (v0.8.2)

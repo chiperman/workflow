@@ -40,7 +40,7 @@ describe('SupabaseService', () => {
       select: jest.fn().mockReturnValue({
         eq: jest.fn().mockReturnValue({
           single: jest.fn().mockResolvedValue({
-            data: { auto_count: 1, manual_count: 2 },
+            data: { auto_count: 1, manual_count: 2, failure_count: 0 },
             error: null,
           }),
         }),
@@ -49,7 +49,7 @@ describe('SupabaseService', () => {
 
     const stats = await service.getStats();
     expect(stats.success).toBe(true);
-    expect(stats.data).toEqual({ auto_count: 1, manual_count: 2 });
+    expect(stats.data).toEqual({ auto_count: 1, manual_count: 2, failure_count: 0 });
   });
 });
 
@@ -70,7 +70,7 @@ describe('LeanCloudService', () => {
 
     const stats = await service.getStats();
     expect(stats.success).toBe(true);
-    expect(stats.data).toEqual({ auto_count: 3, manual_count: 4 });
+    expect(stats.data).toEqual({ auto_count: 3, manual_count: 4, failure_count: 0 });
   });
 });
 
@@ -88,7 +88,7 @@ describe('GladosService', () => {
       select: jest.fn().mockReturnValue({
         eq: jest.fn().mockReturnValue({
           single: jest.fn().mockResolvedValue({
-            data: { auto_count: 5, manual_count: 6 },
+            data: { auto_count: 5, manual_count: 6, failure_count: 0 },
             error: null,
           }),
         }),
@@ -97,7 +97,7 @@ describe('GladosService', () => {
 
     const stats = await service.getStats();
     expect(stats.success).toBe(true);
-    expect(stats.data).toEqual({ auto_count: 5, manual_count: 6 });
+    expect(stats.data).toEqual({ auto_count: 5, manual_count: 6, failure_count: 0 });
   });
 
   it('应该能正确处理签到成功响应', async () => {
@@ -106,23 +106,38 @@ describe('GladosService', () => {
       json: jest.fn().mockResolvedValue({ code: 0, message: 'Checkin! Got 1 Points' }),
     });
 
-    (supabase.from as jest.Mock).mockReturnValue({
-      select: jest.fn().mockReturnValue({
-        eq: jest.fn().mockReturnValue({
-          single: jest.fn().mockResolvedValue({
-            data: { auto_count: 1, manual_count: 2 },
-            error: null,
+    (supabase.from as jest.Mock).mockImplementation((table: string) => {
+      if (table === 'keep_alive_logs') {
+        return {
+          select: jest.fn().mockReturnValue({
+            eq: jest.fn().mockReturnValue({
+              eq: jest.fn().mockReturnValue({
+                gte: jest.fn().mockResolvedValue({ count: 0 }),
+              }),
+            }),
           }),
-        }),
-      }),
-      upsert: jest.fn().mockReturnValue({
+          insert: jest.fn().mockResolvedValue({ error: null }),
+        };
+      }
+      // keep_alive table
+      return {
         select: jest.fn().mockReturnValue({
-          single: jest.fn().mockResolvedValue({
-            data: { id: 1, auto_count: 2, manual_count: 2 },
-            error: null,
+          eq: jest.fn().mockReturnValue({
+            single: jest.fn().mockResolvedValue({
+              data: { auto_count: 1, manual_count: 2, failure_count: 0 },
+              error: null,
+            }),
           }),
         }),
-      }),
+        upsert: jest.fn().mockReturnValue({
+          select: jest.fn().mockReturnValue({
+            single: jest.fn().mockResolvedValue({
+              data: { id: 1, auto_count: 2, manual_count: 2, failure_count: 0 },
+              error: null,
+            }),
+          }),
+        }),
+      };
     });
 
     const result = await service.run('auto');

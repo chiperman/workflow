@@ -2,7 +2,7 @@ import { env } from '@/lib/env';
 import { logger } from '@/lib/logger';
 import { supabase } from '@/lib/supabase';
 import { getBeijingTime } from '@/lib/utils';
-import type { KeepAliveResult, StatsQueryResult } from '@/types';
+import type { KeepAliveResult } from '@/types';
 import { BaseService } from './BaseService';
 
 export class GladosService extends BaseService {
@@ -151,51 +151,6 @@ export class GladosService extends BaseService {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logger.error(`[GLaDOS] executeKeepAlive error:`, errorMessage);
       return { success: false, message: errorMessage, duration: 0, error: errorMessage };
-    }
-  }
-
-  public async getStats(): Promise<StatsQueryResult> {
-    try {
-      const { data: existing, error } = await supabase
-        .from('keep_alive')
-        .select('manual_count, auto_count, failure_count, enabled')
-        .eq('service', 'glados')
-        .single();
-
-      if (error) {
-        if (error.code === 'PGRST116') {
-          return {
-            success: true,
-            data: { manual_count: 0, auto_count: 0, failure_count: 0 },
-            tableExists: true,
-            enabled: true,
-          };
-        }
-        if (error.code === '42P01') {
-          return {
-            success: false,
-            data: { manual_count: 0, auto_count: 0, failure_count: 0 },
-            tableExists: false,
-            error: "Table 'keep_alive' does not exist",
-          };
-        }
-        throw error;
-      }
-
-      return {
-        success: true,
-        data: {
-          manual_count: existing?.manual_count || 0,
-          auto_count: existing?.auto_count || 0,
-          failure_count: existing?.failure_count || 0,
-        },
-        tableExists: true,
-        enabled: existing?.enabled ?? true,
-      };
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      logger.error(`[GLaDOS] getStats error:`, errorMessage);
-      return { success: false, error: errorMessage };
     }
   }
 }

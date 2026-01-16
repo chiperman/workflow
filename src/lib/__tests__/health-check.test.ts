@@ -53,6 +53,7 @@ describe('checkSupabaseHealth', () => {
       stats: {
         auto_count: 10,
         manual_count: 5,
+        failure_count: 0,
       },
     });
   });
@@ -78,6 +79,7 @@ describe('checkSupabaseHealth', () => {
       stats: {
         auto_count: 0,
         manual_count: 0,
+        failure_count: 0,
       },
     });
   });
@@ -105,6 +107,7 @@ describe('checkSupabaseHealth', () => {
       stats: {
         auto_count: 0,
         manual_count: 0,
+        failure_count: 0,
       },
       message: 'Database setup required. Please execute the SQL setup.',
     });
@@ -149,6 +152,7 @@ describe('checkSupabaseHealth', () => {
       stats: {
         auto_count: 0,
         manual_count: 0,
+        failure_count: 0,
       },
       message: 'Database setup required. Please execute the SQL setup.',
     });
@@ -175,6 +179,7 @@ describe('checkSupabaseHealth', () => {
       stats: {
         auto_count: 0,
         manual_count: 0,
+        failure_count: 0,
       },
     });
   });
@@ -216,6 +221,7 @@ describe('checkLeanCloudHealth', () => {
       stats: {
         auto_count: 15,
         manual_count: 8,
+        failure_count: 0,
       },
     });
 
@@ -246,6 +252,7 @@ describe('checkLeanCloudHealth', () => {
       stats: {
         auto_count: 0,
         manual_count: 0,
+        failure_count: 0,
       },
       message: 'Class "keep_alive" does not exist',
     });
@@ -280,6 +287,7 @@ describe('checkLeanCloudHealth', () => {
       stats: {
         auto_count: 0,
         manual_count: 0,
+        failure_count: 0,
       },
     });
   });
@@ -295,6 +303,7 @@ describe('checkLeanCloudHealth', () => {
       stats: {
         auto_count: 0,
         manual_count: 0,
+        failure_count: 0,
       },
       message: 'Network timeout',
     });
@@ -318,6 +327,7 @@ describe('checkLeanCloudHealth', () => {
       stats: {
         auto_count: 0,
         manual_count: 0,
+        failure_count: 0,
       },
     });
   });

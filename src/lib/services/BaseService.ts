@@ -23,9 +23,54 @@ export abstract class BaseService {
   protected abstract executeKeepAlive(trigger: 'auto' | 'manual'): Promise<KeepAliveResult>;
 
   /**
-   * 获取服务状态，由子类实现
+   * 获取服务状态（默认实现，从 Supabase 查询）
+   * 子类可直接继承此实现，或覆写以使用自定义逻辑
    */
-  public abstract getStats(): Promise<StatsQueryResult>;
+  public async getStats(): Promise<StatsQueryResult> {
+    try {
+      const serviceKey = this.serviceName.toLowerCase();
+      const { data: existing, error } = await supabase
+        .from('keep_alive')
+        .select('manual_count, auto_count, failure_count, enabled')
+        .eq('service', serviceKey)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          return {
+            success: true,
+            data: { manual_count: 0, auto_count: 0, failure_count: 0 },
+            tableExists: true,
+            enabled: true,
+          };
+        }
+        if (error.code === '42P01') {
+          return {
+            success: false,
+            data: { manual_count: 0, auto_count: 0, failure_count: 0 },
+            tableExists: false,
+            error: "Table 'keep_alive' does not exist",
+          };
+        }
+        throw error;
+      }
+
+      return {
+        success: true,
+        data: {
+          manual_count: existing?.manual_count || 0,
+          auto_count: existing?.auto_count || 0,
+          failure_count: existing?.failure_count || 0,
+        },
+        tableExists: true,
+        enabled: existing?.enabled ?? true,
+      };
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error(`[${this.serviceName}] getStats error:`, errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  }
 
   /**
    * 记录签到日志到 keep_alive_logs 表

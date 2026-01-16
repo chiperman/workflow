@@ -44,6 +44,7 @@ workflow/
 │   │   │   ├── LeanCloudService.ts
 │   │   │   └── GladosService.ts # GLaDOS 服务 (v0.5.0)
 │   │   ├── api-helper.ts      # API 统一处理工具
+│   │   ├── heatmap-calendar.ts # 日历计算纯函数 (v0.8.2)
 │   │   ├── heatmap-utils.ts   # 热力图聚合逻辑 (v0.8.0)
 │   │   ├── logger.ts          # 统一日志工具 (v0.4.5)
 │   │   ├── utils.ts           # 工具函数
@@ -54,9 +55,14 @@ workflow/
 │   │   └── __tests__/         # 单元测试
 │   │       ├── setup.ts
 │   │       ├── health-check.test.ts
-│   │       ├── heatmap-utils.test.ts # 热力图逻辑测试 (v0.8.0)
+│   │       ├── heatmap-utils.test.ts
+│   │       ├── heatmap-calendar.test.ts # (v0.8.2)
 │   │       ├── services.test.ts
 │   │       └── utils.test.ts
+│   ├── components/            # React 组件
+│   │   ├── __tests__/         # 组件测试 (v0.8.2)
+│   │   │   ├── TaskCard.test.tsx
+│   │   │   └── Heatmap.test.tsx
 │   └── types/                 # 类型定义
 │       └── index.ts
 ├── docs/                      # 文档

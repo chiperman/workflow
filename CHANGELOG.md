@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.2] - 2026-01-16
+
+### Refactored
+
+- **服务层优化**: 将重复的 `getStats()` 实现上移至 `BaseService`，删除约 90 行重复代码。
+- **Heatmap 组件拆分**: 提取日历计算函数到 `heatmap-calendar.ts` 模块，组件从 369 行精简到 280 行。
+
+### Added
+
+- **服务名常量**: 新增 `SERVICES` 常量和 `ServiceName` 类型，消除魔法字符串。
+- **组件测试**: 新增 `TaskCard.test.tsx` 和 `Heatmap.test.tsx`，覆盖组件渲染、API 交互等场景。
+- **日历工具测试**: 新增 `heatmap-calendar.test.ts`，覆盖日期生成、闰年处理、格式化等功能。
+
+### Fixed
+
+- **测试用例修复**: 修复 `services.test.ts` 和 `health-check.test.ts` 中缺失 `failure_count` 字段导致的测试失败。
+- **文档一致性**: 统一 README 和 API.md 中 `keep_alive_logs.status` 类型为 `BOOLEAN`。
+
+### Maintenance
+
+- 移除 `TaskCard` 组件中的空 `useEffect`。
+
 ## [0.8.1] - 2026-01-16
 
 ### Fixed

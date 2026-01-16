@@ -42,6 +42,17 @@ export const DATABASE_CONFIG = {
 } as const;
 
 /**
+ * 服务标识符
+ */
+export const SERVICES = {
+  SUPABASE: 'supabase',
+  LEANCLOUD: 'leancloud',
+  GLADOS: 'glados',
+} as const;
+
+export type ServiceName = (typeof SERVICES)[keyof typeof SERVICES];
+
+/**
  * 动效时序配置 - Anthropic 风格：温柔、舒缓
  * 所有元素按页面从上到下顺序依次入场
  */
