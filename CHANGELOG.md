@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.1] - 2026-01-16
+
+### Fixed
+
+- **日志记录丢失**: 修复 Serverless 环境下因函数提前退出导致签到日志未写入的问题（添加 `await`）。
+- **重复签到日志**: GLaDOS 重复签到时不再记录日志，避免记录无意义的数据。引入 `skipLog` 字段标识跳过日志场景。
+
 ## [0.8.0] - 2026-01-16
 
 ### Added
