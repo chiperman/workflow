@@ -10,7 +10,7 @@ export abstract class BaseService {
   /**
    * 通知策略：
    * always: 每次运行都发送通知
-   * failure-only: 仅在失败或手动运行时运行成功后发送通知
+   * failure-only: 仅在失败时发送通知
    * none: 绝不发送成功通知（失败通知仍可根据逻辑保留）
    */
   protected notificationLevel: NotificationLevel = 'always';
@@ -145,9 +145,7 @@ export abstract class BaseService {
       const duration = Date.now() - startTime;
 
       // 检查是否需要发送成功通知
-      const shouldNotify =
-        this.notificationLevel === 'always' ||
-        (this.notificationLevel === 'failure-only' && trigger === 'manual');
+      const shouldNotify = this.notificationLevel === 'always';
 
       if (shouldNotify) {
         await sendBarkNotification(
