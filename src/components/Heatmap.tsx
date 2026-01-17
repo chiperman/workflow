@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
   formatDateForTooltip,
@@ -80,8 +80,8 @@ export function Heatmap() {
     fetchHeatmapData(selectedYear);
   }, [selectedYear, fetchHeatmapData]);
 
-  // 生成选中年份的日期数组 (Jan 1 - Dec 31)
-  const days = generateYearDays(selectedYear);
+  // 生成选中年份的日期数组 (Jan 1 - Dec 31)，使用 useMemo 缓存
+  const days = useMemo(() => generateYearDays(selectedYear), [selectedYear]);
   const dataMap = new Map(data.map(d => [d.date, d]));
 
   // 计算颜色等级 (Simplified 3-State Logic)
