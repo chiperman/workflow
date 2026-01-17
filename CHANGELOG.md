@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.3] - 2026-01-17
+
+### Removed
+
+- **LeanCloud 移除**: 由于服务停止，彻底移除了 LeanCloud 相关的所有代码、配置、API 和文档 (A1)。
+- **清理**: 删除了 `src/lib/services/LeanCloudService.ts` 及相关测试和路由。
+
+### Refactored
+
+- **TaskCard 重构**: 将 `TaskCard` 组件拆分为 `Header`, `Stats`, `Actions`, `Message` 四个子组件，提升可维护性 (C4)。
+
 ## [0.8.2] - 2026-01-16
 
 ### Refactored

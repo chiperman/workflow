@@ -1,13 +1,13 @@
 # Workflow Operations System
 
-**v0.8.2**
+**v0.8.3**
 
-这是一个用于防止云服务（Supabase, LeanCloud）因不活跃而被暂停的全栈自动化解决方案。它包含每日自动运行的定时任务，具备自动重试机制，以及一个现代化的手动控制台。
+这是一个用于防止云服务（Supabase）因不活跃而被暂停的全栈自动化解决方案。它包含每日自动运行的定时任务，具备自动重试机制，以及一个现代化的手动控制台。
 
 ## 🚀 功能特性
 
 - **签到热力图 (v0.8.0)**: GitHub 风格的签到记录可视化，支持成功/失败颜色区分和悬浮详情。
-- **Supabase & LeanCloud 自动保活**: 每日定时自动触发活跃信号。
+- **Supabase 自动保活**: 每日定时自动触发活跃信号。
 - **GLaDOS 每日签到 (v0.5.0)**: 自动签到以保持网络访问权限。
 - **服务开关控制 (v0.6.0)**: 通过 UI 开关控制每个服务的自动执行，手动触发不受影响。
 - **智能化通知策略 (v0.4.5)**:
@@ -32,7 +32,7 @@
 
 - **Supabase 配置**: `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`
 - **Bark 配置**: `BARK_DEVICE_KEY`
-- **LeanCloud 配置**: `LEANCLOUD_APP_ID`, `LEANCLOUD_APP_KEY`, `LEANCLOUD_API_SERVER`, `LEANCLOUD_MASTER_KEY`
+
 - **安全配置**: `CRON_SECRET`, `APP_KEY`
 
 ### 2. 创建 Supabase 表
@@ -62,7 +62,6 @@ CREATE TABLE IF NOT EXISTS keep_alive_logs (
 INSERT INTO keep_alive (service, timestamp, manual_count, auto_count, enabled)
 VALUES
   ('supabase', NOW(), 0, 0, TRUE),
-  ('leancloud', NOW(), 0, 0, TRUE),
   ('glados', NOW(), 0, 0, TRUE)
 ON CONFLICT (service) DO NOTHING;
 
@@ -93,6 +92,7 @@ CREATE INDEX IF NOT EXISTS idx_logs_timestamp_service ON keep_alive_logs (timest
 
 ## 📦 版本历史
 
+- **v0.8.3**: 彻底移除 LeanCloud 集成，重构 TaskCard 组件。
 - **v0.8.2**: 代码架构重构，提取公用服务逻辑与日历工具函数，新增组件与工具函数全量测试。
 - **v0.8.1**: 修复 Serverless 开启鉴权后的日志记录与 GLaDOS 重复签到逻辑。
 - **v0.8.0**: 新增 GitHub 风格签到热力图，支持服务级最终一致性和独立失败统计。

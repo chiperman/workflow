@@ -20,7 +20,6 @@ workflow/
 │   │   │   ├── stats/         # 统计 API (v0.8.0)
 │   │   │   │   └── heatmap/   # 热力图数据聚合
 │   │   │   ├── supabase-keep-alive/
-│   │   │   ├── leancloud-keep-alive/
 │   │   │   ├── glados-checkin/
 │   │   │   └── tasks/         # 任务管理 API (v0.8.3)
 │   │   ├── favicon.ico
@@ -48,7 +47,6 @@ workflow/
 │   │   ├── services/          # 服务层
 │   │   │   ├── BaseService.ts # 服务基类
 │   │   │   ├── SupabaseService.ts
-│   │   │   ├── LeanCloudService.ts
 │   │   │   └── GladosService.ts # GLaDOS 服务 (v0.5.0)
 │   │   ├── api-helper.ts      # API 统一处理工具
 │   │   ├── heatmap-calendar.ts # 日历计算纯函数 (v0.8.2)
@@ -110,7 +108,6 @@ workflow/
 ### 数据库和后端
 
 - **Supabase** - PostgreSQL 数据库
-- **LeanCloud** - 国际版数据存储
 
 ### UI 和样式
 

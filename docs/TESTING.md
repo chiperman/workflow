@@ -33,7 +33,7 @@ npm run build # 构建过程会自动执行 lint 和类型检查
 ### 2. 测试覆盖范围
 
 - **BaseService**: 测试重试机制、状态流转和通知触发逻辑。
-- **SupabaseService / LeanCloudService / GladosService**: 测试数据库操作流程。
+- **SupabaseService / GladosService**: 测试数据库操作流程。
 - **heatmap-utils (v0.8.0)**: 测试热力图聚合逻辑，包括服务级最终一致性、跨时区处理。
 - **heatmap-calendar (v0.8.2)**: 测试日历计算函数，包括日期生成、闰年处理、月份标签。
 - **组件测试 (v0.8.2)**: TaskCard 和 Heatmap 组件的渲染、交互测试。
@@ -50,7 +50,7 @@ npm run build # 构建过程会自动执行 lint 和类型检查
 **测试方法**：
 
 1. 访问 http://localhost:3000
-2. 观察三个任务卡片（Supabase、LeanCloud 和 GLaDOS）
+2. 观察两个任务卡片（Supabase 和 GLaDOS）
 3. 点击 "Run Task" 按钮
 4. 观察状态变化：
    - Loading 状态（按钮显示 "Running..."）
@@ -142,7 +142,7 @@ npm run build # 构建过程会自动执行 lint 和类型检查
 **测试点**：
 
 - ✅ 版本号显示正确
-- ✅ 系统状态指示器（小圆点）显示（Supabase、LeanCloud、GLaDOS）
+- ✅ 系统状态指示器（小圆点）显示（Supabase、GLaDOS）
 - ✅ 失败服务（如有）红色文字提示
 - ✅ 链接可点击且在新标签页打开
 - ✅ Vercel Logo 加载无闪烁 (Priority)
@@ -297,7 +297,7 @@ npm run build # 构建过程会自动执行 lint 和类型检查
 
 **测试点**:
 
-- ✅ 响应包含 `supabase`, `leancloud`, `glados` 三个字段
+- ✅ 响应包含 `supabase`, `glados` 两个字段
 - ✅ 服务并行执行
 - ✅ 任意一个服务失败不影响整体状态返回 200
 
@@ -463,4 +463,4 @@ npm run build # 构建过程会自动执行 lint 和类型检查
 
 ---
 
-**最后更新**: 2026-01-16 (v0.8.2)
+**最后更新**: 2026-01-17 (v0.8.3)

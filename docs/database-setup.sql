@@ -15,7 +15,6 @@ CREATE TABLE IF NOT EXISTS keep_alive (
 INSERT INTO keep_alive (service, timestamp, manual_count, auto_count, enabled)
 VALUES 
   ('supabase', NOW(), 0, 0, TRUE),
-  ('leancloud', NOW(), 0, 0, TRUE),
   ('glados', NOW(), 0, 0, TRUE)
 ON CONFLICT (service) DO NOTHING;
 

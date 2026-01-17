@@ -43,10 +43,7 @@ GET /api/health
       "status": "operational",
       "stats": { "auto_count": 42, "manual_count": 15 }
     },
-    "leancloud": {
-      "status": "operational",
-      "stats": { "auto_count": 38, "manual_count": 12 }
-    },
+
     "glados": {
       "status": "operational",
       "stats": { "auto_count": 25, "manual_count": 5 }
@@ -78,7 +75,7 @@ GET /api/stats/heatmap
 "failure_count": 0,
 "services": {
 "supabase": "success",
-"leancloud": "success",
+
 "glados": "success"
 }
 }
@@ -112,7 +109,7 @@ GET /api/stats/heatmap
 
 **说明**：
 
-- `service` 必须是 `supabase`、`leancloud` 或 `glados` 之一。
+- `service` 必须是 `supabase` 或 `glados` 之一。
 - `enabled: false` 时，该服务的自动 Cron 任务将被跳过，但手动触发不受影响。
 
 ---
@@ -131,7 +128,7 @@ GET /api/stats/heatmap
 ```json
 {
   "supabase": { "success": true, "message": "..." },
-  "leancloud": { "success": true, "message": "..." },
+
   "glados": { "success": true, "message": "..." }
 }
 ```
@@ -159,11 +156,6 @@ GET /api/stats/heatmap
     "data": { "auto_count": 43, "manual_count": 15 }
   }
   ```
-
-### LeanCloud 保活
-
-- **端点**: `/api/leancloud-keep-alive`
-- **方法**: POST (手动) / GET (自动)
 
 ### GLaDOS 签到
 
@@ -217,7 +209,7 @@ CREATE TABLE IF NOT EXISTS keep_alive_logs (
 INSERT INTO keep_alive (service, timestamp, manual_count, auto_count, enabled)
 VALUES
   ('supabase', NOW(), 0, 0, TRUE),
-  ('leancloud', NOW(), 0, 0, TRUE),
+
   ('glados', NOW(), 0, 0, TRUE)
 ON CONFLICT (service) DO NOTHING;
 
@@ -234,6 +226,11 @@ CREATE INDEX IF NOT EXISTS idx_logs_timestamp_service ON keep_alive_logs (timest
 ---
 
 ## 变更日志
+
+### v0.8.3 (2026-01-17)
+
+- ✅ **移除**: LeanCloud 相关的所有 API 端点 (`/api/leancloud-keep-alive`) 和数据字段。
+- ✅ **优化**: 简化了 `/api/health` 和 `/api/cron-all` 的响应结构。
 
 ### v0.8.0 (2026-01-16)
 
@@ -278,4 +275,4 @@ CREATE INDEX IF NOT EXISTS idx_logs_timestamp_service ON keep_alive_logs (timest
 
 ---
 
-**最后更新**: 2026-01-16 (v0.8.2)
+**最后更新**: 2026-01-17 (v0.8.3)
