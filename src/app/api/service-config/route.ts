@@ -1,3 +1,4 @@
+import { VALID_SERVICES } from '@/config/constants';
 import { env } from '@/lib/env';
 import { supabase } from '@/lib/supabase';
 import { NextResponse } from 'next/server';
@@ -35,10 +36,12 @@ export async function PATCH(request: Request) {
     }
 
     // 验证服务名称
-    const validServices = ['supabase', 'leancloud', 'glados'];
-    if (!validServices.includes(service)) {
+    if (!VALID_SERVICES.includes(service)) {
       return NextResponse.json(
-        { success: false, message: `Invalid service. Must be one of: ${validServices.join(', ')}` },
+        {
+          success: false,
+          message: `Invalid service. Must be one of: ${VALID_SERVICES.join(', ')}`,
+        },
         { status: 400 }
       );
     }

@@ -1,3 +1,4 @@
+import { SERVICES } from '@/config/constants';
 import { env } from '@/lib/env';
 import { gladosService } from '@/lib/services/GladosService';
 import { leanCloudService } from '@/lib/services/LeanCloudService';
@@ -18,10 +19,18 @@ async function getServiceConfigs(): Promise<Record<string, boolean>> {
 
   if (error || !data) {
     // 默认所有服务开启
-    return { supabase: true, leancloud: true, glados: true };
+    return {
+      [SERVICES.SUPABASE]: true,
+      [SERVICES.LEANCLOUD]: true,
+      [SERVICES.GLADOS]: true,
+    };
   }
 
-  const configs: Record<string, boolean> = { supabase: true, leancloud: true, glados: true };
+  const configs: Record<string, boolean> = {
+    [SERVICES.SUPABASE]: true,
+    [SERVICES.LEANCLOUD]: true,
+    [SERVICES.GLADOS]: true,
+  };
   data.forEach((row: ServiceConfig) => {
     configs[row.service] = row.enabled ?? true;
   });
@@ -63,9 +72,9 @@ export async function GET(request: Request) {
 
   // 并行执行所有服务
   const [supabaseResult, leancloudResult, gladosResult] = await Promise.all([
-    executeIfEnabled('supabase', () => supabaseService.run('auto')),
-    executeIfEnabled('leancloud', () => leanCloudService.run('auto')),
-    executeIfEnabled('glados', () => gladosService.run('auto')),
+    executeIfEnabled(SERVICES.SUPABASE, () => supabaseService.run('auto')),
+    executeIfEnabled(SERVICES.LEANCLOUD, () => leanCloudService.run('auto')),
+    executeIfEnabled(SERVICES.GLADOS, () => gladosService.run('auto')),
   ]);
 
   // 构建响应

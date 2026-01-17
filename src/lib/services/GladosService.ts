@@ -1,3 +1,4 @@
+import { SERVICES } from '@/config/constants';
 import { env } from '@/lib/env';
 import { logger } from '@/lib/logger';
 import { supabase } from '@/lib/supabase';
@@ -80,7 +81,7 @@ export class GladosService extends BaseService {
       const { data: existing, error: fetchError } = await supabase
         .from('keep_alive')
         .select('*')
-        .eq('service', 'glados')
+        .eq('service', SERVICES.GLADOS)
         .single();
 
       if (fetchError) {
@@ -109,7 +110,7 @@ export class GladosService extends BaseService {
       const { error: upsertError } = await supabase
         .from('keep_alive')
         .upsert({
-          service: 'glados',
+          service: SERVICES.GLADOS,
           timestamp: new Date().toISOString(),
           manual_count: manualCount,
           auto_count: autoCount,

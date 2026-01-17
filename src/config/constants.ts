@@ -52,6 +52,9 @@ export const SERVICES = {
 
 export type ServiceName = (typeof SERVICES)[keyof typeof SERVICES];
 
+/** 有效服务名称列表，用于 API 验证 */
+export const VALID_SERVICES: ServiceName[] = Object.values(SERVICES);
+
 /**
  * 动效时序配置 - Anthropic 风格：温柔、舒缓
  * 所有元素按页面从上到下顺序依次入场

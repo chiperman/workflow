@@ -1,3 +1,4 @@
+import { SERVICES } from '@/config/constants';
 import { logger } from '@/lib/logger';
 import { supabase } from '@/lib/supabase';
 import { getBeijingTime } from '@/lib/utils';
@@ -16,7 +17,7 @@ export class SupabaseService extends BaseService {
       const { data: existing, error: fetchError } = await supabase
         .from('keep_alive')
         .select('*')
-        .eq('service', 'supabase')
+        .eq('service', SERVICES.SUPABASE)
         .single();
 
       if (fetchError) {
@@ -44,7 +45,7 @@ export class SupabaseService extends BaseService {
       const { error: upsertError } = await supabase
         .from('keep_alive')
         .upsert({
-          service: 'supabase',
+          service: SERVICES.SUPABASE,
           timestamp: new Date().toISOString(),
           manual_count: manualCount,
           auto_count: autoCount,

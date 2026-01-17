@@ -8,7 +8,7 @@ import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { Footer } from '@/components/Footer';
 import { Heatmap } from '@/components/Heatmap';
 import { TaskCard } from '@/components/TaskCard';
-import { APP_VERSION, MOTION_CONFIG as MOTION } from '@/config/constants';
+import { APP_VERSION, MOTION_CONFIG as MOTION, SERVICES } from '@/config/constants';
 import type { HealthCheckResponse, ServiceHealth } from '@/types';
 import { LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -182,7 +182,7 @@ export default function Home() {
                     endpoint: '/api/supabase-keep-alive',
                     method: 'POST' as const,
                     serviceHealth: supabaseHealth,
-                    serviceName: 'supabase',
+                    serviceName: SERVICES.SUPABASE,
                   },
                   {
                     category: 'Data Synchronization',
@@ -191,7 +191,7 @@ export default function Home() {
                     endpoint: '/api/leancloud-keep-alive',
                     method: 'POST' as const,
                     serviceHealth: leanCloudHealth,
-                    serviceName: 'leancloud',
+                    serviceName: SERVICES.LEANCLOUD,
                   },
                   {
                     category: 'Access Protocol',
@@ -200,7 +200,7 @@ export default function Home() {
                     endpoint: '/api/glados-checkin',
                     method: 'POST' as const,
                     serviceHealth: gladosHealth,
-                    serviceName: 'glados',
+                    serviceName: SERVICES.GLADOS,
                   },
                 ].map(task => (
                   <motion.div

@@ -1,3 +1,4 @@
+import { SERVICES } from '@/config/constants';
 import { env } from '@/lib/env';
 import { logger } from '@/lib/logger';
 import { supabase } from '@/lib/supabase';
@@ -127,7 +128,7 @@ export class LeanCloudService extends BaseService {
         const { data } = await supabase
           .from('keep_alive')
           .select('enabled, failure_count')
-          .eq('service', 'leancloud')
+          .eq('service', SERVICES.LEANCLOUD)
           .single();
         if (data) {
           existing = data;
