@@ -32,9 +32,14 @@ const customJestConfig = {
     '!src/components/**', // Exclude components (should have separate component tests)
   ],
 
-  // Coverage thresholds - only enforce for files that have tests
-  // This ensures tested files maintain high quality without failing on untested files
+  // Coverage thresholds - global threshold to prevent regression
   coverageThreshold: {
+    global: {
+      branches: 50,
+      functions: 70,
+      lines: 65,
+      statements: 65,
+    },
     './src/lib/utils.ts': {
       branches: 75,
       functions: 100,

@@ -26,15 +26,19 @@ workflow/
 │   │   ├── page.tsx           # 主页面
 │   │   └── globals.css        # 全局样式
 │   ├── components/            # React 组件
+│   │   ├── ConfirmDialog.tsx  # 确认对话框
+│   │   ├── CreateGuide.tsx    # 表创建引导
 │   │   ├── ErrorBoundary.tsx  # 错误边界
 │   │   ├── ErrorTest.tsx      # 错误测试组件
-│   │   ├── TaskCard.tsx       # 任务卡片
-│   │   ├── CreateGuide.tsx    # 表创建引导
+│   │   ├── Footer.tsx         # 页脚
 │   │   ├── Heatmap.tsx        # 签到热力图 (v0.8.0)
+│   │   ├── PageBackground.tsx # 全局背景组件 (v0.7.0)
 │   │   ├── RollingNumber.tsx  # 数字滚动动画
 │   │   ├── SystemStatus.tsx   # 系统状态显示
-│   │   ├── PageBackground.tsx # 全局背景组件 (v0.7.0)
-│   │   └── Footer.tsx         # 页脚
+│   │   ├── TaskCard.tsx       # 任务卡片
+│   │   └── __tests__/         # 组件测试 (v0.8.2)
+│   │       ├── TaskCard.test.tsx
+│   │       └── Heatmap.test.tsx
 │   ├── config/                # 配置文件
 │   │   └── constants.ts       # 全局常量
 │   ├── lib/                   # 核心逻辑
@@ -59,15 +63,11 @@ workflow/
 │   │       ├── heatmap-calendar.test.ts # (v0.8.2)
 │   │       ├── services.test.ts
 │   │       └── utils.test.ts
-│   ├── components/            # React 组件
-│   │   ├── __tests__/         # 组件测试 (v0.8.2)
-│   │   │   ├── TaskCard.test.tsx
-│   │   │   └── Heatmap.test.tsx
 │   └── types/                 # 类型定义
 │       └── index.ts
 ├── docs/                      # 文档
-│   ├── DEVELOPMENT.md         # 开发文档
 │   ├── API.md                 # API 文档
+│   ├── DEVELOPMENT.md         # 开发文档
 │   ├── TESTING.md             # 测试文档
 │   └── database-setup.sql     # 数据库初始化脚本
 ├── public/                    # 静态资源
@@ -80,6 +80,7 @@ workflow/
 │   ├── window.svg
 │   └── vercel.svg
 ├── .env.local                 # 环境变量 (Git 忽略)
+├── .nvmrc                     # Node.js 版本约束
 ├── commitlint.config.js       # Commitlint 配置
 ├── eslint.config.mjs          # ESLint 配置
 ├── jest.config.js             # Jest 配置
@@ -204,4 +205,4 @@ INSERT INTO keep_alive (service) VALUES ('your-service-name') ON CONFLICT DO NOT
 
 ---
 
-**最后更新**: 2026-01-16 (v0.8.2)
+**最后更新**: 2026-01-17 (v0.8.3)
