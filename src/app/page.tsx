@@ -7,7 +7,7 @@ import useSWR from 'swr';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { Footer } from '@/components/Footer';
 import { Heatmap } from '@/components/Heatmap';
-import { TaskCard } from '@/components/TaskCard';
+import { TaskCard } from '@/components/task-card';
 import { APP_VERSION, MOTION_CONFIG as MOTION, SERVICES } from '@/config/constants';
 import type { HealthCheckResponse, ServiceHealth } from '@/types';
 import { LogOut } from 'lucide-react';
