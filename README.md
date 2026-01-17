@@ -93,6 +93,8 @@ CREATE INDEX IF NOT EXISTS idx_logs_timestamp_service ON keep_alive_logs (timest
 
 ## 📦 版本历史
 
+- **v0.8.2**: 代码架构重构，提取公用服务逻辑与日历工具函数，新增组件与工具函数全量测试。
+- **v0.8.1**: 修复 Serverless 开启鉴权后的日志记录与 GLaDOS 重复签到逻辑。
 - **v0.8.0**: 新增 GitHub 风格签到热力图，支持服务级最终一致性和独立失败统计。
 - **v0.7.0**: UI 重构，实现背景持久化与卡片交替入场动画。
 - **v0.6.0**: 引入服务开关控制逻辑。

@@ -278,4 +278,4 @@ CREATE INDEX IF NOT EXISTS idx_logs_timestamp_service ON keep_alive_logs (timest
 
 ---
 
-**最后更新**: 2026-01-16 (v0.8.0)
+**最后更新**: 2026-01-16 (v0.8.2)
