@@ -174,7 +174,6 @@ function TaskCardComponent({
       <Stats stats={serviceHealth.stats} displayStatus={displayStatus} />
 
       <Actions
-        title={title}
         displayStatus={displayStatus}
         onRun={handleRun}
         showCreateGuide={showCreateGuide}

@@ -1,7 +1,6 @@
 import { SERVICES } from '@/config/constants';
 import { env } from '@/lib/env';
 import { gladosService } from '@/lib/services/GladosService';
-import { leanCloudService } from '@/lib/services/LeanCloudService';
 import { supabaseService } from '@/lib/services/SupabaseService';
 import { supabase } from '@/lib/supabase';
 import type { KeepAliveResult } from '@/types';
@@ -21,14 +20,12 @@ async function getServiceConfigs(): Promise<Record<string, boolean>> {
     // 默认所有服务开启
     return {
       [SERVICES.SUPABASE]: true,
-      [SERVICES.LEANCLOUD]: true,
       [SERVICES.GLADOS]: true,
     };
   }
 
   const configs: Record<string, boolean> = {
     [SERVICES.SUPABASE]: true,
-    [SERVICES.LEANCLOUD]: true,
     [SERVICES.GLADOS]: true,
   };
   data.forEach((row: ServiceConfig) => {
@@ -71,21 +68,19 @@ export async function GET(request: Request) {
   };
 
   // 并行执行所有服务
-  const [supabaseResult, leancloudResult, gladosResult] = await Promise.all([
+  const [supabaseResult, gladosResult] = await Promise.all([
     executeIfEnabled(SERVICES.SUPABASE, () => supabaseService.run('auto')),
-    executeIfEnabled(SERVICES.LEANCLOUD, () => leanCloudService.run('auto')),
     executeIfEnabled(SERVICES.GLADOS, () => gladosService.run('auto')),
   ]);
 
   // 构建响应
   const results = {
     supabase: supabaseResult,
-    leancloud: leancloudResult,
     glados: gladosResult,
   };
 
   // 整体状态：只要有一个成功就返回 200
-  const hasSuccess = supabaseResult.success || leancloudResult.success || gladosResult.success;
+  const hasSuccess = supabaseResult.success || gladosResult.success;
   const status = hasSuccess ? 200 : 500;
 
   return NextResponse.json(results, { status });

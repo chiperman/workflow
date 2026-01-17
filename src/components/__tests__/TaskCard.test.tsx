@@ -1,6 +1,6 @@
 import type { ServiceHealth } from '@/types';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { TaskCard } from '../TaskCard';
+import { TaskCard } from '../task-card';
 
 // Mock lucide-react icons
 jest.mock('lucide-react', () => ({
@@ -8,6 +8,7 @@ jest.mock('lucide-react', () => ({
   Check: () => <span data-testid="check-icon" />,
   Loader2: () => <span data-testid="loader-icon" />,
   Play: () => <span data-testid="play-icon" />,
+  X: () => <span data-testid="close-icon" />,
 }));
 
 // Mock child components

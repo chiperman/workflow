@@ -44,7 +44,7 @@ describe('Heatmap', () => {
                 date: '2026-01-01',
                 success_count: 3,
                 failure_count: 0,
-                services: { supabase: 'success', leancloud: 'success', glados: 'success' },
+                services: { supabase: 'success', glados: 'success' },
               },
             ],
           }),

@@ -3,7 +3,6 @@ import { memo } from 'react';
 import { CreateGuide } from '../CreateGuide';
 
 interface ActionsProps {
-  title: string;
   displayStatus: 'idle' | 'loading' | 'success' | 'error';
   onRun: () => void;
   showCreateGuide: boolean;
@@ -11,7 +10,6 @@ interface ActionsProps {
 }
 
 export const Actions = memo(function Actions({
-  title,
   displayStatus,
   onRun,
   showCreateGuide,
@@ -41,11 +39,7 @@ export const Actions = memo(function Actions({
         </button>
       </div>
 
-      <CreateGuide
-        service={title === 'Supabase' || title === 'GLaDOS' ? 'supabase' : 'leancloud'}
-        show={showCreateGuide}
-        onCopy={onCopyGuide}
-      />
+      <CreateGuide service="supabase" show={showCreateGuide} onCopy={onCopyGuide} />
     </div>
   );
 });

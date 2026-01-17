@@ -50,15 +50,6 @@ export default function Home() {
     [data]
   );
 
-  const leanCloudHealth: ServiceHealth = useMemo(
-    () =>
-      data?.services?.leancloud || {
-        status: 'unknown',
-        stats: { auto_count: 0, manual_count: 0, failure_count: 0 },
-      },
-    [data]
-  );
-
   const gladosHealth: ServiceHealth = useMemo(
     () =>
       data?.services?.glados || {
@@ -75,14 +66,11 @@ export default function Home() {
     if (supabaseHealth.status === 'outage' || supabaseHealth.status === 'misconfigured') {
       failing.push('Supabase');
     }
-    if (leanCloudHealth.status === 'outage' || leanCloudHealth.status === 'misconfigured') {
-      failing.push('LeanCloud');
-    }
     if (gladosHealth.status === 'outage' || gladosHealth.status === 'misconfigured') {
       failing.push('GLaDOS');
     }
     return failing;
-  }, [supabaseHealth.status, leanCloudHealth.status, gladosHealth.status]);
+  }, [supabaseHealth.status, gladosHealth.status]);
 
   if (error) console.error('Health check failed:', error);
 
@@ -185,15 +173,6 @@ export default function Home() {
                     serviceName: SERVICES.SUPABASE,
                   },
                   {
-                    category: 'Data Synchronization',
-                    title: 'LeanCloud',
-                    description: 'Maintains the replication link for secondary storage.',
-                    endpoint: '/api/leancloud-keep-alive',
-                    method: 'POST' as const,
-                    serviceHealth: leanCloudHealth,
-                    serviceName: SERVICES.LEANCLOUD,
-                  },
-                  {
                     category: 'Access Protocol',
                     title: 'GLaDOS',
                     description: 'Daily check-in to maintain network permissions.',
@@ -238,7 +217,6 @@ export default function Home() {
                   failingServices={failingServices}
                   serviceStatuses={{
                     supabase: supabaseHealth.status,
-                    leancloud: leanCloudHealth.status,
                     glados: gladosHealth.status,
                   }}
                 />

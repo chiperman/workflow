@@ -37,8 +37,6 @@ export const TEST_CONFIG = {
 export const DATABASE_CONFIG = {
   /** Supabase keep_alive 表的主键 ID */
   KEEP_ALIVE_ID: 1,
-  /** LeanCloud 查询限制 */
-  QUERY_LIMIT: 1,
 } as const;
 
 /**
@@ -46,7 +44,6 @@ export const DATABASE_CONFIG = {
  */
 export const SERVICES = {
   SUPABASE: 'supabase',
-  LEANCLOUD: 'leancloud',
   GLADOS: 'glados',
 } as const;
 

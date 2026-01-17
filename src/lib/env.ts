@@ -10,12 +10,6 @@ interface EnvConfig {
     url: string;
     serviceRoleKey: string;
   };
-  leancloud: {
-    appId: string;
-    appKey: string;
-    serverUrl: string;
-    masterKey?: string;
-  };
   glados: {
     cookie: string;
     apiUrl?: string;
@@ -42,16 +36,6 @@ function validateEnv(): EnvConfig {
 
   if (!supabaseUrl) missing.push('NEXT_PUBLIC_SUPABASE_URL');
   if (!supabaseServiceRoleKey) missing.push('SUPABASE_SERVICE_ROLE_KEY');
-
-  // 必需的 LeanCloud 环境变量
-  const leancloudAppId = process.env.LEANCLOUD_APP_ID;
-  const leancloudAppKey = process.env.LEANCLOUD_APP_KEY;
-  const leancloudServerUrl = process.env.LEANCLOUD_API_SERVER;
-  const leancloudMasterKey = process.env.LEANCLOUD_MASTER_KEY;
-
-  if (!leancloudAppId) missing.push('LEANCLOUD_APP_ID');
-  if (!leancloudAppKey) missing.push('LEANCLOUD_APP_KEY');
-  if (!leancloudServerUrl) missing.push('LEANCLOUD_API_SERVER');
 
   // 必需的 GLaDOS 环境变量
   const gladosCookie = process.env.GLADOS_COOKIE;
@@ -116,12 +100,6 @@ function validateEnv(): EnvConfig {
     supabase: {
       url: supabaseUrl!,
       serviceRoleKey: supabaseServiceRoleKey!,
-    },
-    leancloud: {
-      appId: leancloudAppId!,
-      appKey: leancloudAppKey!,
-      serverUrl: leancloudServerUrl!,
-      masterKey: leancloudMasterKey,
     },
     glados: {
       cookie: gladosCookie!,
