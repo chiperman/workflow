@@ -13,6 +13,7 @@ workflow/
 ├── src/
 │   ├── app/                    # Next.js App Router
 │   │   ├── api/               # API 路由
+│   │   │   ├── auth/          # 认证 API (v0.8.1)
 │   │   │   ├── health/        # 健康检查 API
 │   │   │   ├── cron-all/      # 统一 Cron 入口
 │   │   │   ├── service-config/ # 服务配置 API (v0.6.0)
@@ -20,9 +21,11 @@ workflow/
 │   │   │   │   └── heatmap/   # 热力图数据聚合
 │   │   │   ├── supabase-keep-alive/
 │   │   │   ├── leancloud-keep-alive/
-│   │   │   └── glados-checkin/
+│   │   │   ├── glados-checkin/
+│   │   │   └── tasks/         # 任务管理 API (v0.8.3)
 │   │   ├── favicon.ico
 │   │   ├── layout.tsx         # 根布局
+│   │   ├── login/             # 登录页面 (v0.8.1)
 │   │   ├── page.tsx           # 主页面
 │   │   └── globals.css        # 全局样式
 │   ├── components/            # React 组件
