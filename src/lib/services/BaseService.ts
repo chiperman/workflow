@@ -1,7 +1,7 @@
 import { sendBarkNotification } from '@/lib/bark';
 import { logger } from '@/lib/logger';
 import { supabase } from '@/lib/supabase';
-import { withRetry } from '@/lib/utils';
+import { getBeijingDateString, withRetry } from '@/lib/utils';
 import type { KeepAliveResult, StatsQueryResult } from '@/types';
 
 export type NotificationLevel = 'always' | 'failure-only' | 'none';
@@ -89,10 +89,9 @@ export abstract class BaseService {
       // 如果任务成功，检查今天是否已经有成功的记录
       if (result.success) {
         // 获取北京时间当天的 00:00:00 (ISO String)
+        // 获取北京时间当天的 00:00:00 (ISO String)
         // 简单实现：使用 sv-SE locale + Asia/Shanghai
-        const todayStr = new Date().toLocaleDateString('sv-SE', {
-          timeZone: 'Asia/Shanghai',
-        });
+        const todayStr = getBeijingDateString();
         const todayStart = new Date(`${todayStr}T00:00:00.000+08:00`).toISOString();
 
         const { count } = await supabase

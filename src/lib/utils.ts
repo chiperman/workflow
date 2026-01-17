@@ -1,12 +1,24 @@
 import { RETRY_CONFIG } from '@/config/constants';
 
+export const TIMEZONE = 'Asia/Shanghai';
+
 /**
  * 获取当前的北京时间字符串
  */
 export function getBeijingTime(date: Date = new Date()): string {
   return date.toLocaleString('zh-CN', {
-    timeZone: 'Asia/Shanghai',
+    timeZone: TIMEZONE,
     hour12: false,
+  });
+}
+
+/**
+ * 获取北京时间的 YYYY-MM-DD 日期字符串
+ * 使用 sv-SE locale 是获取 ISO 格式日期部分的标准 hack
+ */
+export function getBeijingDateString(date: Date = new Date()): string {
+  return date.toLocaleDateString('sv-SE', {
+    timeZone: TIMEZONE,
   });
 }
 

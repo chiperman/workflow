@@ -136,7 +136,7 @@ export function Heatmap() {
 
   return (
     <div className="heatmap-container">
-      <div className="heatmap-layout">
+      <div className="heatmap-layout relative">
         {/* 左侧：热力图主体 */}
         <div className="heatmap-main">
           <div className="heatmap-wrapper">
@@ -191,36 +191,41 @@ export function Heatmap() {
               </div>
             </div>
 
-            {/* 图例 */}
-            <div className="heatmap-footer">
-              <div className="heatmap-legend">
-                <div className="heatmap-cell heatmap-level-0" />
-                <span>No check-ins</span>
+            {/* 底部：图例 (右对齐) */}
+            <div className="heatmap-footer mt-4 flex justify-end items-center text-xs text-gray-400">
+              <div className="heatmap-legend flex items-center gap-3">
+                <div className="flex items-center gap-1">
+                  <div className="heatmap-cell heatmap-level-0 w-3 h-3 rounded-sm" />
+                  <span>No check-ins</span>
+                </div>
 
-                <div
-                  className="heatmap-cell heatmap-level-success"
-                  style={{ marginLeft: '12px' }}
-                />
-                <span>Success</span>
+                <div className="flex items-center gap-1">
+                  <div className="heatmap-cell heatmap-level-success w-3 h-3 rounded-sm" />
+                  <span>Success</span>
+                </div>
 
-                <div
-                  className="heatmap-cell heatmap-level-failure"
-                  style={{ marginLeft: '12px' }}
-                />
-                <span>Failure</span>
+                <div className="flex items-center gap-1">
+                  <div className="heatmap-cell heatmap-level-failure w-3 h-3 rounded-sm" />
+                  <span>Failure</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* 右侧：年份选择器 */}
-        <div className="heatmap-years-sidebar">
+        {/* 右侧：年份选择器 (Desktop: absolute right; Mobile: flex below) */}
+        <div className="heatmap-years-sidebar md:absolute md:top-0 md:-right-20 mt-4 md:mt-0 flex md:flex-col gap-1 flex-wrap">
           {availableYears.map(year => (
             <button
               key={year}
               onClick={() => setSelectedYear(year)}
-              className={`heatmap-year-btn ${year === selectedYear ? 'active' : ''}`}
+              className={`heatmap-year-btn px-3 py-1 text-sm text-right transition-colors font-serif ${
+                year === selectedYear
+                  ? 'text-[#d97757] font-medium' // Active: Terracotta
+                  : 'text-gray-400 hover:text-gray-900' // Inactive: Grey to Black hover
+              }`}
               disabled={loading}
+              style={{ fontFamily: 'var(--font-serif)' }}
             >
               {year}
             </button>

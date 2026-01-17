@@ -162,21 +162,7 @@ h6 {
 }
 
 /* Footer with legend and year selector */
-.heatmap-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 8px;
-  padding-top: 8px;
-}
-
-.heatmap-legend {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  color: #666;
-}
+/* .heatmap-footer handled by Tailwind */
 
 /* Fix for legend cells disappearing due to responsive 100% width */
 .heatmap-legend .heatmap-cell {
@@ -191,42 +177,13 @@ h6 {
   transform: none;
 }
 
-.heatmap-years-sidebar {
-  position: absolute;
-  right: -80px; /* Position outside the container to the right */
-  top: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding-top: 20px; /* align with grid, skip month labels */
-}
+/* Year sidebar layout handled by Tailwind (md:absolute) */
+/* .heatmap-years-sidebar { ... } */
 
 .heatmap-year-btn {
-  padding: 6px 12px;
-  font-size: 13px;
-  font-weight: 400;
+  /* Only keep base styles that are not layout releated if needed, 
+     but we moved most to Tailwind. Keeping minimal reset just in case. */
   font-family: var(--font-serif), Georgia, serif;
-  color: #888888;
-  background: transparent;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: color 0.3s ease;
-  text-align: right;
-}
-
-.heatmap-year-btn:hover:not(:disabled) {
-  color: #191919;
-}
-
-.heatmap-year-btn.active {
-  color: #d97757;
-  font-weight: 500;
-}
-
-.heatmap-year-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 /* Tooltip */

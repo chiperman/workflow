@@ -1,3 +1,5 @@
+import { getBeijingDateString } from './utils';
+
 export interface LogEntry {
   service: string;
   status: boolean;
@@ -29,9 +31,8 @@ export function aggregateByDay(logs: LogEntry[]): HeatmapDay[] {
   // 1. 遍历日志，确定每个服务在每一天的最终状态
   for (const log of logs) {
     // 转换为北京时间并取日期部分
-    const beijingDate = new Date(log.timestamp).toLocaleDateString('sv-SE', {
-      timeZone: 'Asia/Shanghai',
-    });
+
+    const beijingDate = getBeijingDateString(new Date(log.timestamp));
 
     if (!dayMap.has(beijingDate)) {
       dayMap.set(beijingDate, {});
