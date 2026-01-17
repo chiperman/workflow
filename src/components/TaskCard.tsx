@@ -1,7 +1,7 @@
 'use client';
 
 import type { ServiceHealth } from '@/types';
-import { AlertCircle, Check, Loader2, Play } from 'lucide-react';
+import { AlertCircle, Check, Loader2, Play, X } from 'lucide-react';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { CreateGuide } from './CreateGuide';
 import { RollingNumber } from './RollingNumber';
@@ -39,6 +39,7 @@ function TaskCardComponent({
   const [localMessage, setLocalMessage] = useState('');
   const [isToggling, setIsToggling] = useState(false);
   const [localEnabled, setLocalEnabled] = useState(serviceHealth.enabled ?? true);
+  const [isDismissed, setIsDismissed] = useState(false);
 
   // 同步 props 变化到 local state
   useEffect(() => {
@@ -56,14 +57,20 @@ function TaskCardComponent({
     return 'idle';
   }, [localStatus, serviceHealth.status]);
 
-  // 计算最终消息
-  const displayMessage = useMemo(() => {
+  // 当原始消息变化时，重置关闭状态
+  const rawMessage = useMemo(() => {
     if (localMessage) return localMessage;
     if (serviceHealth.message) return serviceHealth.message;
     if (serviceHealth.status === 'misconfigured') return 'Configuration error detected.';
     if (serviceHealth.status === 'outage') return 'Service is currently unavailable.';
     return '';
   }, [localMessage, serviceHealth.message, serviceHealth.status]);
+
+  useEffect(() => {
+    setIsDismissed(false);
+  }, [rawMessage]);
+
+  const displayMessage = isDismissed ? '' : rawMessage;
 
   const showCreateGuide = useMemo(() => {
     return (
@@ -77,6 +84,7 @@ function TaskCardComponent({
 
     setLocalStatus('loading');
     setLocalMessage('');
+    setIsDismissed(false); // Reset dismissal on new run
 
     try {
       const url = `${endpoint}${endpoint.includes('?') ? '&' : '?'}trigger=manual`;
@@ -246,7 +254,9 @@ function TaskCardComponent({
 
         {displayMessage && (
           <div
-            className={`mt-4 flex items-start gap-2 text-sm font-mono ${displayStatus === 'error' ? 'text-[#9f3e3e]' : 'text-[#3f6212]'}`}
+            className={`mt-4 flex items-start gap-2 text-sm font-mono relative pr-6 ${
+              displayStatus === 'error' ? 'text-[#9f3e3e]' : 'text-[#3f6212]'
+            }`}
           >
             <span className="mt-[2px] shrink-0">
               {(displayStatus === 'success' ||
@@ -256,6 +266,13 @@ function TaskCardComponent({
               {displayStatus === 'error' && <AlertCircle className="w-4 h-4" />}
             </span>
             <p className="leading-relaxed">{displayMessage}</p>
+            <button
+              onClick={() => setIsDismissed(true)}
+              className="absolute top-0 right-0 p-0.5 hover:bg-black/5 rounded transition-colors"
+              title="Dismiss message"
+            >
+              <X className="w-3 h-3 opacity-50 hover:opacity-100" />
+            </button>
           </div>
         )}
 
