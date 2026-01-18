@@ -224,4 +224,72 @@ export abstract class BaseService {
       );
     }
   }
+
+  /**
+   * 更新服务的统计信息 (Generic implementation)
+   * 提取了 GladosService 和 SupabaseService 中的公共逻辑
+   */
+  protected async updateServiceStats(
+    shouldIncrement: boolean,
+    trigger: 'auto' | 'manual'
+  ): Promise<{
+    action: 'created' | 'updated';
+    data: { manual_count: number; auto_count: number; failure_count: number };
+  }> {
+    const serviceKey = this.serviceName.toLowerCase();
+
+    // 1. Select existing record
+    const { data: existing, error: fetchError } = await supabase
+      .from('keep_alive')
+      .select('*')
+      .eq('service', serviceKey)
+      .single();
+
+    if (fetchError) {
+      if (fetchError.code === '42P01') {
+        throw new Error("Table 'keep_alive' does not exist. Please execute the SQL setup.");
+      }
+      if (fetchError.code !== 'PGRST116') {
+        logger.error(`[${this.serviceName}] Supabase select error:`, fetchError);
+        throw new Error(`Supabase select failed: ${fetchError.message}`);
+      }
+    }
+
+    // 2. Calculate new counts
+    let manualCount = existing?.manual_count || 0;
+    let autoCount = existing?.auto_count || 0;
+
+    if (shouldIncrement) {
+      if (trigger === 'manual') manualCount++;
+      else autoCount++;
+    }
+
+    // 3. Upsert record
+    const { error: upsertError } = await supabase
+      .from('keep_alive')
+      .upsert({
+        service: serviceKey,
+        timestamp: new Date().toISOString(),
+        manual_count: manualCount,
+        auto_count: autoCount,
+        failure_count: existing?.failure_count || 0,
+        enabled: existing?.enabled ?? true,
+      })
+      .select()
+      .single();
+
+    if (upsertError) {
+      logger.error(`[${this.serviceName}] Supabase upsert error:`, upsertError);
+      throw new Error(`Supabase upsert failed: ${upsertError.message}`);
+    }
+
+    return {
+      action: existing ? 'updated' : 'created',
+      data: {
+        manual_count: manualCount,
+        auto_count: autoCount,
+        failure_count: existing?.failure_count || 0,
+      },
+    };
+  }
 }

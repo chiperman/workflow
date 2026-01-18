@@ -1,6 +1,4 @@
-import { SERVICES } from '@/config/constants';
 import { logger } from '@/lib/logger';
-import { supabase } from '@/lib/supabase';
 import { getBeijingTime } from '@/lib/utils';
 import type { KeepAliveResult } from '@/types';
 import { BaseService } from './BaseService';
@@ -13,55 +11,12 @@ export class SupabaseService extends BaseService {
 
   protected async executeKeepAlive(trigger: 'auto' | 'manual' = 'auto'): Promise<KeepAliveResult> {
     try {
-      logger.info(`[Supabase] Selecting existing record...`);
-      const { data: existing, error: fetchError } = await supabase
-        .from('keep_alive')
-        .select('*')
-        .eq('service', SERVICES.SUPABASE)
-        .single();
-
-      if (fetchError) {
-        if (fetchError.code === 'PGRST116') {
-          // No record yet
-        } else if (fetchError.code === '42P01') {
-          return {
-            success: false,
-            message: "Table 'keep_alive' does not exist. Please execute the SQL setup.",
-            duration: 0,
-            error: fetchError.message,
-          };
-        } else {
-          throw fetchError;
-        }
-      }
-
-      let manualCount = existing?.manual_count || 0;
-      let autoCount = existing?.auto_count || 0;
-
-      if (trigger === 'manual') manualCount++;
-      else autoCount++;
-
-      logger.info(`[Supabase] Upserting record...`);
-      const { error: upsertError } = await supabase
-        .from('keep_alive')
-        .upsert({
-          service: SERVICES.SUPABASE,
-          timestamp: new Date().toISOString(),
-          manual_count: manualCount,
-          auto_count: autoCount,
-        })
-        .select()
-        .single();
-
-      if (upsertError) {
-        logger.error(`[Supabase] Upsert error:`, upsertError);
-        throw new Error(`Supabase upsert failed: ${upsertError.message}`);
-      }
+      logger.info(`[Supabase] Updating Supabase...`);
+      const { action, data: stats } = await this.updateServiceStats(true, trigger);
 
       const beijingTime = getBeijingTime();
-      const action = existing ? 'updated' : 'created';
       const baseAction = action === 'created' ? 'Created new record' : 'Updated record';
-      const message = `Supabase Success: ${baseAction} at ${beijingTime} (${trigger}). Auto=${autoCount}, Manual=${manualCount}.`;
+      const message = `Supabase Success: ${baseAction} at ${beijingTime} (${trigger}). Auto=${stats.auto_count}, Manual=${stats.manual_count}.`;
 
       logger.info(`[Supabase] Complete: ${message}`);
       return {
@@ -69,11 +24,7 @@ export class SupabaseService extends BaseService {
         action,
         message,
         duration: 0,
-        data: {
-          manual_count: manualCount,
-          auto_count: autoCount,
-          failure_count: existing?.failure_count || 0,
-        },
+        data: stats,
       };
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';

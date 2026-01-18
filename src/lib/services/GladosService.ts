@@ -1,7 +1,5 @@
-import { SERVICES } from '@/config/constants';
 import { env } from '@/lib/env';
 import { logger } from '@/lib/logger';
-import { supabase } from '@/lib/supabase';
 import { getBeijingTime } from '@/lib/utils';
 import type { KeepAliveResult } from '@/types';
 import { BaseService } from './BaseService';
@@ -78,60 +76,17 @@ export class GladosService extends BaseService {
       const checkinMessage = data.message || '';
 
       logger.info(`[GLaDOS] API success, updating Supabase...`);
-      const { data: existing, error: fetchError } = await supabase
-        .from('keep_alive')
-        .select('*')
-        .eq('service', SERVICES.GLADOS)
-        .single();
 
-      if (fetchError) {
-        if (fetchError.code === '42P01') {
-          return {
-            success: false,
-            message: "Table 'keep_alive' does not exist. Please execute the SQL setup.",
-            duration: 0,
-            error: fetchError.message,
-          };
-        }
-        if (fetchError.code !== 'PGRST116') {
-          logger.error(`[GLaDOS] Supabase select error:`, fetchError);
-          throw new Error(`Supabase select failed: ${fetchError.message}`);
-        }
-      }
-
-      let manualCount = existing?.manual_count || 0;
-      let autoCount = existing?.auto_count || 0;
-
-      if (!isAlreadyCheckedIn) {
-        if (trigger === 'manual') manualCount++;
-        else autoCount++;
-      }
-
-      const { error: upsertError } = await supabase
-        .from('keep_alive')
-        .upsert({
-          service: SERVICES.GLADOS,
-          timestamp: new Date().toISOString(),
-          manual_count: manualCount,
-          auto_count: autoCount,
-        })
-        .select()
-        .single();
-
-      if (upsertError) {
-        logger.error(`[GLaDOS] Supabase upsert error:`, upsertError);
-        throw new Error(`Supabase upsert failed: ${upsertError.message}`);
-      }
+      const { action, data: stats } = await this.updateServiceStats(!isAlreadyCheckedIn, trigger);
 
       const beijingTime = getBeijingTime();
-      const action = existing ? 'updated' : 'created';
       const baseAction = action === 'created' ? 'Created new record' : 'Updated record';
 
       let message: string;
       if (isAlreadyCheckedIn) {
         message = `GLaDOS Checked-in: "${checkinMessage}" [Executed at ${beijingTime} (${trigger})]`;
       } else {
-        message = `GLaDOS Success: ${baseAction} at ${beijingTime} (${trigger}). Auto=${autoCount}, Manual=${manualCount}.`;
+        message = `GLaDOS Success: ${baseAction} at ${beijingTime} (${trigger}). Auto=${stats.auto_count}, Manual=${stats.manual_count}.`;
       }
 
       logger.info(`[GLaDOS] Complete: ${message}`);
@@ -140,11 +95,7 @@ export class GladosService extends BaseService {
         action,
         message,
         duration: 0,
-        data: {
-          manual_count: manualCount,
-          auto_count: autoCount,
-          failure_count: existing?.failure_count || 0,
-        },
+        data: stats,
         // 重复签到时跳过日志记录，避免覆盖真正的签到状态
         skipLog: isAlreadyCheckedIn,
       };
