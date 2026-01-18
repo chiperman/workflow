@@ -10,7 +10,7 @@ import { Heatmap } from '@/components/Heatmap';
 import { TaskCard } from '@/components/task-card';
 import { APP_VERSION, MOTION_CONFIG as MOTION, SERVICES } from '@/config/constants';
 import type { HealthCheckResponse, ServiceHealth } from '@/types';
-import { LogOut } from 'lucide-react';
+import { AlertCircle, Check, LogOut, RefreshCw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
@@ -18,6 +18,9 @@ const fetcher = (url: string) => fetch(url).then(res => res.json());
 export default function Home() {
   const router = useRouter();
   const [isExiting, setIsExiting] = useState(false);
+  const [refreshStatus, setRefreshStatus] = useState<'idle' | 'loading' | 'success' | 'error'>(
+    'idle'
+  );
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const handleLogout = async () => {
@@ -101,21 +104,107 @@ export default function Home() {
                   >
                     System Operations
                   </motion.h1>
-                  <motion.button
-                    initial={{ opacity: 0, y: MOTION.yOffset }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{
-                      delay: MOTION.delay.header,
-                      duration: MOTION.duration,
-                      ease: MOTION.ease,
-                    }}
-                    onClick={() => setShowLogoutConfirm(true)}
-                    className="flex items-center gap-2 px-3 py-1 text-[10px] font-medium tracking-tight text-[#888888] border border-[#e5e5e0] rounded-lg hover:bg-white hover:text-[#191919] hover:border-[#d97757]/30 transition-colors duration-300"
-                    title="End session"
-                  >
-                    <LogOut className="w-3 h-3" />
-                    <span>Sign out</span>
-                  </motion.button>
+                  <div className="flex items-center gap-3"></div>
+                  <div className="flex items-center gap-3">
+                    <motion.button
+                      initial={{ opacity: 0, y: MOTION.yOffset }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        delay: MOTION.delay.header,
+                        duration: MOTION.duration,
+                        ease: MOTION.ease,
+                      }}
+                      onClick={async () => {
+                        if (refreshStatus !== 'idle') return;
+                        setRefreshStatus('loading');
+                        try {
+                          await Promise.all([
+                            mutate(),
+                            globalMutate(
+                              key =>
+                                typeof key === 'string' && key.startsWith('/api/stats/heatmap'),
+                              undefined,
+                              { revalidate: true }
+                            ),
+                          ]);
+                          setRefreshStatus('success');
+                          setTimeout(() => setRefreshStatus('idle'), 2000);
+                        } catch (err) {
+                          console.error('Refresh failed:', err);
+                          setRefreshStatus('error');
+                          setTimeout(() => setRefreshStatus('idle'), 2000);
+                        }
+                      }}
+                      disabled={refreshStatus !== 'idle'}
+                      className={`
+                      flex items-center justify-center p-2 rounded-lg border transition-all duration-300 group
+                      ${
+                        refreshStatus === 'error'
+                          ? 'border-red-200 bg-red-50 text-red-600'
+                          : refreshStatus === 'success'
+                            ? 'border-emerald-200 bg-emerald-50 text-emerald-600'
+                            : 'border-[#e5e5e0] text-[#888888] hover:bg-white hover:text-[#191919] hover:border-[#d97757]/30'
+                      }
+                      ${refreshStatus !== 'idle' ? 'cursor-not-allowed' : ''}
+                    `}
+                      title="Refresh data"
+                    >
+                      <AnimatePresence mode="wait">
+                        {refreshStatus === 'loading' ? (
+                          <motion.div
+                            key="loading"
+                            initial={{ scale: 0.5, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.5, opacity: 0 }}
+                          >
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          </motion.div>
+                        ) : refreshStatus === 'success' ? (
+                          <motion.div
+                            key="success"
+                            initial={{ scale: 0.5, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.5, opacity: 0 }}
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                          </motion.div>
+                        ) : refreshStatus === 'error' ? (
+                          <motion.div
+                            key="error"
+                            initial={{ scale: 0.5, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.5, opacity: 0 }}
+                          >
+                            <AlertCircle className="w-3.5 h-3.5" />
+                          </motion.div>
+                        ) : (
+                          <motion.div
+                            key="idle"
+                            initial={{ scale: 0.5, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.5, opacity: 0 }}
+                          >
+                            <RefreshCw className="w-3.5 h-3.5 group-hover:rotate-180 transition-transform duration-500" />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.button>
+                    <motion.button
+                      initial={{ opacity: 0, y: MOTION.yOffset }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        delay: MOTION.delay.header,
+                        duration: MOTION.duration,
+                        ease: MOTION.ease,
+                      }}
+                      onClick={() => setShowLogoutConfirm(true)}
+                      className="flex items-center gap-2 px-3 py-1.5 text-[10px] font-medium tracking-tight text-[#888888] border border-[#e5e5e0] rounded-lg hover:bg-white hover:text-[#191919] hover:border-[#d97757]/30 transition-colors duration-300"
+                      title="End session"
+                    >
+                      <LogOut className="w-3 h-3" />
+                      <span>Sign out</span>
+                    </motion.button>
+                  </div>
                 </div>
                 <motion.p
                   initial={{ opacity: 0, y: MOTION.yOffset }}
