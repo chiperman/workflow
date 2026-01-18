@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.8.6](https://github.com/chiperman/workflow/compare/v0.8.5...v0.8.6) (2026-01-18)
+
+### Features
+
+- **ui:** 添加全局刷新按钮及状态反馈 ([cef1575](https://github.com/chiperman/workflow/commit/cef1575))
+
+### Bug Fixes
+
+- **ui:** 修复刷新按钮动画速度不一致问题 ([3b9ba94](https://github.com/chiperman/workflow/commit/3b9ba941044af97974a5c1860b03fde9a3b43e6f))
+
 ### [0.8.5](https://github.com/chiperman/workflow/compare/v0.8.1...v0.8.5) (2026-01-18)
 
 ### Features
