@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.4] - 2026-01-18
+
+### Refactored
+
+- **数据库操作统一**: 提取 `BaseService.updateServiceStats` 通用方法，消除了 `GladosService` 和 `SupabaseService` 中重复的数据库操作逻辑 (C1)。
+- **代码清理**: 移除了服务层中冗余的依赖引用。
+
 ## [0.8.3] - 2026-01-17
 
 ### Removed
