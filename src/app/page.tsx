@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from 'framer-motion';
 import { useMemo, useState } from 'react';
-import useSWR from 'swr';
+import useSWR, { mutate as globalMutate } from 'swr';
 
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { Footer } from '@/components/Footer';
@@ -196,7 +196,18 @@ export default function Home() {
                       },
                     }}
                   >
-                    <TaskCard {...task} onStatsUpdate={() => mutate()} />
+                    <TaskCard
+                      {...task}
+                      onStatsUpdate={() => {
+                        mutate(); // Refresh health data
+                        // Refresh heatmap data (all years)
+                        globalMutate(
+                          key => typeof key === 'string' && key.startsWith('/api/stats/heatmap'),
+                          undefined,
+                          { revalidate: true }
+                        );
+                      }}
+                    />
                   </motion.div>
                 ))}
               </motion.div>
