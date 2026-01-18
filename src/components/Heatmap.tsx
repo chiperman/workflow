@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
 
 import {
@@ -108,6 +108,27 @@ export function Heatmap() {
 
   // 始终渲染格子结构，数据加载完成后自动更新颜色
 
+  // Control animation start to avoid initial render blocking AND wait for data
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    // Defer animation start to ensure DOM is fully painted
+    // Note: We intentionally DO NOT wait for data (loading) here.
+    // We want the "skeleton" (gray cells) to animate immediately.
+    // When data arrives, the CSS transition will handle the color change smoothly.
+    const timer = requestAnimationFrame(() => {
+      setLoaded(true);
+    });
+    return () => cancelAnimationFrame(timer);
+  }, [selectedYear]);
+
+  // Create a map for quick lookup of day index (0-365)
+  const dayIndexMap = useMemo(() => {
+    const map = new Map<string, number>();
+    days.forEach((d, i) => map.set(d, i));
+    return map;
+  }, [days]);
+
   // 按周分组
   const weeks = groupByWeeks(days);
 
@@ -157,15 +178,28 @@ export function Heatmap() {
               >
                 {weeks.map((week, weekIndex) => (
                   <div key={weekIndex} className="heatmap-week">
-                    {week.map((date, dayIndex) => (
-                      <div
-                        key={date || `empty-${weekIndex}-${dayIndex}`}
-                        className={`heatmap-cell ${date ? getColorClass(date) : 'heatmap-level-0'}`}
-                        onMouseEnter={e => date && handleMouseEnter(e, date)}
-                        onMouseLeave={handleMouseLeave}
-                        style={{ visibility: date ? 'visible' : 'hidden' }}
-                      />
-                    ))}
+                    {week.map((date, dayIndex) => {
+                      const globalIndex = date ? (dayIndexMap.get(date) ?? 0) : 0;
+                      // Only apply animation class when loaded is true
+                      const shouldAnimate = date && loaded;
+                      return (
+                        <div
+                          key={date || `empty-${weekIndex}-${dayIndex}`}
+                          className={`heatmap-cell ${date ? getColorClass(date) : 'heatmap-level-0'} ${
+                            shouldAnimate ? 'animate-fade-in' : ''
+                          }`}
+                          onMouseEnter={e => date && handleMouseEnter(e, date)}
+                          onMouseLeave={handleMouseLeave}
+                          style={{
+                            visibility: date ? 'visible' : 'hidden',
+                            // Use 5ms interval for faster but still sequential appearance
+                            animationDelay: shouldAnimate ? `${globalIndex * 5}ms` : '0ms',
+                            // Ensure opacity is 0 before animation starts (handled by CSS, but good to ensure logic alignment)
+                            opacity: date && !shouldAnimate ? 0 : undefined,
+                          }}
+                        />
+                      );
+                    })}
                   </div>
                 ))}
               </div>

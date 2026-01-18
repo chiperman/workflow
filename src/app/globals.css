@@ -139,7 +139,9 @@ h6 {
   aspect-ratio: 1 / 1; /* Keep perfect square */
   border-radius: 2px;
   cursor: pointer;
-  transition: transform 0.1s ease;
+  transition:
+    transform 0.1s ease,
+    background-color 0.8s ease;
 }
 
 .heatmap-cell:hover {
@@ -148,17 +150,17 @@ h6 {
 
 /* Color levels - Simplified 3 States */
 .heatmap-level-0 {
-  background: #ebedf0;
+  background-color: #ebedf0;
 }
 
 .heatmap-level-success {
-  background: #40c463; /* Standard Green */
+  background-color: #40c463; /* Standard Green */
 }
 
 /* failure handled below */
 
 .heatmap-level-failure {
-  background: #ff6b6b;
+  background-color: #ff6b6b;
 }
 
 /* Footer with legend and year selector */
@@ -230,4 +232,19 @@ h6 {
 
 .heatmap-error {
   color: #ff6b6b;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  opacity: 0;
+  animation: fadeIn 0.2s ease-out forwards;
 }
