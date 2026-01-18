@@ -1,6 +1,22 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
+### [0.8.5](https://github.com/chiperman/workflow/compare/v0.8.1...v0.8.5) (2026-01-18)
+
+### Features
+
+- **heatmap:** 任务完成后自动刷新热力图 ([82cc0ac](https://github.com/chiperman/workflow/commit/82cc0acf39a21a889d422b29d003200952ad7725))
+- **heatmap:** 实现热力图顺序渐显动效 ([81f6685](https://github.com/chiperman/workflow/commit/81f6685909a9b57988eb842c863536aa7eca29a2))
+- **security:** 所有 API 接口添加强制鉴权 ([d1cd4d5](https://github.com/chiperman/workflow/commit/d1cd4d5c6b41c4daba52ad3d4b1e5475928dc16d))
+- **service:** 提取数据库操作逻辑到 BaseService ([79f1f90](https://github.com/chiperman/workflow/commit/79f1f906a1145e620811eb0a81297689d1f65c9a))
+- **ui:** 任务卡片错误消息添加关闭按钮 ([095fc8f](https://github.com/chiperman/workflow/commit/095fc8f099051c07c07fc42c9c8aa9b5b06be2ee))
+
+### Bug Fixes
+
+- **auth:** 将 Cookie sameSite 属性改为 strict 增强 CSRF 防护 ([c703b9c](https://github.com/chiperman/workflow/commit/c703b9c6c23ca6ddc753a725daee5837e44e03a1))
+- **notification:** 移除手动触发时的强制成功通知逻辑 ([fe57232](https://github.com/chiperman/workflow/commit/fe57232aa0d01548df284b37182545b647850e54))
+- **ui:** heatmap 错误处理优化 ([f99db50](https://github.com/chiperman/workflow/commit/f99db50b944fe9888c24f1442e247da00950f986))
 
 ## [0.8.4] - 2026-01-18
 
