@@ -1,4 +1,4 @@
-import { env } from '@/lib/env';
+import { checkTriggerPermission, verifyAuth } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 import { BaseService } from './services/BaseService';
 
@@ -17,30 +17,19 @@ export async function handleKeepAliveRequest(request: Request, service: BaseServ
   const trigger =
     triggerParam === 'manual' || triggerParam === 'auto' ? triggerParam : defaultTrigger;
 
-  const authHeader = request.headers.get('authorization');
-  const xAppKey = request.headers.get('x-app-key');
-
   // 特例：mode === 'status' 始终允许匿名查看，便于展示系统状态
   if (mode !== 'status') {
-    if (trigger === 'auto' && env.cron?.secret) {
-      if (authHeader !== `Bearer ${env.cron.secret}`) {
-        return NextResponse.json(
-          { success: false, message: 'Unauthorized (Cron)' },
-          { status: 401 }
-        );
-      }
-    } else if (trigger === 'manual' && env.appKey) {
-      // v0.6.2: 同时支持 Key 验证和 Session Cookie 验证
-      const hasCookieSession = request.headers
-        .get('cookie')
-        ?.includes('workflow_session=authenticated');
+    const authResult = verifyAuth(request);
 
-      if (xAppKey !== env.appKey && !hasCookieSession) {
-        return NextResponse.json(
-          { success: false, message: 'Invalid App Key or Session' },
-          { status: 401 }
-        );
-      }
+    // 1. 身份验证 (Authentication)
+    if (!authResult.authorized) {
+      return NextResponse.json({ success: false, message: authResult.message }, { status: 401 });
+    }
+
+    // 2. 权限检查 (Authorization)
+    const permission = checkTriggerPermission(authResult.type, trigger as 'auto' | 'manual');
+    if (!permission.authorized) {
+      return NextResponse.json({ success: false, message: permission.message }, { status: 401 });
     }
   }
 

@@ -26,13 +26,20 @@ jest.mock('next/server', () => ({
 }));
 
 // Mock env
-jest.mock('../env', () => ({
-  env: {
-    cron: { secret: 'test-cron-secret' },
-    appKey: 'test-app-key',
-    supabase: { url: 'https://test.supabase.co', serviceRoleKey: 'test-key' },
-  },
-}));
+const originalEnv = process.env;
+
+beforeEach(() => {
+  jest.resetModules();
+  process.env = {
+    ...originalEnv,
+    CRON_SECRET: 'test-cron-secret',
+    APP_KEY: 'test-app-key',
+  };
+});
+
+afterAll(() => {
+  process.env = originalEnv;
+});
 
 import type { KeepAliveResult, StatsQueryResult } from '@/types';
 import { handleKeepAliveRequest } from '../api-helper';

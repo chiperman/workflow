@@ -1,43 +1,40 @@
+import { verifyAuth } from '@/lib/auth';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // 1. 排除路径 (不需要鉴权的路径)
-  const isPublicPath =
-    pathname === '/login' ||
-    pathname.startsWith('/_next') ||
-    pathname.startsWith('/api/auth') ||
-    pathname.startsWith('/api/stats') ||
-    pathname.includes('favicon.ico');
+  // 1. 统一鉴权
+  const authResult = verifyAuth(request);
 
-  // 2. 识别请求类型与特殊凭证
-  const authHeader = request.headers.get('authorization');
-  const xAppKey = request.headers.get('x-app-key');
-  const isApiRequest = pathname.startsWith('/api/');
+  // 2. Api 路由处理
+  if (pathname.startsWith('/api/')) {
+    // 排除 api/auth 和 api/stats (已被 verifyAuth 识别为 public 或 authenticated)
+    // 但我们需要明确：如果是 public 类型，且不在 public 路径白名单中（理论上 verifyAuth 已经处理了），
+    // 这里主要处理 authorized: false 的情况
+    // 注意：verifyAuth 内部已经把 api/auth 和 api/stats 归为 public
 
-  // 3. 自动化绕过 (带有 Cron Secret 或 App Key 的请求)
-  if (isApiRequest && (authHeader || xAppKey)) {
+    if (!authResult.authorized) {
+      return NextResponse.json({ success: false, message: authResult.message }, { status: 401 });
+    }
     return NextResponse.next();
   }
 
-  // 4. Session 检查
-  const session = request.cookies.get('workflow_session');
-
-  if (!session) {
-    if (isPublicPath) return NextResponse.next();
-
-    if (isApiRequest) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+  // 3. 页面路由处理
+  // 如果已登录用户访问登录页 -> 跳转首页
+  if (pathname === '/login') {
+    if (authResult.authorized && authResult.type === 'session') {
+      return NextResponse.redirect(new URL('/', request.url));
     }
-    const loginUrl = new URL('/login', request.url);
-    return NextResponse.redirect(loginUrl);
+    return NextResponse.next();
   }
 
-  // 5. 已登录重定向
-  if (pathname === '/login') {
-    return NextResponse.redirect(new URL('/', request.url));
+  // 如果未登录用户访问受保护页面 -> 跳转登录
+  // public 路径 (如 favicon) 已经在 authorized=true (type=public) 中
+  if (!authResult.authorized) {
+    const loginUrl = new URL('/login', request.url);
+    return NextResponse.redirect(loginUrl);
   }
 
   return NextResponse.next();
