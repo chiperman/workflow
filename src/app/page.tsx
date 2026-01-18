@@ -104,7 +104,6 @@ export default function Home() {
                   >
                     System Operations
                   </motion.h1>
-                  <div className="flex items-center gap-3"></div>
                   <div className="flex items-center gap-3">
                     <motion.button
                       initial={{ opacity: 0, y: MOTION.yOffset }}
@@ -137,7 +136,7 @@ export default function Home() {
                       }}
                       disabled={refreshStatus !== 'idle'}
                       className={`
-                      flex items-center justify-center p-2 rounded-lg border transition-all duration-300 group
+                      flex items-center justify-center p-2 rounded-lg border transition-colors duration-300 group
                       ${
                         refreshStatus === 'error'
                           ? 'border-red-200 bg-red-50 text-red-600'
@@ -149,45 +148,40 @@ export default function Home() {
                     `}
                       title="Refresh data"
                     >
-                      <AnimatePresence mode="wait">
-                        {refreshStatus === 'loading' ? (
-                          <motion.div
-                            key="loading"
-                            initial={{ scale: 0.5, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.5, opacity: 0 }}
-                          >
-                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                          </motion.div>
-                        ) : refreshStatus === 'success' ? (
-                          <motion.div
-                            key="success"
-                            initial={{ scale: 0.5, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.5, opacity: 0 }}
-                          >
-                            <Check className="w-3.5 h-3.5" />
-                          </motion.div>
-                        ) : refreshStatus === 'error' ? (
-                          <motion.div
-                            key="error"
-                            initial={{ scale: 0.5, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.5, opacity: 0 }}
-                          >
-                            <AlertCircle className="w-3.5 h-3.5" />
-                          </motion.div>
-                        ) : (
-                          <motion.div
-                            key="idle"
-                            initial={{ scale: 0.5, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.5, opacity: 0 }}
-                          >
-                            <RefreshCw className="w-3.5 h-3.5 group-hover:rotate-180 transition-transform duration-500" />
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+                      {refreshStatus === 'idle' ? (
+                        <RefreshCw className="w-3.5 h-3.5 group-hover:rotate-180 transition-transform duration-500" />
+                      ) : (
+                        <AnimatePresence mode="wait">
+                          {refreshStatus === 'loading' ? (
+                            <motion.div
+                              key="loading"
+                              initial={{ scale: 0.5, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              exit={{ scale: 0.5, opacity: 0 }}
+                            >
+                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                            </motion.div>
+                          ) : refreshStatus === 'success' ? (
+                            <motion.div
+                              key="success"
+                              initial={{ scale: 0.5, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              exit={{ scale: 0.5, opacity: 0 }}
+                            >
+                              <Check className="w-3.5 h-3.5" />
+                            </motion.div>
+                          ) : (
+                            <motion.div
+                              key="error"
+                              initial={{ scale: 0.5, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              exit={{ scale: 0.5, opacity: 0 }}
+                            >
+                              <AlertCircle className="w-3.5 h-3.5" />
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      )}
                     </motion.button>
                     <motion.button
                       initial={{ opacity: 0, y: MOTION.yOffset }}
