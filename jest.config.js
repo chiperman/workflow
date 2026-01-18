@@ -27,7 +27,7 @@ const customJestConfig = {
     'src/**/*.{ts,tsx}',
     '!src/**/*.d.ts',
     '!src/**/__tests__/**',
-    '!src/app/**', // Exclude Next.js app directory (routes, layouts)
+    '!src/app/!(api)/**', // Exclude Next.js app directory except api
     '!src/types/**', // Exclude type definitions
     '!src/components/**', // Exclude components (should have separate component tests)
   ],

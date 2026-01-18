@@ -1,185 +1,143 @@
 /**
- * API Helper 测试
- *
- * 这个模块测试 handleKeepAliveRequest 函数的各种场景
+ * @jest-environment node
  */
-
-// Mock supabase client FIRST to prevent import errors
-jest.mock('../supabase', () => ({
-  supabase: { from: jest.fn() },
-}));
-
-// Mock bark
-jest.mock('../bark', () => ({
-  sendBarkNotification: jest.fn(),
-}));
-
-// Mock Next.js Response
-jest.mock('next/server', () => ({
-  NextResponse: {
-    json: jest.fn((data, options) => ({
-      status: options?.status || 200,
-      json: () => Promise.resolve(data),
-      headers: options?.headers || {},
-    })),
-  },
-}));
-
-// Mock env
-const originalEnv = process.env;
-
-beforeEach(() => {
-  jest.resetModules();
-  process.env = {
-    ...originalEnv,
-    CRON_SECRET: 'test-cron-secret',
-    APP_KEY: 'test-app-key',
-  };
-});
-
-afterAll(() => {
-  process.env = originalEnv;
-});
-
-import type { KeepAliveResult, StatsQueryResult } from '@/types';
+import { checkTriggerPermission, verifyAuth } from '@/lib/auth';
+import { KeepAliveResult } from '@/types';
 import { handleKeepAliveRequest } from '../api-helper';
 import { BaseService } from '../services/BaseService';
 
-// Mock BaseService implementation for testing
+// Mock dependencies
+jest.mock('@/lib/auth', () => ({
+  checkTriggerPermission: jest.fn(),
+  verifyAuth: jest.fn(),
+}));
+
+// Mock BaseService
 class MockService extends BaseService {
-  public mockRunResult: KeepAliveResult = {
-    success: true,
-    message: 'Mock success',
-    duration: 100,
-    data: { auto_count: 1, manual_count: 2, failure_count: 0 },
-  };
-
-  public mockStatsResult: StatsQueryResult = {
-    success: true,
-    data: { auto_count: 1, manual_count: 2, failure_count: 0 },
-    tableExists: true,
-    enabled: true,
-  };
-
   constructor() {
-    super('MockService');
+    super('mock-service');
   }
-
-  protected async executeKeepAlive(): Promise<KeepAliveResult> {
-    return this.mockRunResult;
+  // Implement abstract method
+  async executeKeepAlive(_trigger: 'auto' | 'manual'): Promise<KeepAliveResult> {
+    return {
+      success: true,
+      message: 'Mock execution',
+      duration: 0,
+      action: 'created',
+      data: { manual_count: 0, auto_count: 0, failure_count: 0 },
+    };
   }
-
-  public async getStats(): Promise<StatsQueryResult> {
-    return this.mockStatsResult;
-  }
-
-  public async run(): Promise<KeepAliveResult> {
-    return this.mockRunResult;
-  }
-}
-
-// Helper function to create mock Request
-function createMockRequest(
-  url: string,
-  options: { method?: string; headers?: Record<string, string> } = {}
-) {
-  return {
-    url,
-    method: options.method || 'GET',
-    headers: {
-      get: (name: string) => {
-        const headerName = name.toLowerCase();
-        const headers = options.headers || {};
-        for (const key in headers) {
-          if (key.toLowerCase() === headerName) {
-            return headers[key];
-          }
-        }
-        return null;
-      },
-    },
-  } as unknown as Request;
 }
 
 describe('handleKeepAliveRequest', () => {
   let mockService: MockService;
+  let runSpy: jest.SpyInstance;
+  let getStatsSpy: jest.SpyInstance;
 
   beforeEach(() => {
-    mockService = new MockService();
     jest.clearAllMocks();
+    mockService = new MockService();
+
+    runSpy = jest.spyOn(mockService, 'run').mockResolvedValue({
+      success: true,
+      message: 'Success',
+      duration: 123,
+    });
+
+    getStatsSpy = jest.spyOn(mockService, 'getStats');
   });
 
-  describe('mode=status', () => {
-    it('应允许匿名访问 status 模式', async () => {
-      const request = createMockRequest('https://test.com/api/test?mode=status');
-      const response = await handleKeepAliveRequest(request, mockService);
+  const createRequest = (method: string = 'GET', searchParams: Record<string, string> = {}) => {
+    const url = new URL('http://localhost/api/test');
+    Object.entries(searchParams).forEach(([key, value]) => url.searchParams.set(key, value));
+    return new Request(url.toString(), { method });
+  };
 
-      expect(response.status).toBe(200);
-      const body = await response.json();
-      expect(body.success).toBe(true);
-      expect(body.data).toEqual({ auto_count: 1, manual_count: 2, failure_count: 0 });
-    });
+  it('should allow public access when mode is status', async () => {
+    const req = createRequest('GET', { mode: 'status' });
+    const mockStats = {
+      success: true,
+      data: { manual_count: 10, auto_count: 5, failure_count: 0 },
+      tableExists: true,
+      enabled: true,
+    };
+    getStatsSpy.mockResolvedValue(mockStats);
+
+    const response = await handleKeepAliveRequest(req, mockService);
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(data).toEqual(mockStats);
+    expect(verifyAuth).not.toHaveBeenCalled();
   });
 
-  describe('auto trigger (GET)', () => {
-    it('应拒绝未授权的 auto 请求', async () => {
-      const request = createMockRequest('https://test.com/api/test', { method: 'GET' });
-      const response = await handleKeepAliveRequest(request, mockService);
+  it('should return 401 if authentication fails', async () => {
+    const req = createRequest('POST', { trigger: 'manual' });
+    (verifyAuth as jest.Mock).mockReturnValue({ authorized: false, message: 'Unauthorized' });
 
-      expect(response.status).toBe(401);
-    });
+    const response = await handleKeepAliveRequest(req, mockService);
+    const data = await response.json();
 
-    it('应接受正确的 cron secret', async () => {
-      const request = createMockRequest('https://test.com/api/test', {
-        method: 'GET',
-        headers: { Authorization: 'Bearer test-cron-secret' },
-      });
-
-      const response = await handleKeepAliveRequest(request, mockService);
-      expect(response.status).toBe(200);
-    });
+    expect(response.status).toBe(401);
+    expect(data.success).toBe(false);
+    expect(data.message).toBe('Unauthorized');
   });
 
-  describe('manual trigger (POST)', () => {
-    it('应拒绝未授权的 manual 请求', async () => {
-      const request = createMockRequest('https://test.com/api/test', { method: 'POST' });
-      const response = await handleKeepAliveRequest(request, mockService);
-
-      expect(response.status).toBe(401);
+  it('should return 401 if authorization (permission) fails', async () => {
+    const req = createRequest('POST', { trigger: 'manual' });
+    (verifyAuth as jest.Mock).mockReturnValue({ authorized: true, type: 'admin' });
+    (checkTriggerPermission as jest.Mock).mockReturnValue({
+      authorized: false,
+      message: 'Forbidden',
     });
 
-    it('应接受正确的 app key', async () => {
-      const request = createMockRequest('https://test.com/api/test', {
-        method: 'POST',
-        headers: { 'X-App-Key': 'test-app-key' },
-      });
+    const response = await handleKeepAliveRequest(req, mockService);
+    const data = await response.json();
 
-      const response = await handleKeepAliveRequest(request, mockService);
-      expect(response.status).toBe(200);
-    });
-
-    it('应接受有效的 session cookie', async () => {
-      const request = createMockRequest('https://test.com/api/test', {
-        method: 'POST',
-        headers: { Cookie: 'workflow_session=authenticated' },
-      });
-
-      const response = await handleKeepAliveRequest(request, mockService);
-      expect(response.status).toBe(200);
-    });
+    expect(response.status).toBe(401);
+    expect(data.success).toBe(false);
+    expect(data.message).toBe('Forbidden');
   });
 
-  describe('error handling', () => {
-    it('应返回 500 当服务执行失败', async () => {
-      mockService.mockRunResult = { success: false, message: 'Failed', duration: 0 };
+  it('should execute service run if auth passes', async () => {
+    const req = createRequest('POST', { trigger: 'manual' });
+    (verifyAuth as jest.Mock).mockReturnValue({ authorized: true, type: 'admin' });
+    (checkTriggerPermission as jest.Mock).mockReturnValue({ authorized: true });
 
-      const request = createMockRequest('https://test.com/api/test', {
-        method: 'GET',
-        headers: { Authorization: 'Bearer test-cron-secret' },
-      });
+    const response = await handleKeepAliveRequest(req, mockService);
+    const data = await response.json();
 
-      const response = await handleKeepAliveRequest(request, mockService);
-      expect(response.status).toBe(500);
-    });
+    expect(response.status).toBe(200);
+    expect(data.success).toBe(true);
+    expect(mockService.run).toHaveBeenCalledWith('manual');
+  });
+
+  it('should return 500 if service run returns failure', async () => {
+    const req = createRequest('GET'); // default auto
+    (verifyAuth as jest.Mock).mockReturnValue({ authorized: true, type: 'cron' });
+    (checkTriggerPermission as jest.Mock).mockReturnValue({ authorized: true });
+
+    runSpy.mockResolvedValue({ success: false, message: 'Service failed', duration: 100 });
+
+    const response = await handleKeepAliveRequest(req, mockService);
+    const data = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(data.success).toBe(false);
+    expect(data.message).toBe('Service failed');
+  });
+
+  it('should return 500 if service throws exception', async () => {
+    const req = createRequest('GET');
+    (verifyAuth as jest.Mock).mockReturnValue({ authorized: true, type: 'cron' });
+    (checkTriggerPermission as jest.Mock).mockReturnValue({ authorized: true });
+
+    runSpy.mockRejectedValue(new Error('Critical error'));
+
+    const response = await handleKeepAliveRequest(req, mockService);
+    const data = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(data.error).toBe('Critical error');
   });
 });
