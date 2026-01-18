@@ -11,7 +11,9 @@
     "lint:check": "eslint . --max-warnings 0",
     "type-check": "tsc --noEmit",
     "test": "jest",
-    "prepare": "husky"
+    "prepare": "husky",
+    "release": "standard-version",
+    "release:first": "standard-version --first-release"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.87.1",
@@ -40,6 +42,7 @@
     "jest-environment-jsdom": "^30.2.0",
     "lint-staged": "^16.2.7",
     "prettier": "^3.7.4",
+    "standard-version": "^9.5.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   },
