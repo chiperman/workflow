@@ -1,9 +1,16 @@
+import { verifyAuth } from '@/lib/auth';
 import { checkGladosHealth, checkSupabaseHealth } from '@/lib/health-check';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // 鉴权检查
+  const authResult = verifyAuth(request);
+  if (!authResult.authorized) {
+    return NextResponse.json({ success: false, message: authResult.message }, { status: 401 });
+  }
+
   const [supabaseCheck, gladosCheck] = await Promise.all([
     checkSupabaseHealth(),
     checkGladosHealth(),

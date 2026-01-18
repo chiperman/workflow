@@ -27,6 +27,10 @@ jest.mock('@/lib/logger', () => ({
   },
 }));
 
+jest.mock('@/lib/auth', () => ({
+  verifyAuth: jest.fn().mockReturnValue({ authorized: true, type: 'session' }),
+}));
+
 describe('Heatmap API Route', () => {
   const mockRequest = new NextRequest('http://localhost/api/stats/heatmap?year=2023');
 

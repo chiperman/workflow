@@ -1,12 +1,19 @@
+import { verifyAuth } from '@/lib/auth';
 import { logger } from '@/lib/logger';
 import { supabase } from '@/lib/supabase';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 /**
  * 获取有数据的年份列表
  * 用于热力图年份选择器
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // 鉴权检查
+  const authResult = verifyAuth(request);
+  if (!authResult.authorized) {
+    return NextResponse.json({ success: false, message: authResult.message }, { status: 401 });
+  }
+
   try {
     // 查询最早和最晚的日志时间戳
     const { data, error } = await supabase

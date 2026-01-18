@@ -53,7 +53,7 @@ describe('handleKeepAliveRequest', () => {
     return new Request(url.toString(), { method });
   };
 
-  it('should allow public access when mode is status', async () => {
+  it('should allow access when mode is status with valid auth', async () => {
     const req = createRequest('GET', { mode: 'status' });
     const mockStats = {
       success: true,
@@ -61,6 +61,7 @@ describe('handleKeepAliveRequest', () => {
       tableExists: true,
       enabled: true,
     };
+    (verifyAuth as jest.Mock).mockReturnValue({ authorized: true, type: 'session' });
     getStatsSpy.mockResolvedValue(mockStats);
 
     const response = await handleKeepAliveRequest(req, mockService);
@@ -68,7 +69,7 @@ describe('handleKeepAliveRequest', () => {
 
     expect(response.status).toBe(200);
     expect(data).toEqual(mockStats);
-    expect(verifyAuth).not.toHaveBeenCalled();
+    expect(verifyAuth).toHaveBeenCalled();
   });
 
   it('should return 401 if authentication fails', async () => {

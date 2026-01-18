@@ -33,7 +33,6 @@ export function verifyAuth(req: Request | NextRequest): AuthResult {
     pathname === '/login' ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api/auth') || // 登录/登出接口自行处理
-    pathname.startsWith('/api/stats') || // 状态接口公开
     pathname.includes('favicon.ico');
 
   // 注意：即使是公开路径，如果携带了凭证，我们也优先验证凭证（以便 API 明确调用者身份）

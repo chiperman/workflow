@@ -17,8 +17,8 @@ export async function handleKeepAliveRequest(request: Request, service: BaseServ
   const trigger =
     triggerParam === 'manual' || triggerParam === 'auto' ? triggerParam : defaultTrigger;
 
-  // 特例：mode === 'status' 始终允许匿名查看，便于展示系统状态
-  if (mode !== 'status') {
+  // 特例：mode === 'status' 也需要鉴权（S3 安全加固）
+  {
     const authResult = verifyAuth(request);
 
     // 1. 身份验证 (Authentication)
@@ -26,10 +26,12 @@ export async function handleKeepAliveRequest(request: Request, service: BaseServ
       return NextResponse.json({ success: false, message: authResult.message }, { status: 401 });
     }
 
-    // 2. 权限检查 (Authorization)
-    const permission = checkTriggerPermission(authResult.type, trigger as 'auto' | 'manual');
-    if (!permission.authorized) {
-      return NextResponse.json({ success: false, message: permission.message }, { status: 401 });
+    // 2. 权限检查 (Authorization) - 仅对非 status 模式检查触发权限
+    if (mode !== 'status') {
+      const permission = checkTriggerPermission(authResult.type, trigger as 'auto' | 'manual');
+      if (!permission.authorized) {
+        return NextResponse.json({ success: false, message: permission.message }, { status: 401 });
+      }
     }
   }
 

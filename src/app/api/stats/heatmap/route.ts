@@ -1,3 +1,4 @@
+import { verifyAuth } from '@/lib/auth';
 import { aggregateByDay } from '@/lib/heatmap-utils';
 import { logger } from '@/lib/logger';
 import { supabase } from '@/lib/supabase';
@@ -9,6 +10,12 @@ import { NextRequest, NextResponse } from 'next/server';
  * 默认返回当前年份的数据
  */
 export async function GET(request: NextRequest) {
+  // 鉴权检查
+  const authResult = verifyAuth(request);
+  if (!authResult.authorized) {
+    return NextResponse.json({ success: false, message: authResult.message }, { status: 401 });
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const yearParam = searchParams.get('year');

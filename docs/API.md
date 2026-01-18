@@ -33,6 +33,8 @@
 GET /api/health
 ```
 
+> ⚠️ **鉴权**: 需要有效的 Session Cookie 或 `X-App-Key` Header。
+
 ### 响应示例
 
 ```json
@@ -61,6 +63,8 @@ GET /api/health
 ```
 GET /api/stats/heatmap
 ```
+
+> ⚠️ **鉴权**: 需要有效的 Session Cookie 或 `X-App-Key` Header。
 
 返回过去 12 个月的签到记录聚合数据，用于渲染 GitHub 风格的热力图。
 
@@ -226,6 +230,11 @@ CREATE INDEX IF NOT EXISTS idx_logs_timestamp_service ON keep_alive_logs (timest
 ---
 
 ## 变更日志
+
+### v0.8.4 (2026-01-18)
+
+- ✅ **安全加固**: 所有 API 接口现在需要鉴权（Session Cookie 或 `X-App-Key`）。
+- ✅ **新增**: T2 API 路由单元测试。
 
 ### v0.8.3 (2026-01-17)
 
