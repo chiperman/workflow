@@ -106,15 +106,6 @@ export function Heatmap() {
     setTooltip(null);
   };
 
-  // 错误时显示错误信息
-  if (error) {
-    return (
-      <div className="heatmap-container">
-        <div className="heatmap-error">{error}</div>
-      </div>
-    );
-  }
-
   // 始终渲染格子结构，数据加载完成后自动更新颜色
 
   // 按周分组
@@ -180,14 +171,17 @@ export function Heatmap() {
               </div>
             </div>
 
-            {/* 底部：图例 (右对齐) */}
-            <div className="heatmap-footer mt-4 flex justify-end items-center text-xs text-gray-400">
+            {/* 底部：图例 (右对齐) & 错误提示 */}
+            <div className="heatmap-footer mt-4 flex justify-between items-center text-xs text-gray-400">
+              <div className="heatmap-status">
+                {error && <span className="text-red-400">Offline: Data sync failed</span>}
+              </div>
               <div className="heatmap-legend flex items-center gap-3">
                 <div className="flex items-center gap-1">
                   <div className="heatmap-cell heatmap-level-0 w-3 h-3 rounded-sm" />
                   <span>No check-ins</span>
                 </div>
-
+                {/* ... other legend items ... */}
                 <div className="flex items-center gap-1">
                   <div className="heatmap-cell heatmap-level-success w-3 h-3 rounded-sm" />
                   <span>Success</span>

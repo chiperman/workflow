@@ -117,7 +117,7 @@ describe('Heatmap', () => {
     render(<Heatmap />, { wrapper: TestWrapper });
 
     await waitFor(() => {
-      expect(screen.getByText('Failed to load data')).toBeInTheDocument();
+      expect(screen.getByText('Offline: Data sync failed')).toBeInTheDocument();
     });
   });
 
