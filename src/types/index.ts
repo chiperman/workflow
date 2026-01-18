@@ -5,6 +5,30 @@
  */
 
 /**
+ * 统一的结果类型 (Result Pattern)
+ *
+ * 用于表示可能成功或失败的操作结果。
+ * - 成功时: { ok: true, data: T }
+ * - 失败时: { ok: false, error: E }
+ *
+ * @example
+ * ```typescript
+ * function divide(a: number, b: number): Result<number, string> {
+ *   if (b === 0) return { ok: false, error: 'Division by zero' };
+ *   return { ok: true, data: a / b };
+ * }
+ *
+ * const result = divide(10, 2);
+ * if (result.ok) {
+ *   console.log(result.data); // 5
+ * } else {
+ *   console.error(result.error);
+ * }
+ * ```
+ */
+export type Result<T, E = string> = { ok: true; data: T } | { ok: false; error: E };
+
+/**
  * 服务统计数据
  */
 export interface ServiceStats {
