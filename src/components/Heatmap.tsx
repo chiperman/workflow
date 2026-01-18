@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
+import useSWR from 'swr';
 
 import {
   formatDateForTooltip,
@@ -30,55 +31,43 @@ interface YearsData {
   error?: string;
 }
 
+const fetcher = (url: string) => fetch(url).then(res => res.json());
+
 /**
  * GitHub 风格的签到热力图组件
  */
 export function Heatmap() {
-  const [data, setData] = useState<HeatmapDay[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [tooltip, setTooltip] = useState<{ day: HeatmapDay; x: number; y: number } | null>(null);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [availableYears, setAvailableYears] = useState<number[]>([new Date().getFullYear()]);
 
-  // 获取有数据的年份列表
-  useEffect(() => {
-    async function fetchYears() {
-      try {
-        const res = await fetch('/api/stats/heatmap/years');
-        const json: YearsData = await res.json();
-        if (json.success && json.years) {
-          setAvailableYears(json.years);
-        }
-      } catch {
-        // 忽略错误，使用默认当前年份
-      }
-    }
-    fetchYears();
-  }, []);
+  // 获取有数据的年份列表 (使用 SWR 缓存)
+  const { data: yearsData } = useSWR<YearsData>('/api/stats/heatmap/years', fetcher, {
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false,
+    revalidateIfStale: false,
+  });
+  const availableYears =
+    yearsData?.success && yearsData.years ? yearsData.years : [new Date().getFullYear()];
 
-  // 获取指定年份的热力图数据
-  const fetchHeatmapData = useCallback(async (year: number) => {
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/stats/heatmap?year=${year}`);
-      const json: HeatmapData = await res.json();
-      if (json.success && json.data) {
-        setData(json.data);
-        setError(null);
-      } else {
-        setError(json.error || 'Failed to load heatmap data');
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // 获取指定年份的热力图数据 (使用 SWR 缓存)
+  const {
+    data: heatmapResponse,
+    isLoading: loading,
+    error: fetchError,
+  } = useSWR<HeatmapData>(`/api/stats/heatmap?year=${selectedYear}`, fetcher, {
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false,
+    revalidateIfStale: false,
+  });
 
-  useEffect(() => {
-    fetchHeatmapData(selectedYear);
-  }, [selectedYear, fetchHeatmapData]);
+  const data = heatmapResponse?.success && heatmapResponse.data ? heatmapResponse.data : [];
+  const error = fetchError
+    ? fetchError instanceof Error
+      ? fetchError.message
+      : 'Unknown error'
+    : heatmapResponse && !heatmapResponse.success
+      ? heatmapResponse.error
+      : null;
 
   // 生成选中年份的日期数组 (Jan 1 - Dec 31)，使用 useMemo 缓存
   const days = useMemo(() => generateYearDays(selectedYear), [selectedYear]);

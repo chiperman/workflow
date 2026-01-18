@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { SWRConfig } from 'swr';
 import { Heatmap } from '../Heatmap';
 
 // Mock the heatmap-calendar module
@@ -17,6 +18,11 @@ jest.mock('@/lib/heatmap-calendar', () => ({
   getMonthLabels: jest.fn(() => [{ name: 'Jan', weekIndex: 0 }]),
   formatDateForTooltip: jest.fn((date: string) => date),
 }));
+
+// Wrapper to disable SWR caching in tests
+const TestWrapper = ({ children }: { children: React.ReactNode }) => (
+  <SWRConfig value={{ provider: () => new Map(), dedupingInterval: 0 }}>{children}</SWRConfig>
+);
 
 describe('Heatmap', () => {
   beforeEach(() => {
@@ -51,7 +57,7 @@ describe('Heatmap', () => {
       });
     });
 
-    render(<Heatmap />);
+    render(<Heatmap />, { wrapper: TestWrapper });
 
     await waitFor(() => {
       expect(screen.getByText('Jan')).toBeInTheDocument();
@@ -64,7 +70,7 @@ describe('Heatmap', () => {
       json: () => Promise.resolve({ success: true, data: [], years: [2026] }),
     });
 
-    render(<Heatmap />);
+    render(<Heatmap />, { wrapper: TestWrapper });
 
     await waitFor(() => {
       expect(screen.getByText('No check-ins')).toBeInTheDocument();
@@ -87,7 +93,7 @@ describe('Heatmap', () => {
       });
     });
 
-    render(<Heatmap />);
+    render(<Heatmap />, { wrapper: TestWrapper });
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: '2026' })).toBeInTheDocument();
@@ -108,7 +114,7 @@ describe('Heatmap', () => {
       });
     });
 
-    render(<Heatmap />);
+    render(<Heatmap />, { wrapper: TestWrapper });
 
     await waitFor(() => {
       expect(screen.getByText('Failed to load data')).toBeInTheDocument();
@@ -121,7 +127,7 @@ describe('Heatmap', () => {
       json: () => Promise.resolve({ success: true, data: [], years: [2026] }),
     });
 
-    render(<Heatmap />);
+    render(<Heatmap />, { wrapper: TestWrapper });
 
     await waitFor(() => {
       // 只显示奇数行的星期标签 (Mon, Wed, Fri)
@@ -145,7 +151,7 @@ describe('Heatmap', () => {
       });
     });
 
-    render(<Heatmap />);
+    render(<Heatmap />, { wrapper: TestWrapper });
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: '2025' })).toBeInTheDocument();
