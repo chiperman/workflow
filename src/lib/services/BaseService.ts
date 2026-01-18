@@ -2,7 +2,7 @@ import { sendBarkNotification } from '@/lib/bark';
 import { logger } from '@/lib/logger';
 import { supabase } from '@/lib/supabase';
 import { getBeijingDateString, withRetry } from '@/lib/utils';
-import type { KeepAliveResult, StatsQueryResult } from '@/types';
+import type { KeepAliveResult, Result } from '@/types';
 
 export type NotificationLevel = 'always' | 'failure-only' | 'none';
 
@@ -26,7 +26,15 @@ export abstract class BaseService {
    * 获取服务状态（默认实现，从 Supabase 查询）
    * 子类可直接继承此实现，或覆写以使用自定义逻辑
    */
-  public async getStats(): Promise<StatsQueryResult> {
+  public async getStats(): Promise<
+    Result<{
+      manual_count: number;
+      auto_count: number;
+      failure_count: number;
+      enabled: boolean;
+      tableExists: boolean;
+    }>
+  > {
     try {
       const serviceKey = this.serviceName.toLowerCase();
       const { data: existing, error } = await supabase
@@ -38,17 +46,19 @@ export abstract class BaseService {
       if (error) {
         if (error.code === 'PGRST116') {
           return {
-            success: true,
-            data: { manual_count: 0, auto_count: 0, failure_count: 0 },
-            tableExists: true,
-            enabled: true,
+            ok: true,
+            data: {
+              manual_count: 0,
+              auto_count: 0,
+              failure_count: 0,
+              enabled: true,
+              tableExists: true,
+            },
           };
         }
         if (error.code === '42P01') {
           return {
-            success: false,
-            data: { manual_count: 0, auto_count: 0, failure_count: 0 },
-            tableExists: false,
+            ok: false,
             error: "Table 'keep_alive' does not exist",
           };
         }
@@ -56,19 +66,19 @@ export abstract class BaseService {
       }
 
       return {
-        success: true,
+        ok: true,
         data: {
           manual_count: existing?.manual_count || 0,
           auto_count: existing?.auto_count || 0,
           failure_count: existing?.failure_count || 0,
+          enabled: existing?.enabled ?? true,
+          tableExists: true,
         },
-        tableExists: true,
-        enabled: existing?.enabled ?? true,
       };
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logger.error(`[${this.serviceName}] getStats error:`, errorMessage);
-      return { success: false, error: errorMessage };
+      return { ok: false, error: errorMessage };
     }
   }
 
@@ -232,10 +242,12 @@ export abstract class BaseService {
   protected async updateServiceStats(
     shouldIncrement: boolean,
     trigger: 'auto' | 'manual'
-  ): Promise<{
-    action: 'created' | 'updated';
-    data: { manual_count: number; auto_count: number; failure_count: number };
-  }> {
+  ): Promise<
+    Result<{
+      action: 'created' | 'updated';
+      data: { manual_count: number; auto_count: number; failure_count: number };
+    }>
+  > {
     const serviceKey = this.serviceName.toLowerCase();
 
     // 1. Select existing record
@@ -247,11 +259,14 @@ export abstract class BaseService {
 
     if (fetchError) {
       if (fetchError.code === '42P01') {
-        throw new Error("Table 'keep_alive' does not exist. Please execute the SQL setup.");
+        return {
+          ok: false,
+          error: "Table 'keep_alive' does not exist. Please execute the SQL setup.",
+        };
       }
       if (fetchError.code !== 'PGRST116') {
         logger.error(`[${this.serviceName}] Supabase select error:`, fetchError);
-        throw new Error(`Supabase select failed: ${fetchError.message}`);
+        return { ok: false, error: `Supabase select failed: ${fetchError.message}` };
       }
     }
 
@@ -280,15 +295,18 @@ export abstract class BaseService {
 
     if (upsertError) {
       logger.error(`[${this.serviceName}] Supabase upsert error:`, upsertError);
-      throw new Error(`Supabase upsert failed: ${upsertError.message}`);
+      return { ok: false, error: `Supabase upsert failed: ${upsertError.message}` };
     }
 
     return {
-      action: existing ? 'updated' : 'created',
+      ok: true,
       data: {
-        manual_count: manualCount,
-        auto_count: autoCount,
-        failure_count: existing?.failure_count || 0,
+        action: existing ? 'updated' : 'created',
+        data: {
+          manual_count: manualCount,
+          auto_count: autoCount,
+          failure_count: existing?.failure_count || 0,
+        },
       },
     };
   }

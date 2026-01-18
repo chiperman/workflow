@@ -1,3 +1,4 @@
+import { Result } from '@/types';
 import type { NextRequest } from 'next/server';
 
 /**
@@ -99,28 +100,40 @@ export function verifyAuth(req: Request | NextRequest): AuthResult {
  * @param authType 当前用户的身份类型 (来自 verifyAuth)
  * @param trigger 想要执行的操作类型 ('auto' | 'manual')
  */
+
+// ... (existing imports)
+
+// ...
+
+/**
+ * 验证操作权限 (Authorization)
+ * 统一管理 "谁能做什么" 的逻辑，作为 Single Source of Truth。
+ *
+ * @param authType 当前用户的身份类型 (来自 verifyAuth)
+ * @param trigger 想要执行的操作类型 ('auto' | 'manual')
+ */
 export function checkTriggerPermission(
   authType: AuthResult['type'],
   trigger: 'auto' | 'manual'
-): { authorized: boolean; message?: string } {
+): Result<void> {
   // 规则 1: 自动触发 (Auto) 必须是 Cron (最高权限)
   if (trigger === 'auto') {
     if (authType === 'cron') {
-      return { authorized: true };
+      return { ok: true, data: undefined };
     }
-    return { authorized: false, message: 'Unauthorized (Cron only)' };
+    return { ok: false, error: 'Unauthorized (Cron only)' };
   }
 
   // 规则 2: 手动触发 (Manual) 允许 App Key 或 Session
   if (trigger === 'manual') {
     // Session 用户 (浏览器) 或 App Key (API调用) 都可以手动触发
     if (authType === 'app-key' || authType === 'session') {
-      return { authorized: true };
+      return { ok: true, data: undefined };
     }
     // Cron 虽然权限高，但为了安全和语义清晰，我们限制 Cron 只跑 Auto
     // Public 用户无权触发
-    return { authorized: false, message: 'Invalid trigger for this credential' };
+    return { ok: false, error: 'Invalid trigger for this credential' };
   }
 
-  return { authorized: false, message: 'Unknown trigger type' };
+  return { ok: false, error: 'Unknown trigger type' };
 }

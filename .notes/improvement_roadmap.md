@@ -110,11 +110,9 @@
 ### 🟢 低优先级 (Low Priority)
 
 #### 🧹 错误处理标准化
-- **状态**: 🟡 部分完成
-- **说明**: 已定义 `Result<T>` 类型。需逐步将现有 `throw` 和 `return { error }` 模式迁移到新的 Result Pattern。
+- **状态**: 🟡 核心完成
+- **说明**: 已定义 `Result<T>`。`BaseService` (`getStats`, `updateServiceStats`)、`auth` (`checkTriggerPermission`) 及相关消费者已迁移至新模式。API 响应格式暂保持兼容。
 
-#### � 热力图移动端适配
+####  热力图移动端适配
 - **现状**: 年份选择器在窄屏可能被遮挡。
 - **建议**: 优化移动端布局。
-
-

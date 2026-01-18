@@ -85,6 +85,7 @@ export interface KeepAliveResult {
 
 /**
  * Stats 查询结果
+ * @deprecated Use Result<ServiceStats & ...> instead
  */
 export interface StatsQueryResult {
   success: boolean;

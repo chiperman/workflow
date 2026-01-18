@@ -12,7 +12,11 @@ export class SupabaseService extends BaseService {
   protected async executeKeepAlive(trigger: 'auto' | 'manual' = 'auto'): Promise<KeepAliveResult> {
     try {
       logger.info(`[Supabase] Updating Supabase...`);
-      const { action, data: stats } = await this.updateServiceStats(true, trigger);
+      const updateResult = await this.updateServiceStats(true, trigger);
+      if (!updateResult.ok) {
+        throw new Error(updateResult.error);
+      }
+      const { action, data: stats } = updateResult.data;
 
       const beijingTime = getBeijingTime();
       const baseAction = action === 'created' ? 'Created new record' : 'Updated record';

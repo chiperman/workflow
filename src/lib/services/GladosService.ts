@@ -77,7 +77,11 @@ export class GladosService extends BaseService {
 
       logger.info(`[GLaDOS] API success, updating Supabase...`);
 
-      const { action, data: stats } = await this.updateServiceStats(!isAlreadyCheckedIn, trigger);
+      const updateResult = await this.updateServiceStats(!isAlreadyCheckedIn, trigger);
+      if (!updateResult.ok) {
+        throw new Error(updateResult.error);
+      }
+      const { action, data: stats } = updateResult.data;
 
       const beijingTime = getBeijingTime();
       const baseAction = action === 'created' ? 'Created new record' : 'Updated record';

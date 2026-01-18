@@ -29,20 +29,28 @@ export async function handleKeepAliveRequest(request: Request, service: BaseServ
     // 2. 权限检查 (Authorization) - 仅对非 status 模式检查触发权限
     if (mode !== 'status') {
       const permission = checkTriggerPermission(authResult.type, trigger as 'auto' | 'manual');
-      if (!permission.authorized) {
-        return NextResponse.json({ success: false, message: permission.message }, { status: 401 });
+      if (!permission.ok) {
+        return NextResponse.json({ success: false, message: permission.error }, { status: 401 });
       }
     }
   }
 
   // 2. 如果请求统计数据
   if (mode === 'status') {
-    const stats = await service.getStats();
-    return NextResponse.json(stats, {
-      headers: {
-        'Cache-Control': 's-maxage=60, stale-while-revalidate=30',
-      },
-    });
+    const result = await service.getStats();
+
+    if (result.ok) {
+      return NextResponse.json(
+        { success: true, ...result.data },
+        {
+          headers: {
+            'Cache-Control': 's-maxage=60, stale-while-revalidate=30',
+          },
+        }
+      );
+    } else {
+      return NextResponse.json({ success: false, error: result.error }, { status: 500 });
+    }
   }
 
   // 3. 执行保活逻辑

@@ -8,29 +8,25 @@ import { supabaseService } from './services/SupabaseService';
 export async function checkSupabaseHealth(): Promise<ServiceHealth> {
   const result = await supabaseService.getStats();
 
-  if (!result.success) {
+  if (!result.ok) {
     return {
       status: 'misconfigured',
       tableExists: false,
       stats: { auto_count: 0, manual_count: 0, failure_count: 0 },
-      message: 'Database setup required. Please execute the SQL setup.',
+      message: result.error || 'Database setup required',
     };
   }
 
-  if (result.tableExists === false) {
-    return {
-      status: 'misconfigured',
-      tableExists: false,
-      stats: { auto_count: 0, manual_count: 0, failure_count: 0 },
-      message: 'Table "keep_alive" does not exist. Please execute the SQL setup.',
-    };
-  }
+  const { enabled, tableExists, ...stats } = result.data;
+
+  // 如果 tableExists 为 false (虽然在 Result 模式下通常意味着 ok: false，但为了兼容逻辑保留)
+  // 实际上上面的 !ok 已经覆盖了大部分错误
 
   return {
     status: 'operational',
-    tableExists: true,
-    stats: result.data || { auto_count: 0, manual_count: 0, failure_count: 0 },
-    enabled: result.enabled,
+    tableExists,
+    stats,
+    enabled,
   };
 }
 
@@ -40,28 +36,21 @@ export async function checkSupabaseHealth(): Promise<ServiceHealth> {
 export async function checkGladosHealth(): Promise<ServiceHealth> {
   const result = await gladosService.getStats();
 
-  if (!result.success) {
+  if (!result.ok) {
     return {
       status: 'misconfigured',
       tableExists: false,
       stats: { auto_count: 0, manual_count: 0, failure_count: 0 },
-      message: 'Database setup required. Please execute the SQL setup.',
+      message: result.error || 'Database setup required',
     };
   }
 
-  if (result.tableExists === false) {
-    return {
-      status: 'misconfigured',
-      tableExists: false,
-      stats: { auto_count: 0, manual_count: 0, failure_count: 0 },
-      message: 'Table "keep_alive" does not exist. Please execute the SQL setup.',
-    };
-  }
+  const { enabled, tableExists, ...stats } = result.data;
 
   return {
     status: 'operational',
-    tableExists: true,
-    stats: result.data || { auto_count: 0, manual_count: 0, failure_count: 0 },
-    enabled: result.enabled,
+    tableExists,
+    stats,
+    enabled,
   };
 }

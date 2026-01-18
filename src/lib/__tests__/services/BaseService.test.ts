@@ -64,8 +64,11 @@ describe('BaseService.updateServiceStats', () => {
 
     const result = await service.testUpdateServiceStats(true, 'auto');
 
-    expect(result.action).toBe('created');
-    expect(result.data).toEqual({ manual_count: 0, auto_count: 1, failure_count: 0 });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return; // Guard for TS
+
+    expect(result.data.action).toBe('created');
+    expect(result.data.data).toEqual({ manual_count: 0, auto_count: 1, failure_count: 0 });
 
     // Verify upsert
     expect(mockUpsert).toHaveBeenCalledWith(
@@ -86,8 +89,11 @@ describe('BaseService.updateServiceStats', () => {
 
     const result = await service.testUpdateServiceStats(true, 'auto');
 
-    expect(result.action).toBe('updated');
-    expect(result.data).toEqual({ manual_count: 5, auto_count: 11, failure_count: 2 });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    expect(result.data.action).toBe('updated');
+    expect(result.data.data).toEqual({ manual_count: 5, auto_count: 11, failure_count: 2 });
 
     expect(mockUpsert).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -107,7 +113,10 @@ describe('BaseService.updateServiceStats', () => {
 
     const result = await service.testUpdateServiceStats(true, 'manual');
 
-    expect(result.data).toEqual({ manual_count: 6, auto_count: 10, failure_count: 0 });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    expect(result.data.data).toEqual({ manual_count: 6, auto_count: 10, failure_count: 0 });
   });
 
   it('should NOT increment counts if shouldIncrement is false', async () => {
@@ -118,7 +127,10 @@ describe('BaseService.updateServiceStats', () => {
 
     const result = await service.testUpdateServiceStats(false, 'auto');
 
-    expect(result.data).toEqual({ manual_count: 5, auto_count: 10, failure_count: 0 });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    expect(result.data.data).toEqual({ manual_count: 5, auto_count: 10, failure_count: 0 });
 
     expect(mockUpsert).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -134,9 +146,10 @@ describe('BaseService.updateServiceStats', () => {
       error: { code: '42P01', message: 'relation "keep_alive" does not exist' },
     });
 
-    await expect(service.testUpdateServiceStats(true, 'auto')).rejects.toThrow(
-      "Table 'keep_alive' does not exist"
-    );
+    const result = await service.testUpdateServiceStats(true, 'auto');
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error).toBe("Table 'keep_alive' does not exist. Please execute the SQL setup.");
   });
 
   it('should propagate other Supabase errors', async () => {
@@ -145,8 +158,9 @@ describe('BaseService.updateServiceStats', () => {
       error: { code: 'SOME_OTHER_CODE', message: 'Something went wrong' },
     });
 
-    await expect(service.testUpdateServiceStats(true, 'auto')).rejects.toThrow(
-      'Supabase select failed: Something went wrong'
-    );
+    const result = await service.testUpdateServiceStats(true, 'auto');
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error).toBe('Supabase select failed: Something went wrong');
   });
 });

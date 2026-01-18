@@ -56,10 +56,14 @@ describe('handleKeepAliveRequest', () => {
   it('should allow access when mode is status with valid auth', async () => {
     const req = createRequest('GET', { mode: 'status' });
     const mockStats = {
-      success: true,
-      data: { manual_count: 10, auto_count: 5, failure_count: 0 },
-      tableExists: true,
-      enabled: true,
+      ok: true,
+      data: {
+        manual_count: 10,
+        auto_count: 5,
+        failure_count: 0,
+        tableExists: true,
+        enabled: true, // Mock data includes enabled
+      },
     };
     (verifyAuth as jest.Mock).mockReturnValue({ authorized: true, type: 'session' });
     getStatsSpy.mockResolvedValue(mockStats);
@@ -68,7 +72,14 @@ describe('handleKeepAliveRequest', () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data).toEqual(mockStats);
+    expect(data).toEqual({
+      success: true,
+      manual_count: 10,
+      auto_count: 5,
+      failure_count: 0,
+      tableExists: true,
+      enabled: true,
+    });
     expect(verifyAuth).toHaveBeenCalled();
   });
 
@@ -88,8 +99,8 @@ describe('handleKeepAliveRequest', () => {
     const req = createRequest('POST', { trigger: 'manual' });
     (verifyAuth as jest.Mock).mockReturnValue({ authorized: true, type: 'admin' });
     (checkTriggerPermission as jest.Mock).mockReturnValue({
-      authorized: false,
-      message: 'Forbidden',
+      ok: false,
+      error: 'Forbidden',
     });
 
     const response = await handleKeepAliveRequest(req, mockService);
@@ -103,7 +114,7 @@ describe('handleKeepAliveRequest', () => {
   it('should execute service run if auth passes', async () => {
     const req = createRequest('POST', { trigger: 'manual' });
     (verifyAuth as jest.Mock).mockReturnValue({ authorized: true, type: 'admin' });
-    (checkTriggerPermission as jest.Mock).mockReturnValue({ authorized: true });
+    (checkTriggerPermission as jest.Mock).mockReturnValue({ ok: true });
 
     const response = await handleKeepAliveRequest(req, mockService);
     const data = await response.json();
@@ -116,7 +127,7 @@ describe('handleKeepAliveRequest', () => {
   it('should return 500 if service run returns failure', async () => {
     const req = createRequest('GET'); // default auto
     (verifyAuth as jest.Mock).mockReturnValue({ authorized: true, type: 'cron' });
-    (checkTriggerPermission as jest.Mock).mockReturnValue({ authorized: true });
+    (checkTriggerPermission as jest.Mock).mockReturnValue({ ok: true });
 
     runSpy.mockResolvedValue({ success: false, message: 'Service failed', duration: 100 });
 
@@ -131,7 +142,7 @@ describe('handleKeepAliveRequest', () => {
   it('should return 500 if service throws exception', async () => {
     const req = createRequest('GET');
     (verifyAuth as jest.Mock).mockReturnValue({ authorized: true, type: 'cron' });
-    (checkTriggerPermission as jest.Mock).mockReturnValue({ authorized: true });
+    (checkTriggerPermission as jest.Mock).mockReturnValue({ ok: true });
 
     runSpy.mockRejectedValue(new Error('Critical error'));
 

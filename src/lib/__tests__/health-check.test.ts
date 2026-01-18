@@ -99,7 +99,7 @@ describe('checkSupabaseHealth', () => {
         manual_count: 0,
         failure_count: 0,
       },
-      message: 'Database setup required. Please execute the SQL setup.',
+      message: "Table 'keep_alive' does not exist",
     });
   });
 
@@ -144,7 +144,7 @@ describe('checkSupabaseHealth', () => {
         manual_count: 0,
         failure_count: 0,
       },
-      message: 'Database setup required. Please execute the SQL setup.',
+      message: 'Network error',
     });
   });
 
