@@ -2,6 +2,8 @@ import { env } from '@/lib/env';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * 身份验证接口
  * POST /api/auth -> 登录

@@ -43,7 +43,7 @@ export function Heatmap() {
   // 获取有数据的年份列表 (使用 SWR 缓存)
   const { data: yearsData } = useSWR<YearsData>('/api/stats/heatmap/years', fetcher, {
     revalidateOnFocus: false,
-    revalidateOnReconnect: false,
+    revalidateOnReconnect: true,
     revalidateIfStale: false,
   });
   const availableYears =
@@ -56,7 +56,7 @@ export function Heatmap() {
     error: fetchError,
   } = useSWR<HeatmapData>(`/api/stats/heatmap?year=${selectedYear}`, fetcher, {
     revalidateOnFocus: false,
-    revalidateOnReconnect: false,
+    revalidateOnReconnect: true,
     revalidateIfStale: false,
   });
 

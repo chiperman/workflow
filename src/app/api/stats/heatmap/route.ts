@@ -4,6 +4,8 @@ import { logger } from '@/lib/logger';
 import { supabase } from '@/lib/supabase';
 import { NextRequest, NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * 热力图数据 API
  * 支持 year 参数查询指定年份的数据

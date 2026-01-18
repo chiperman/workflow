@@ -3,6 +3,8 @@ import { logger } from '@/lib/logger';
 import { supabase } from '@/lib/supabase';
 import { NextRequest, NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * 获取有数据的年份列表
  * 用于热力图年份选择器

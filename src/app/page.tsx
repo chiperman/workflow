@@ -38,7 +38,7 @@ export default function Home() {
   // 使用 SWR 获取健康数据
   const { data, error, mutate } = useSWR<HealthCheckResponse>('/api/health', fetcher, {
     revalidateOnFocus: false,
-    revalidateOnReconnect: false,
+    revalidateOnReconnect: true,
     revalidateIfStale: false,
     revalidateOnMount: true,
   });
