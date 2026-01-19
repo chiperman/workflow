@@ -45,6 +45,7 @@ describe('checkSupabaseHealth', () => {
         manual_count: 5,
         failure_count: 0,
       },
+      todayCheckedIn: false,
     });
   });
 
@@ -71,6 +72,7 @@ describe('checkSupabaseHealth', () => {
         manual_count: 0,
         failure_count: 0,
       },
+      todayCheckedIn: false,
     });
   });
 
@@ -100,6 +102,7 @@ describe('checkSupabaseHealth', () => {
         failure_count: 0,
       },
       message: "Table 'keep_alive' does not exist",
+      todayCheckedIn: false,
     });
   });
 
@@ -145,6 +148,7 @@ describe('checkSupabaseHealth', () => {
         failure_count: 0,
       },
       message: 'Network error',
+      todayCheckedIn: false,
     });
   });
 
@@ -171,6 +175,7 @@ describe('checkSupabaseHealth', () => {
         manual_count: 0,
         failure_count: 0,
       },
+      todayCheckedIn: false,
     });
   });
 });
