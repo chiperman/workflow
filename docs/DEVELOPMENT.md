@@ -50,6 +50,8 @@ workflow/
 │   │   └── __tests__/         # 组件测试 (v0.8.2)
 │   │       ├── TaskCard.test.tsx
 │   │       └── Heatmap.test.tsx
+│   ├── hooks/             # 自定义 Hooks (v0.8.7)
+│   │   └── useSystemHealth.ts
 │   ├── config/                # 配置文件
 │   │   ├── constants.ts       # 全局常量
 │   │   └── swr.ts             # SWR 全局配置 (v0.8.7)
