@@ -8,7 +8,7 @@
 
 ### 目录结构
 
-```
+````
 workflow/
 ├── src/
 │   ├── app/                    # Next.js App Router
@@ -46,58 +46,74 @@ workflow/
 │   │       ├── TaskCard.test.tsx
 │   │       └── Heatmap.test.tsx
 │   ├── config/                # 配置文件
-│   │   └── constants.ts       # 全局常量
+│   │   ├── constants.ts       # 全局常量
+│   │   └── swr.ts             # SWR 全局配置 (v0.8.7)
 │   ├── lib/                   # 核心逻辑
 │   │   ├── services/          # 服务层
-│   │   │   ├── BaseService.ts # 服务基类
-│   │   │   ├── SupabaseService.ts
-│   │   │   └── GladosService.ts # GLaDOS 服务 (v0.5.0)
-│   │   ├── api-helper.ts      # API 统一处理工具
-│   │   ├── heatmap-calendar.ts # 日历计算纯函数 (v0.8.2)
-│   │   ├── heatmap-utils.ts   # 热力图聚合逻辑 (v0.8.0)
-│   │   ├── logger.ts          # 统一日志工具 (v0.4.5)
-│   │   ├── utils.ts           # 工具函数
-│   │   ├── health-check.ts    # 健康检查逻辑
-│   │   ├── supabase.ts        # Supabase 客户端
-│   │   ├── bark.ts            # Bark 通知推送
-│   │   ├── env.ts             # 环境变量验证
-│   │   └── __tests__/         # 单元测试
-│   │       ├── setup.ts
-│   │       ├── health-check.test.ts
-│   │       ├── heatmap-utils.test.ts
-│   │       ├── heatmap-calendar.test.ts # (v0.8.2)
-│   │       ├── services.test.ts
-│   │       └── utils.test.ts
-│   └── types/                 # 类型定义
-│       └── index.ts
-├── docs/                      # 文档
-│   ├── API.md                 # API 文档
-│   ├── DEVELOPMENT.md         # 开发文档
-│   ├── TESTING.md             # 测试文档
-│   └── database-setup.sql     # 数据库初始化脚本
-├── public/                    # 静态资源
-│   ├── file.svg
-│   ├── claude-color.svg
-│   ├── next.svg
-│   ├── globe.svg
-│   ├── gemini-color.svg
-│   ├── github.svg
-│   ├── window.svg
-│   └── vercel.svg
-├── .env.local                 # 环境变量 (Git 忽略)
-├── .nvmrc                     # Node.js 版本约束
-├── commitlint.config.js       # Commitlint 配置
-├── eslint.config.mjs          # ESLint 配置
-├── jest.config.js             # Jest 配置
-├── next.config.ts             # Next.js 配置
-├── package.json               # 项目依赖
-├── postcss.config.mjs         # PostCSS 配置
-├── tailwind.config.ts         # Tailwind CSS 配置
-├── tsconfig.json              # TypeScript 配置
-├── vercel.json                # Vercel Cron 配置
-├── instrumentation.ts         # Next.js Instrumentation
-└── next-env.d.ts              # Next.js 类型定义
-```
+// ... (omitted for brevity, keep existing structure)
+
+// ...
+
+3. **启动开发服务器**
+   ```bash
+   npm run dev
+````
+
+### 环境变量 (可选)
+
+- **LOG_LEVEL**: 控制日志输出级别。
+  - 可选值: `debug`, `info`, `warn`, `error`, `silent`
+  - 默认: 开发环境 `info`, 生产环境 `warn`
+    │ │ │ ├── BaseService.ts # 服务基类
+    │ │ │ ├── SupabaseService.ts
+    │ │ │ └── GladosService.ts # GLaDOS 服务 (v0.5.0)
+    │ │ ├── api-helper.ts # API 统一处理工具
+    │ │ ├── heatmap-calendar.ts # 日历计算纯函数 (v0.8.2)
+    │ │ ├── heatmap-utils.ts # 热力图聚合逻辑 (v0.8.0)
+    │ │ ├── logger.ts # 统一日志工具 (v0.4.5)
+    │ │ ├── utils.ts # 工具函数
+    │ │ ├── health-check.ts # 健康检查逻辑
+    │ │ ├── supabase.ts # Supabase 客户端
+    │ │ ├── bark.ts # Bark 通知推送
+    │ │ ├── env.ts # 环境变量验证
+    │ │ └── **tests**/ # 单元测试
+    │ │ ├── setup.ts
+    │ │ ├── health-check.test.ts
+    │ │ ├── heatmap-utils.test.ts
+    │ │ ├── heatmap-calendar.test.ts # (v0.8.2)
+    │ │ ├── services.test.ts
+    │ │ └── utils.test.ts
+    │ └── types/ # 类型定义
+    │ └── index.ts
+    ├── docs/ # 文档
+    │ ├── API.md # API 文档
+    │ ├── DEVELOPMENT.md # 开发文档
+    │ ├── TESTING.md # 测试文档
+    │ └── database-setup.sql # 数据库初始化脚本
+    ├── public/ # 静态资源
+    │ ├── file.svg
+    │ ├── claude-color.svg
+    │ ├── next.svg
+    │ ├── globe.svg
+    │ ├── gemini-color.svg
+    │ ├── github.svg
+    │ ├── window.svg
+    │ └── vercel.svg
+    ├── .env.local # 环境变量 (Git 忽略)
+    ├── .nvmrc # Node.js 版本约束
+    ├── commitlint.config.js # Commitlint 配置
+    ├── eslint.config.mjs # ESLint 配置
+    ├── jest.config.js # Jest 配置
+    ├── next.config.ts # Next.js 配置
+    ├── package.json # 项目依赖
+    ├── postcss.config.mjs # PostCSS 配置
+    ├── tailwind.config.ts # Tailwind CSS 配置
+    ├── tsconfig.json # TypeScript 配置
+    ├── vercel.json # Vercel Cron 配置
+    ├── instrumentation.ts # Next.js Instrumentation
+    └── next-env.d.ts # Next.js 类型定义
+
+````
 
 ---
 
@@ -151,7 +167,7 @@ workflow/
 
    ```bash
    npm install
-   ```
+````
 
 2. **配置环境变量**
    复制 `env.example` 到 `.env.local` 并填写相关 Key。

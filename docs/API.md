@@ -231,6 +231,13 @@ CREATE INDEX IF NOT EXISTS idx_logs_timestamp_service ON keep_alive_logs (timest
 
 ## 变更日志
 
+### v0.8.7 (2026-01-19)
+
+- ✅ **重构**: 全面代码优化 (O1-O8)，包括废弃代码清理、常量提取。
+- ✅ **新增**: 统一日志级别控制 `LOG_LEVEL`。
+- ✅ **新增**: 标准 API 响应接口定义 `ApiResponse<T>`。
+- ✅ **测试**: 开启 UI 组件的测试覆盖率统计。
+
 ### v0.8.4 (2026-01-18)
 
 - ✅ **安全加固**: 所有 API 接口现在需要鉴权（Session Cookie 或 `X-App-Key`）。

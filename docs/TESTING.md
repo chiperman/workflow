@@ -16,7 +16,7 @@ npm run dev
 
 ---
 
-## 🤖 自动化单元测试 (v0.4.0)
+## 🤖 自动化单元测试 (v0.8.7)
 
 本项目使用 **Jest** 对核心逻辑进行单元测试。
 
@@ -26,18 +26,21 @@ npm run dev
 # 运行所有测试
 npm test
 
-# 检查测试覆盖率
-npm run build # 构建过程会自动执行 lint 和类型检查
+# 检查测试覆盖率 (详细报告)
+npm test -- --coverage
 ```
 
 ### 2. 测试覆盖范围
 
 - **BaseService**: 测试重试机制、状态流转和通知触发逻辑。
 - **SupabaseService / GladosService**: 测试数据库操作流程。
-- **heatmap-utils (v0.8.0)**: 测试热力图聚合逻辑，包括服务级最终一致性、跨时区处理。
-- **heatmap-calendar (v0.8.2)**: 测试日历计算函数，包括日期生成、闰年处理、月份标签。
-- **组件测试 (v0.8.2)**: TaskCard 和 Heatmap 组件的渲染、交互测试。
+- **heatmap-utils (v0.8.0)**: 测试热力图聚合逻辑。
+- **heatmap-calendar (v0.8.2)**: 测试日历计算函数。
+- **组件测试 (v0.8.7)**: TaskCard 和 Heatmap 组件的渲染、交互测试 (覆盖率已纳入统计)。
 - **Utils**: 测试通用工具函数。
+- **Logger (v0.8.7)**: 测试日志级别控制逻辑。
+
+> **注意**: 由于引入大量 UI 组件进行覆盖率统计，当前的全局覆盖率阈值约为 50%。详细阈值配置见 `jest.config.js`。
 
 ---
 
