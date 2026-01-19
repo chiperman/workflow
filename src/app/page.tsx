@@ -12,6 +12,8 @@ import { useSystemHealth } from '@/hooks/useSystemHealth';
 import { AlertCircle, Check, LogOut, RefreshCw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
+import { toast } from 'sonner';
+
 export default function Home() {
   const router = useRouter();
   const [isExiting, setIsExiting] = useState(false);
@@ -29,13 +31,19 @@ export default function Home() {
   const handleRefreshClick = async () => {
     if (refreshUIStatus !== 'idle') return;
     setRefreshUIStatus('loading');
+    const loadingToast = toast.loading('Refreshing system data...');
     try {
       await refreshAll();
       setRefreshUIStatus('success');
+      toast.success('System data refreshed', { id: loadingToast });
       setTimeout(() => setRefreshUIStatus('idle'), 2000);
     } catch (err) {
       console.error('Refresh failed:', err);
       setRefreshUIStatus('error');
+      toast.error('Refresh failed', {
+        id: loadingToast,
+        description: err instanceof Error ? err.message : 'Unknown error occurred',
+      });
       setTimeout(() => setRefreshUIStatus('idle'), 2000);
     }
   };

@@ -140,6 +140,7 @@ workflow/
 
 - **Tailwind CSS 4** - 样式框架
 - **Lucide React** - 图标库
+- **Sonner** - Toast 通知库
 
 ### 开发工具
 

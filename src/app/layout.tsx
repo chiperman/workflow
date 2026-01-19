@@ -1,5 +1,6 @@
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import type { Metadata } from 'next';
+import { Toaster } from 'sonner';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -21,6 +22,7 @@ export default function RootLayout({
         <div className="relative z-10">
           <ErrorBoundary>{children}</ErrorBoundary>
         </div>
+        <Toaster position="top-center" richColors />
       </body>
     </html>
   );
