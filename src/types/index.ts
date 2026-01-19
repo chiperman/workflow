@@ -94,3 +94,32 @@ export interface KeepAliveResult {
   /** 设为 true 时跳过日志记录（如 GLaDOS 重复签到场景） */
   skipLog?: boolean;
 }
+
+/**
+ * 热力图 - 单日数据
+ */
+export interface HeatmapDay {
+  date: string;
+  success_count: number;
+  failure_count: number;
+  services: Record<string, 'success' | 'failure'>;
+}
+
+/**
+ * 热力图 - API 响应数据
+ */
+export interface HeatmapData {
+  success: boolean;
+  data?: HeatmapDay[];
+  year?: number;
+  error?: string;
+}
+
+/**
+ * 热力图 - 年份列表响应数据
+ */
+export interface YearsData {
+  success: boolean;
+  years?: number[];
+  error?: string;
+}

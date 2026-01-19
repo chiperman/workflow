@@ -3,35 +3,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
 
-import { HEATMAP_CONFIG } from '@/config/constants';
+import { HeatmapGrid } from '@/components/heatmap/HeatmapGrid';
+import { HeatmapLegend } from '@/components/heatmap/HeatmapLegend';
+import { HeatmapTooltip } from '@/components/heatmap/HeatmapTooltip';
+import { HeatmapYearSelector } from '@/components/heatmap/HeatmapYearSelector';
 import { SWR_CONFIG } from '@/config/swr';
-import {
-  formatDateForTooltip,
-  generateYearDays,
-  getMonthLabels,
-  groupByWeeks,
-  WEEKDAYS,
-} from '@/lib/heatmap-calendar';
-
-interface HeatmapDay {
-  date: string;
-  success_count: number;
-  failure_count: number;
-  services: Record<string, 'success' | 'failure'>;
-}
-
-interface HeatmapData {
-  success: boolean;
-  data?: HeatmapDay[];
-  year?: number;
-  error?: string;
-}
-
-interface YearsData {
-  success: boolean;
-  years?: number[];
-  error?: string;
-}
+import { generateYearDays, getMonthLabels, groupByWeeks, WEEKDAYS } from '@/lib/heatmap-calendar';
+import type { HeatmapData, HeatmapDay, YearsData } from '@/types';
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
@@ -67,22 +45,6 @@ export function Heatmap() {
   const days = useMemo(() => generateYearDays(selectedYear), [selectedYear]);
   const dataMap = new Map(data.map(d => [d.date, d]));
 
-  // 计算颜色等级 (Simplified 3-State Logic)
-  const getColorClass = (date: string): string => {
-    if (!date) return 'heatmap-level-0';
-    const day = dataMap.get(date);
-    if (!day) return 'heatmap-level-0';
-
-    // Priority 1: Failure (Red) - If ANY service failed eventually, the day is imperfect.
-    if (day.failure_count > 0) return 'heatmap-level-failure';
-
-    // Priority 2: Success (Green) - Only if NO failures and AT LEAST one success.
-    if (day.success_count > 0) return 'heatmap-level-success';
-
-    // Default: Empty (Grey)
-    return 'heatmap-level-0';
-  };
-
   const handleMouseEnter = (e: React.MouseEvent, date: string) => {
     // If no data exists for this date, default to 0 counts
     const day = dataMap.get(date) || {
@@ -100,33 +62,18 @@ export function Heatmap() {
     setTooltip(null);
   };
 
-  // 始终渲染格子结构，数据加载完成后自动更新颜色
-
   // Control animation start to avoid initial render blocking AND wait for data
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    // Defer animation start to ensure DOM is fully painted
-    // Note: We intentionally DO NOT wait for data (loading) here.
-    // We want the "skeleton" (gray cells) to animate immediately.
-    // When data arrives, the CSS transition will handle the color change smoothly.
     const timer = requestAnimationFrame(() => {
       setLoaded(true);
     });
     return () => cancelAnimationFrame(timer);
   }, [selectedYear]);
 
-  // Create a map for quick lookup of day index (0-365)
-  const dayIndexMap = useMemo(() => {
-    const map = new Map<string, number>();
-    days.forEach((d, i) => map.set(d, i));
-    return map;
-  }, [days]);
-
   // 按周分组
   const weeks = groupByWeeks(days);
-
-  // 计算月份标签位置
   const monthLabels = getMonthLabels(weeks);
 
   return (
@@ -164,135 +111,31 @@ export function Heatmap() {
               </div>
 
               {/* 热力图网格 */}
-              <div
-                className="heatmap-grid"
-                style={{
-                  gridTemplateColumns: `repeat(${weeks.length}, 1fr)`,
-                }}
-              >
-                {weeks.map((week, weekIndex) => (
-                  <div key={weekIndex} className="heatmap-week">
-                    {week.map((date, dayIndex) => {
-                      const globalIndex = date ? (dayIndexMap.get(date) ?? 0) : 0;
-                      // Only apply animation class when loaded is true
-                      const shouldAnimate = date && loaded;
-                      return (
-                        <div
-                          key={date || `empty-${weekIndex}-${dayIndex}`}
-                          className={`heatmap-cell ${date ? getColorClass(date) : 'heatmap-level-0'} ${
-                            shouldAnimate ? 'animate-fade-in' : ''
-                          }`}
-                          onMouseEnter={e => date && handleMouseEnter(e, date)}
-                          onMouseLeave={handleMouseLeave}
-                          style={{
-                            visibility: date ? 'visible' : 'hidden',
-                            // Use constant interval for faster but still sequential appearance
-                            animationDelay: shouldAnimate
-                              ? `${globalIndex * HEATMAP_CONFIG.ANIMATION_INTERVAL}ms`
-                              : '0ms',
-                            // Ensure opacity is 0 before animation starts (handled by CSS, but good to ensure logic alignment)
-                            opacity: date && !shouldAnimate ? 0 : undefined,
-                          }}
-                        />
-                      );
-                    })}
-                  </div>
-                ))}
-              </div>
+              <HeatmapGrid
+                weeks={weeks}
+                days={days}
+                dataMap={dataMap}
+                loaded={loaded}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+              />
             </div>
 
             {/* 底部：图例 (右对齐) & 错误提示 */}
-            <div className="heatmap-footer mt-4 flex justify-between items-center text-xs text-gray-400">
-              <div className="heatmap-status">
-                {error && <span className="text-red-400">Offline: Data sync failed</span>}
-              </div>
-              <div className="heatmap-legend flex items-center gap-3">
-                <div className="flex items-center gap-1">
-                  <div className="heatmap-cell heatmap-level-0 w-3 h-3 rounded-sm" />
-                  <span>No check-ins</span>
-                </div>
-                {/* ... other legend items ... */}
-                <div className="flex items-center gap-1">
-                  <div className="heatmap-cell heatmap-level-success w-3 h-3 rounded-sm" />
-                  <span>Success</span>
-                </div>
-
-                <div className="flex items-center gap-1">
-                  <div className="heatmap-cell heatmap-level-failure w-3 h-3 rounded-sm" />
-                  <span>Failure</span>
-                </div>
-              </div>
-            </div>
+            <HeatmapLegend error={error} />
           </div>
         </div>
 
-        {/* 右侧：年份选择器 (Desktop: absolute right; Mobile: flex below) */}
-        <div className="heatmap-years-sidebar md:absolute md:top-0 md:-right-20 mt-4 md:mt-0 flex md:flex-col gap-1 flex-wrap">
-          {availableYears.map(year => (
-            <button
-              key={year}
-              onClick={() => setSelectedYear(year)}
-              className={`heatmap-year-btn px-3 py-1 text-sm text-right transition-colors font-serif ${
-                year === selectedYear
-                  ? 'text-[#d97757] font-medium' // Active: Terracotta
-                  : 'text-gray-400 hover:text-gray-900' // Inactive: Grey to Black hover
-              }`}
-              disabled={loading}
-              style={{ fontFamily: 'var(--font-serif)' }}
-            >
-              {year}
-            </button>
-          ))}
-        </div>
+        {/* 右侧：年份选择器 */}
+        <HeatmapYearSelector
+          years={availableYears}
+          selectedYear={selectedYear}
+          loading={loading}
+          onSelectYear={setSelectedYear}
+        />
       </div>
 
-      {tooltip && (
-        <div
-          className="heatmap-tooltip"
-          style={{
-            position: 'fixed',
-            left: Math.min(Math.max(tooltip.x, 10), window.innerWidth - 10), // Prevent overflow
-            top: tooltip.y - 8,
-            transform: 'translate(-50%, -100%)',
-            pointerEvents: 'none', // Prevent flickering
-          }}
-        >
-          <div className="tooltip-date">
-            {(() => {
-              const { success_count, failure_count, date } = tooltip.day;
-              const total = success_count + failure_count;
-              const dateText = formatDateForTooltip(date);
-
-              if (total === 0) {
-                return `No check-ins on ${dateText}`;
-              }
-
-              const parts: string[] = [];
-              if (success_count > 0) {
-                parts.push(`${success_count} successful`);
-              }
-              if (failure_count > 0) {
-                parts.push(`${failure_count} failed`);
-              }
-
-              const description = parts.join(', ');
-              const unit = total === 1 ? 'check-in' : 'check-ins';
-
-              return `${description} ${unit} on ${dateText}`;
-            })()}
-          </div>
-          {Object.entries(tooltip.day.services).filter(([, status]) => status === 'failure')
-            .length > 0 && (
-            <div className="tooltip-services mt-1 text-red-300">
-              Failed:{' '}
-              {Object.entries(tooltip.day.services)
-                .filter(([, status]) => status === 'failure')
-                .map(([service]) => service.charAt(0).toUpperCase() + service.slice(1)) // Capitalize
-                .join(', ')}
-            </div>
-          )}
-        </div>
-      )}
+      {tooltip && <HeatmapTooltip day={tooltip.day} x={tooltip.x} y={tooltip.y} />}
     </div>
   );
 }

@@ -1,16 +1,11 @@
+import { HEATMAP_COLORS } from '@/config/constants';
+import type { HeatmapDay } from '@/types';
 import { getBeijingDateString } from './utils';
 
 export interface LogEntry {
   service: string;
   status: boolean;
   timestamp: string;
-}
-
-export interface HeatmapDay {
-  date: string;
-  success_count: number;
-  failure_count: number;
-  services: Record<string, 'success' | 'failure'>;
 }
 
 interface DayServiceStatus {
@@ -82,4 +77,21 @@ export function aggregateByDay(logs: LogEntry[]): HeatmapDay[] {
   }
 
   return result.sort((a, b) => a.date.localeCompare(b.date));
+}
+
+/**
+ * 根据数据计算热力图单元格颜色
+ * Simplified 3-State Logic
+ */
+export function getColorClass(date: string, day?: HeatmapDay): string {
+  if (!date || !day) return HEATMAP_COLORS.LEVEL_0;
+
+  // Priority 1: Failure (Red) - If ANY service failed eventually, the day is imperfect.
+  if (day.failure_count > 0) return HEATMAP_COLORS.LEVEL_FAILURE;
+
+  // Priority 2: Success (Green) - Only if NO failures and AT LEAST one success.
+  if (day.success_count > 0) return HEATMAP_COLORS.LEVEL_SUCCESS;
+
+  // Default: Empty (Grey)
+  return HEATMAP_COLORS.LEVEL_0;
 }

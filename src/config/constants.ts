@@ -81,3 +81,14 @@ export const HEATMAP_CONFIG = {
   /** 单元格动画间隔 (ms) */
   ANIMATION_INTERVAL: 5,
 } as const;
+
+/**
+ * 热力图颜色配置
+ */
+export const HEATMAP_COLORS = {
+  LEVEL_0: 'heatmap-level-0',
+  LEVEL_SUCCESS: 'heatmap-level-success',
+  LEVEL_FAILURE: 'heatmap-level-failure',
+  ACTIVE_YEAR: '#d97757',
+  INACTIVE_YEAR: 'transparent',
+} as const;

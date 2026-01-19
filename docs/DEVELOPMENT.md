@@ -33,7 +33,12 @@ workflow/
 │   │   ├── ErrorBoundary.tsx  # 错误边界
 │   │   ├── ErrorTest.tsx      # 错误测试组件
 │   │   ├── Footer.tsx         # 页脚
-│   │   ├── Heatmap.tsx        # 签到热力图 (v0.8.0)
+│   │   ├── Heatmap.tsx        # 签到热力图入口 (v0.8.7 重构)
+│   │   ├── heatmap/           # 热力图子组件
+│   │   │   ├── HeatmapGrid.tsx
+│   │   │   ├── HeatmapLegend.tsx
+│   │   │   ├── HeatmapYearSelector.tsx
+│   │   │   └── HeatmapTooltip.tsx
 │   │   ├── PageBackground.tsx # 全局背景组件 (v0.7.0)
 │   │   ├── RollingNumber.tsx  # 数字滚动动画
 │   │   ├── SystemStatus.tsx   # 系统状态显示
@@ -225,4 +230,4 @@ INSERT INTO keep_alive (service) VALUES ('your-service-name') ON CONFLICT DO NOT
 
 ---
 
-**最后更新**: 2026-01-17 (v0.8.3)
+**最后更新**: 2026-01-19 (v0.8.7)
