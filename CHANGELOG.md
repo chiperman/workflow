@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.8.8](https://github.com/chiperman/workflow/compare/v0.8.7...v0.8.8) (2026-01-19)
+
+### Features
+
+- **ui:** 使用 Radix UI 重构 Heatmap Tooltip ([675eeb7](https://github.com/chiperman/workflow/commit/675eeb788534489940cd691317626371d389f2c6))
+- 集成 sonner 并增强错误处理提示 ([b114ebb](https://github.com/chiperman/workflow/commit/b114ebb05e75eacaada873de01dc2560ee8bb856))
+
+### Bug Fixes
+
+- **ui:** 优化热力图交互与视觉体验 ([03144e9](https://github.com/chiperman/workflow/commit/03144e9ba5aeec6e603965700b948a465fab5453))
+- **ui:** 优化移动端体验与视觉细节 ([4a24bd0](https://github.com/chiperman/workflow/commit/4a24bd06b9104f6df82d0b6ed05b9ea045b0181b))
+
 ### [0.8.7](https://github.com/chiperman/workflow/compare/v0.8.6...v0.8.7) (2026-01-19)
 
 ### Features
