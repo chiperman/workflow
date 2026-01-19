@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.8.7](https://github.com/chiperman/workflow/compare/v0.8.6...v0.8.7) (2026-01-19)
+
+### Features
+
+- **dashboard:** 增加今日未签到提示功能（含动画效果） ([2035257](https://github.com/chiperman/workflow/commit/2035257d21d414b76692e1bf0a181353c739334c))
+
+### Bug Fixes
+
+- **api:** 统一所有接口为动态渲染，修复刷新按钮缓存问题 ([e3afc10](https://github.com/chiperman/workflow/commit/e3afc10f6e273e5c30b89228676004e18f8c33b6))
+- **glados:** 修正签到 token 从 glados.one 到 glados.cloud ([db054b7](https://github.com/chiperman/workflow/commit/db054b73933bf5ac41226fdcb0df319a51856d20))
+- **glados:** 更新默认签到 URL 从 glados.rocks 到 glados.cloud ([0d6034f](https://github.com/chiperman/workflow/commit/0d6034f27f98f7830ad3d294895a1d4049c0e11b))
+- **test:** 同步 health-check 测试用例，添加 todayCheckedIn 字段 ([9bd2d84](https://github.com/chiperman/workflow/commit/9bd2d84df8d57d50911312244547c3830497d6b5))
+
 ### [0.8.6](https://github.com/chiperman/workflow/compare/v0.8.5...v0.8.6) (2026-01-18)
 
 ### Features
