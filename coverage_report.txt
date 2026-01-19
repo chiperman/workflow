@@ -1,0 +1,138 @@
+
+> workflow@0.8.6 test
+> jest --coverage --coverageReporters=text
+
+PASS src/lib/__tests__/auth.test.ts
+PASS src/app/api/stats/heatmap/__tests__/route.test.ts
+PASS src/lib/__tests__/api-helper.test.ts
+PASS src/app/api/supabase-keep-alive/__tests__/route.test.ts
+PASS src/app/api/glados-checkin/__tests__/route.test.ts
+PASS src/lib/__tests__/heatmap-utils.test.ts
+PASS src/lib/__tests__/health-check.test.ts
+  ● Console
+
+    console.error
+      [ERROR] [Supabase] getStats error: Unknown error
+
+      44 |   error: (message: string, ...args: unknown[]) => {
+      45 |     if (shouldLog('error')) {
+    > 46 |       console.error(`[ERROR] ${message}`, ...args);
+         |               ^
+      47 |     }
+      48 |   },
+      49 |
+
+      at Object.error (src/lib/logger.ts:46:15)
+      at SupabaseService.error [as getStats] (src/lib/services/BaseService.ts:80:14)
+      at checkSupabaseHealth (src/lib/health-check.ts:35:18)
+      at Object.<anonymous> (src/lib/__tests__/health-check.test.ts:124:20)
+
+    console.error
+      [ERROR] [Supabase] getStats error: Network error
+
+      44 |   error: (message: string, ...args: unknown[]) => {
+      45 |     if (shouldLog('error')) {
+    > 46 |       console.error(`[ERROR] ${message}`, ...args);
+         |               ^
+      47 |     }
+      48 |   },
+      49 |
+
+      at Object.error (src/lib/logger.ts:46:15)
+      at SupabaseService.error [as getStats] (src/lib/services/BaseService.ts:80:14)
+      at checkSupabaseHealth (src/lib/health-check.ts:35:18)
+      at Object.<anonymous> (src/lib/__tests__/health-check.test.ts:140:20)
+
+PASS src/lib/__tests__/services/BaseService.test.ts
+  ● Console
+
+    console.error
+      [ERROR] [TestService] Supabase select error: { code: 'SOME_OTHER_CODE', message: 'Something went wrong' }
+
+      44 |   error: (message: string, ...args: unknown[]) => {
+      45 |     if (shouldLog('error')) {
+    > 46 |       console.error(`[ERROR] ${message}`, ...args);
+         |               ^
+      47 |     }
+      48 |   },
+      49 |
+
+      at Object.error (src/lib/logger.ts:46:15)
+      at TestService.error [as updateServiceStats] (src/lib/services/BaseService.ts:268:16)
+
+PASS src/lib/__tests__/heatmap-calendar.test.ts
+PASS src/components/__tests__/Heatmap.test.tsx
+PASS src/components/__tests__/TaskCard.test.tsx
+PASS src/lib/__tests__/utils.test.ts
+---------------------------------|---------|----------|---------|---------|-----------------------------------
+File                             | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s                 
+---------------------------------|---------|----------|---------|---------|-----------------------------------
+All files                        |   49.19 |    43.84 |    47.2 |   48.94 |                                   
+ src                             |       0 |        0 |       0 |       0 |                                   
+  middleware.ts                  |       0 |        0 |       0 |       0 | 1-43                              
+ src/app/api/auth                |       0 |        0 |       0 |       0 |                                   
+  route.ts                       |       0 |        0 |       0 |       0 | 1-40                              
+ src/app/api/cron-all            |       0 |        0 |       0 |       0 |                                   
+  route.ts                       |       0 |        0 |       0 |       0 | 1-86                              
+ src/app/api/glados-checkin      |    87.5 |      100 |     100 |     100 |                                   
+  route.ts                       |    87.5 |      100 |     100 |     100 |                                   
+ src/app/api/health              |       0 |        0 |       0 |       0 |                                   
+  route.ts                       |       0 |        0 |       0 |       0 | 1-23                              
+ src/app/api/service-config      |       0 |        0 |       0 |       0 |                                   
+  route.ts                       |       0 |        0 |       0 |       0 | 1-63                              
+ src/app/api/stats/heatmap       |    92.3 |       70 |     100 |      96 |                                   
+  route.ts                       |    92.3 |       70 |     100 |      96 | 18                                
+ src/app/api/stats/heatmap/years |       0 |        0 |       0 |       0 |                                   
+  route.ts                       |       0 |        0 |       0 |       0 | 1-52                              
+ src/app/api/supabase-keep-alive |    87.5 |      100 |     100 |     100 |                                   
+  route.ts                       |    87.5 |      100 |     100 |     100 |                                   
+ src/components                  |   28.97 |    28.34 |      34 |    26.7 |                                   
+  ConfirmDialog.tsx              |       0 |        0 |       0 |       0 | 3-84                              
+  CreateGuide.tsx                |       0 |        0 |       0 |       0 | 3-90                              
+  ErrorBoundary.tsx              |       0 |        0 |       0 |       0 | 3-194                             
+  ErrorTest.tsx                  |       0 |        0 |       0 |       0 | 3-21                              
+  Footer.tsx                     |       0 |        0 |       0 |       0 | 2-18                              
+  Heatmap.tsx                    |      68 |    57.14 |   70.83 |   66.15 | 83,88-96,100,185,262-290          
+  PageBackground.tsx             |       0 |      100 |       0 |       0 | 3-5                               
+  RollingNumber.tsx              |       0 |        0 |       0 |       0 | 3-26                              
+  SystemStatus.tsx               |       0 |        0 |       0 |       0 | 12-22                             
+ src/components/task-card        |   80.76 |    71.42 |      80 |   84.26 |                                   
+  Actions.tsx                    |     100 |      100 |     100 |     100 |                                   
+  Header.tsx                     |     100 |    95.45 |     100 |     100 | 45                                
+  Message.tsx                    |     100 |     87.5 |     100 |     100 | 20                                
+  Stats.tsx                      |     100 |      100 |     100 |     100 |                                   
+  TaskCard.tsx                   |   76.19 |    55.55 |   72.72 |   81.08 | 57,59,116-117,122-127,151-156,187 
+  index.tsx                      |     100 |      100 |     100 |     100 |                                   
+ src/config                      |      65 |      100 |       0 |    90.9 |                                   
+  constants.ts                   |   61.11 |      100 |       0 |      90 | 72                                
+  swr.ts                         |     100 |      100 |     100 |     100 |                                   
+ src/lib                         |      73 |    57.36 |   66.66 |   73.62 |                                   
+  api-helper.ts                  |   96.29 |       90 |     100 |   96.29 | 52                                
+  auth.ts                        |    27.5 |    23.68 |      50 |   28.94 | 28-89,127                         
+  bark.ts                        |    6.66 |        0 |       0 |    6.66 | 3-24                              
+  env.ts                         |   69.44 |    54.16 |   33.33 |   77.41 | 73-88,93-95                       
+  health-check.ts                |   61.53 |       25 |   66.66 |   61.53 | 21-25,62-78                       
+  heatmap-calendar.ts            |   98.24 |     87.5 |     100 |   97.95 | 98                                
+  heatmap-utils.ts               |   96.42 |       90 |     100 |   96.29 | 46                                
+  logger.ts                      |   55.55 |       25 |   42.85 |   52.94 | 27-40,51-52                       
+  supabase.ts                    |      75 |      100 |     100 |     100 |                                   
+  utils.ts                       |   89.79 |    76.59 |      80 |    92.5 | 8-9,98                            
+ src/lib/services                |   34.17 |    37.14 |   41.66 |    32.9 |                                   
+  BaseService.ts                 |   43.52 |    53.42 |   42.85 |   42.85 | 91-231,297-298                    
+  GladosService.ts               |   17.64 |        0 |   33.33 |      16 | 14-109                            
+  SupabaseService.ts             |   36.36 |        0 |      50 |   33.33 | 13-36                             
+---------------------------------|---------|----------|---------|---------|-----------------------------------
+Jest: "global" coverage threshold for statements (65%) not met: 46.5%
+Jest: "global" coverage threshold for branches (50%) not met: 41.38%
+Jest: "global" coverage threshold for lines (65%) not met: 46.31%
+Jest: "global" coverage threshold for functions (70%) not met: 45.29%
+Jest: "./src/lib/utils.ts" coverage threshold for statements (95%) not met: 89.79%
+Jest: "./src/lib/utils.ts" coverage threshold for lines (95%) not met: 92.5%
+Jest: "./src/lib/utils.ts" coverage threshold for functions (100%) not met: 80%
+Jest: "./src/lib/health-check.ts" coverage threshold for branches (50%) not met: 25%
+
+Test Suites: 12 passed, 12 total
+Tests:       80 passed, 80 total
+Snapshots:   0 total
+Time:        6.748 s
+Ran all test suites.

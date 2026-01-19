@@ -116,9 +116,6 @@ function isConfigurationError(error: unknown): boolean {
   // Supabase: 表不存在
   if (errorCode === '42P01') return true;
 
-  // LeanCloud: 类不存在（当是配置问题时，而非自动创建场景）
-  // 注意：我们允许 404 重试，以防是临时问题
-
   // 缺少环境变量
   if (errorMessage.includes('missing environment')) return true;
   if (errorMessage.includes('missing env')) return true;

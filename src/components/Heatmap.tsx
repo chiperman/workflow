@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
 
+import { HEATMAP_CONFIG } from '@/config/constants';
+import { SWR_CONFIG } from '@/config/swr';
 import {
   formatDateForTooltip,
   generateYearDays,
@@ -41,11 +43,7 @@ export function Heatmap() {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   // 获取有数据的年份列表 (使用 SWR 缓存)
-  const { data: yearsData } = useSWR<YearsData>('/api/stats/heatmap/years', fetcher, {
-    revalidateOnFocus: false,
-    revalidateOnReconnect: true,
-    revalidateIfStale: false,
-  });
+  const { data: yearsData } = useSWR<YearsData>('/api/stats/heatmap/years', fetcher, SWR_CONFIG);
   const availableYears =
     yearsData?.success && yearsData.years ? yearsData.years : [new Date().getFullYear()];
 
@@ -54,11 +52,7 @@ export function Heatmap() {
     data: heatmapResponse,
     isLoading: loading,
     error: fetchError,
-  } = useSWR<HeatmapData>(`/api/stats/heatmap?year=${selectedYear}`, fetcher, {
-    revalidateOnFocus: false,
-    revalidateOnReconnect: true,
-    revalidateIfStale: false,
-  });
+  } = useSWR<HeatmapData>(`/api/stats/heatmap?year=${selectedYear}`, fetcher, SWR_CONFIG);
 
   const data = heatmapResponse?.success && heatmapResponse.data ? heatmapResponse.data : [];
   const error = fetchError
@@ -192,8 +186,10 @@ export function Heatmap() {
                           onMouseLeave={handleMouseLeave}
                           style={{
                             visibility: date ? 'visible' : 'hidden',
-                            // Use 5ms interval for faster but still sequential appearance
-                            animationDelay: shouldAnimate ? `${globalIndex * 5}ms` : '0ms',
+                            // Use constant interval for faster but still sequential appearance
+                            animationDelay: shouldAnimate
+                              ? `${globalIndex * HEATMAP_CONFIG.ANIMATION_INTERVAL}ms`
+                              : '0ms',
                             // Ensure opacity is 0 before animation starts (handled by CSS, but good to ensure logic alignment)
                             opacity: date && !shouldAnimate ? 0 : undefined,
                           }}
@@ -255,9 +251,10 @@ export function Heatmap() {
           className="heatmap-tooltip"
           style={{
             position: 'fixed',
-            left: tooltip.x,
-            top: tooltip.y - 10,
+            left: Math.min(Math.max(tooltip.x, 10), window.innerWidth - 10), // Prevent overflow
+            top: tooltip.y - 8,
             transform: 'translate(-50%, -100%)',
+            pointerEvents: 'none', // Prevent flickering
           }}
         >
           <div className="tooltip-date">

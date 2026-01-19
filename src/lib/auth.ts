@@ -101,17 +101,6 @@ export function verifyAuth(req: Request | NextRequest): AuthResult {
  * @param trigger 想要执行的操作类型 ('auto' | 'manual')
  */
 
-// ... (existing imports)
-
-// ...
-
-/**
- * 验证操作权限 (Authorization)
- * 统一管理 "谁能做什么" 的逻辑，作为 Single Source of Truth。
- *
- * @param authType 当前用户的身份类型 (来自 verifyAuth)
- * @param trigger 想要执行的操作类型 ('auto' | 'manual')
- */
 export function checkTriggerPermission(
   authType: AuthResult['type'],
   trigger: 'auto' | 'manual'

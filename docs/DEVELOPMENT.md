@@ -37,7 +37,11 @@ workflow/
 │   │   ├── PageBackground.tsx # 全局背景组件 (v0.7.0)
 │   │   ├── RollingNumber.tsx  # 数字滚动动画
 │   │   ├── SystemStatus.tsx   # 系统状态显示
-│   │   ├── TaskCard.tsx       # 任务卡片
+│   │   ├── task-card/         # 任务卡片组件 (v0.8.3)
+│   │   │   ├── index.tsx
+│   │   │   ├── TaskCard.tsx
+│   │   │   ├── Header.tsx
+│   │   │   └── ...
 │   │   └── __tests__/         # 组件测试 (v0.8.2)
 │   │       ├── TaskCard.test.tsx
 │   │       └── Heatmap.test.tsx

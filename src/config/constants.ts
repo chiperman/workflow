@@ -73,3 +73,11 @@ export const MOTION_CONFIG = {
     },
   },
 } as const;
+
+/**
+ * 热力图配置
+ */
+export const HEATMAP_CONFIG = {
+  /** 单元格动画间隔 (ms) */
+  ANIMATION_INTERVAL: 5,
+} as const;

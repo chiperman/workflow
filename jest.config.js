@@ -29,7 +29,6 @@ const customJestConfig = {
     '!src/**/__tests__/**',
     '!src/app/!(api)/**', // Exclude Next.js app directory except api
     '!src/types/**', // Exclude type definitions
-    '!src/components/**', // Exclude components (should have separate component tests)
   ],
 
   // Coverage thresholds - global threshold to prevent regression

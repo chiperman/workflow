@@ -61,6 +61,16 @@ export interface ServiceHealth {
 export type SystemStatus = 'Operational' | 'Degraded' | 'Checking';
 
 /**
+ * 标准 API 响应格式
+ */
+export interface ApiResponse<T = unknown> {
+  success: boolean;
+  message?: string;
+  data?: T;
+  error?: string;
+}
+
+/**
  * 健康检查 API 响应
  */
 export interface HealthCheckResponse {
@@ -83,16 +93,4 @@ export interface KeepAliveResult {
   error?: string;
   /** 设为 true 时跳过日志记录（如 GLaDOS 重复签到场景） */
   skipLog?: boolean;
-}
-
-/**
- * Stats 查询结果
- * @deprecated Use Result<ServiceStats & ...> instead
- */
-export interface StatsQueryResult {
-  success: boolean;
-  data?: ServiceStats;
-  tableExists?: boolean;
-  enabled?: boolean;
-  error?: string;
 }
