@@ -157,11 +157,11 @@ export default function Home() {
                         ease: MOTION.ease,
                       }}
                       onClick={() => setShowLogoutConfirm(true)}
-                      className="flex items-center gap-2 px-3 py-1.5 text-[10px] font-medium tracking-tight text-[#888888] border border-[#e5e5e0] rounded-lg hover:bg-white hover:text-[#191919] hover:border-[#d97757]/30 transition-colors duration-300"
+                      className="flex items-center justify-center sm:justify-start gap-2 p-2 sm:px-3 sm:py-2 text-[10px] font-medium tracking-tight text-[#888888] border border-[#e5e5e0] rounded-lg hover:bg-white hover:text-[#191919] hover:border-[#d97757]/30 transition-colors duration-300 whitespace-nowrap"
                       title="End session"
                     >
-                      <LogOut className="w-3 h-3" />
-                      <span>Sign out</span>
+                      <LogOut className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">Sign out</span>
                     </motion.button>
                   </div>
                 </div>
@@ -173,7 +173,7 @@ export default function Home() {
                     duration: MOTION.duration,
                     ease: MOTION.ease,
                   }}
-                  className="text-base text-[#555555] max-w-xl leading-relaxed font-light text-center sm:text-left"
+                  className="text-sm text-[#555555] max-w-xl leading-relaxed font-light text-left"
                 >
                   Control center for automated maintenance protocols and cross-service data
                   synchronization.

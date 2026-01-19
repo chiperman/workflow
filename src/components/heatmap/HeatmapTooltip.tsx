@@ -35,7 +35,7 @@ export function HeatmapTooltip({ day, children }: HeatmapTooltipProps) {
       <Tooltip.Trigger asChild>{children}</Tooltip.Trigger>
       <Tooltip.Portal>
         <Tooltip.Content
-          className="z-50 px-3 py-2 text-xs text-white bg-gray-900 rounded shadow-lg animate-in fade-in zoom-in-95 duration-200"
+          className="z-50 px-3 py-2 text-xs text-white bg-gray-900 rounded shadow-lg animate-in fade-in zoom-in-95 duration-200 hidden md:block"
           sideOffset={5}
           side="top"
         >
