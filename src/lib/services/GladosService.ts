@@ -23,7 +23,7 @@ export class GladosService extends BaseService {
 
   protected async executeKeepAlive(trigger: 'auto' | 'manual' = 'auto'): Promise<KeepAliveResult> {
     try {
-      const apiUrls = [env.glados.apiUrl, 'https://glados.rocks/api/user/checkin'].filter(
+      const apiUrls = [env.glados.apiUrl, 'https://glados.cloud/api/user/checkin'].filter(
         Boolean
       ) as string[];
 
