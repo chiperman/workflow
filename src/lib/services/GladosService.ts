@@ -36,7 +36,7 @@ export class GladosService extends BaseService {
           const response = await fetch(apiUrl, {
             method: 'POST',
             headers: this.headers,
-            body: JSON.stringify({ token: 'glados.one' }),
+            body: JSON.stringify({ token: 'glados.cloud' }),
           });
 
           responseData = await response.json();
