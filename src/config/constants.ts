@@ -67,6 +67,8 @@ export const MOTION_CONFIG = {
     heatmap: 0.2,
     cards: 0.3,
     cardStagger: 0.1,
+    /** 热力图年份选择器延迟 - 在热力图动画后出现 (365 days * 5ms = ~1.8s) */
+    heatmapYears: 2.0,
     get footer() {
       // cards(0.3) + stagger(0.1) * 3 + buffer(0.1) = 0.7
       return 0.7;

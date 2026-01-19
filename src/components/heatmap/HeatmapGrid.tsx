@@ -36,7 +36,7 @@ export function HeatmapGrid({ weeks, days, dataMap, loaded }: HeatmapGridProps) 
 
             const cell = (
               <div
-                className={`heatmap-cell ${getColorClass(date, day)} ${
+                className={`heatmap-cell cursor-pointer ${getColorClass(date, day)} ${
                   shouldAnimate ? 'animate-fade-in' : ''
                 }`}
                 style={{

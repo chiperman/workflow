@@ -1,3 +1,4 @@
+import { VALID_SERVICES } from '@/config/constants';
 import { formatDateForTooltip } from '@/lib/heatmap-calendar';
 import type { HeatmapDay } from '@/types';
 import * as Tooltip from '@radix-ui/react-tooltip';
@@ -30,6 +31,11 @@ export function HeatmapTooltip({ day, children }: HeatmapTooltipProps) {
     .filter(([, status]) => status === 'failure')
     .map(([service]) => service.charAt(0).toUpperCase() + service.slice(1));
 
+  // Find unexecuted services (exist in config but not in day's records)
+  const unexecutedServices = VALID_SERVICES.filter(service => !day.services[service]).map(
+    service => service.charAt(0).toUpperCase() + service.slice(1)
+  );
+
   return (
     <Tooltip.Root delayDuration={100}>
       <Tooltip.Trigger asChild>{children}</Tooltip.Trigger>
@@ -42,6 +48,9 @@ export function HeatmapTooltip({ day, children }: HeatmapTooltipProps) {
           <div className="font-medium">{message}</div>
           {failedServices.length > 0 && (
             <div className="mt-1 text-red-300">Failed: {failedServices.join(', ')}</div>
+          )}
+          {unexecutedServices.length > 0 && (
+            <div className="mt-1 text-gray-400">Unexecuted: {unexecutedServices.join(', ')}</div>
           )}
           <Tooltip.Arrow className="fill-gray-900" />
         </Tooltip.Content>

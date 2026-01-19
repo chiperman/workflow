@@ -17,7 +17,11 @@ export function Heatmap() {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   // 获取有数据的年份列表 (使用 SWR 缓存)
-  const { data: yearsData } = useSWR<YearsData>('/api/stats/heatmap/years', fetcher, SWR_CONFIG);
+  const { data: yearsData, isLoading: yearsLoading } = useSWR<YearsData>(
+    '/api/stats/heatmap/years',
+    fetcher,
+    { ...SWR_CONFIG, keepPreviousData: true }
+  );
   const availableYears =
     yearsData?.success && yearsData.years ? yearsData.years : [new Date().getFullYear()];
 
@@ -105,6 +109,7 @@ export function Heatmap() {
             selectedYear={selectedYear}
             loading={loading}
             onSelectYear={setSelectedYear}
+            yearsLoaded={!yearsLoading}
           />
         </div>
       </div>
