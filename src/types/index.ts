@@ -51,6 +51,8 @@ export interface ServiceHealth {
   stats: ServiceStats;
   message?: string;
   enabled?: boolean;
+  /** 今日是否已有签到记录 */
+  todayCheckedIn?: boolean;
 }
 
 /**

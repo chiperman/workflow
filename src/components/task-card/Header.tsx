@@ -1,3 +1,4 @@
+import { AnimatePresence, motion } from 'framer-motion';
 import { memo } from 'react';
 
 interface HeaderProps {
@@ -7,6 +8,7 @@ interface HeaderProps {
   displayStatus: 'idle' | 'loading' | 'success' | 'error';
   localEnabled: boolean;
   isToggling: boolean;
+  todayCheckedIn?: boolean;
   onToggle: () => void;
 }
 
@@ -17,6 +19,7 @@ export const Header = memo(function Header({
   displayStatus,
   localEnabled,
   isToggling,
+  todayCheckedIn,
   onToggle,
 }: HeaderProps) {
   return (
@@ -26,30 +29,58 @@ export const Header = memo(function Header({
           <span className="text-[10px] font-medium tracking-wider uppercase text-[#6b6b6b] block">
             {category}
           </span>
-          {!localEnabled && (
-            <span className="text-[9px] font-bold tracking-wider uppercase text-orange-600 bg-orange-100 px-2 py-0.5 rounded border border-orange-200">
-              Auto: OFF
-            </span>
-          )}
+          <AnimatePresence mode="popLayout">
+            {!localEnabled && (
+              <motion.span
+                key="auto-off"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.2 }}
+                className="text-[9px] font-bold tracking-wider uppercase text-orange-600 bg-orange-100 px-2 py-0.5 rounded border border-orange-200"
+              >
+                Auto: OFF
+              </motion.span>
+            )}
+            {todayCheckedIn === false && (
+              <motion.span
+                key="not-checked-in"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.2 }}
+                className="text-[9px] font-bold tracking-wider uppercase text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200"
+              >
+                今日未签到
+              </motion.span>
+            )}
+          </AnimatePresence>
         </div>
         <div className="flex items-center gap-2">
-          {displayStatus !== 'idle' && (
-            <span
-              className={`text-[10px] uppercase font-bold tracking-wider ${
-                displayStatus === 'error'
-                  ? 'text-red-500'
-                  : displayStatus === 'success'
-                    ? 'text-emerald-600'
-                    : 'text-amber-500'
-              }`}
-            >
-              {displayStatus === 'loading'
-                ? 'Running...'
-                : displayStatus === 'error'
-                  ? 'Failed'
-                  : 'Success'}
-            </span>
-          )}
+          <AnimatePresence mode="wait">
+            {displayStatus !== 'idle' && (
+              <motion.span
+                key={displayStatus}
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 4 }}
+                transition={{ duration: 0.15 }}
+                className={`text-[10px] uppercase font-bold tracking-wider ${
+                  displayStatus === 'error'
+                    ? 'text-red-500'
+                    : displayStatus === 'success'
+                      ? 'text-emerald-600'
+                      : 'text-amber-500'
+                }`}
+              >
+                {displayStatus === 'loading'
+                  ? 'Running...'
+                  : displayStatus === 'error'
+                    ? 'Failed'
+                    : 'Success'}
+              </motion.span>
+            )}
+          </AnimatePresence>
           <button
             onClick={onToggle}
             disabled={isToggling}

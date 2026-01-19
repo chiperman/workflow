@@ -168,6 +168,7 @@ function TaskCardComponent({
         displayStatus={displayStatus}
         localEnabled={localEnabled}
         isToggling={isToggling}
+        todayCheckedIn={serviceHealth.todayCheckedIn}
         onToggle={handleToggle}
       />
 
