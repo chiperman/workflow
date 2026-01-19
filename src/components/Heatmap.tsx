@@ -1,15 +1,12 @@
-'use client';
-
-import { useEffect, useMemo, useState } from 'react';
-import useSWR from 'swr';
-
 import { HeatmapGrid } from '@/components/heatmap/HeatmapGrid';
 import { HeatmapLegend } from '@/components/heatmap/HeatmapLegend';
-import { HeatmapTooltip } from '@/components/heatmap/HeatmapTooltip';
 import { HeatmapYearSelector } from '@/components/heatmap/HeatmapYearSelector';
 import { SWR_CONFIG } from '@/config/swr';
 import { generateYearDays, getMonthLabels, groupByWeeks, WEEKDAYS } from '@/lib/heatmap-calendar';
-import type { HeatmapData, HeatmapDay, YearsData } from '@/types';
+import type { HeatmapData, YearsData } from '@/types';
+import * as Tooltip from '@radix-ui/react-tooltip';
+import { useEffect, useMemo, useState } from 'react';
+import useSWR from 'swr';
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
@@ -17,7 +14,6 @@ const fetcher = (url: string) => fetch(url).then(res => res.json());
  * GitHub 风格的签到热力图组件
  */
 export function Heatmap() {
-  const [tooltip, setTooltip] = useState<{ day: HeatmapDay; x: number; y: number } | null>(null);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   // 获取有数据的年份列表 (使用 SWR 缓存)
@@ -45,23 +41,6 @@ export function Heatmap() {
   const days = useMemo(() => generateYearDays(selectedYear), [selectedYear]);
   const dataMap = new Map(data.map(d => [d.date, d]));
 
-  const handleMouseEnter = (e: React.MouseEvent, date: string) => {
-    // If no data exists for this date, default to 0 counts
-    const day = dataMap.get(date) || {
-      date,
-      success_count: 0,
-      failure_count: 0,
-      services: {},
-    };
-
-    const rect = e.currentTarget.getBoundingClientRect();
-    setTooltip({ day, x: rect.left + rect.width / 2, y: rect.top });
-  };
-
-  const handleMouseLeave = () => {
-    setTooltip(null);
-  };
-
   // Control animation start to avoid initial render blocking AND wait for data
   const [loaded, setLoaded] = useState(false);
 
@@ -77,65 +56,58 @@ export function Heatmap() {
   const monthLabels = getMonthLabels(weeks);
 
   return (
-    <div className="heatmap-container">
-      <div className="heatmap-layout relative">
-        {/* 左侧：热力图主体 */}
-        <div className="heatmap-main">
-          <div className="heatmap-wrapper">
-            {/* 月份标签 */}
-            <div
-              className="heatmap-months"
-              style={{
-                gridTemplateColumns: `repeat(${weeks.length}, 1fr)`,
-              }}
-            >
-              {monthLabels.map((label, i) => (
-                <span
-                  key={i}
-                  className="heatmap-month-label"
-                  style={{ gridColumnStart: label.weekIndex + 1 }}
-                >
-                  {label.name}
-                </span>
-              ))}
-            </div>
-
-            <div className="heatmap-body">
-              {/* 星期标签 */}
-              <div className="heatmap-weekdays">
-                {WEEKDAYS.map((day, i) => (
-                  <div key={day} className="heatmap-weekday-label">
-                    {i % 2 === 1 ? day : ''}
-                  </div>
+    <Tooltip.Provider>
+      <div className="heatmap-container">
+        <div className="heatmap-layout relative">
+          {/* 左侧：热力图主体 */}
+          <div className="heatmap-main">
+            <div className="heatmap-wrapper">
+              {/* 月份标签 */}
+              <div
+                className="heatmap-months"
+                style={{
+                  gridTemplateColumns: `repeat(${weeks.length}, 1fr)`,
+                }}
+              >
+                {monthLabels.map((label, i) => (
+                  <span
+                    key={i}
+                    className="heatmap-month-label"
+                    style={{ gridColumnStart: label.weekIndex + 1 }}
+                  >
+                    {label.name}
+                  </span>
                 ))}
               </div>
 
-              {/* 热力图网格 */}
-              <HeatmapGrid
-                weeks={weeks}
-                days={days}
-                dataMap={dataMap}
-                loaded={loaded}
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={handleMouseLeave}
-              />
+              <div className="heatmap-body">
+                {/* 星期标签 */}
+                <div className="heatmap-weekdays">
+                  {WEEKDAYS.map((day, i) => (
+                    <div key={day} className="heatmap-weekday-label">
+                      {i % 2 === 1 ? day : ''}
+                    </div>
+                  ))}
+                </div>
+
+                {/* 热力图网格 */}
+                <HeatmapGrid weeks={weeks} days={days} dataMap={dataMap} loaded={loaded} />
+              </div>
+
+              {/* 底部：图例 (右对齐) & 错误提示 */}
+              <HeatmapLegend error={error} />
             </div>
-
-            {/* 底部：图例 (右对齐) & 错误提示 */}
-            <HeatmapLegend error={error} />
           </div>
+
+          {/* 右侧：年份选择器 */}
+          <HeatmapYearSelector
+            years={availableYears}
+            selectedYear={selectedYear}
+            loading={loading}
+            onSelectYear={setSelectedYear}
+          />
         </div>
-
-        {/* 右侧：年份选择器 */}
-        <HeatmapYearSelector
-          years={availableYears}
-          selectedYear={selectedYear}
-          loading={loading}
-          onSelectYear={setSelectedYear}
-        />
       </div>
-
-      {tooltip && <HeatmapTooltip day={tooltip.day} x={tooltip.x} y={tooltip.y} />}
-    </div>
+    </Tooltip.Provider>
   );
 }

@@ -1,3 +1,4 @@
+import { HeatmapTooltip } from '@/components/heatmap/HeatmapTooltip';
 import { HEATMAP_CONFIG } from '@/config/constants';
 import { getColorClass } from '@/lib/heatmap-utils';
 import type { HeatmapDay } from '@/types';
@@ -8,18 +9,9 @@ interface HeatmapGridProps {
   days: string[];
   dataMap: Map<string, HeatmapDay>;
   loaded: boolean;
-  onMouseEnter: (e: React.MouseEvent, date: string) => void;
-  onMouseLeave: () => void;
 }
 
-export function HeatmapGrid({
-  weeks,
-  days,
-  dataMap,
-  loaded,
-  onMouseEnter,
-  onMouseLeave,
-}: HeatmapGridProps) {
+export function HeatmapGrid({ weeks, days, dataMap, loaded }: HeatmapGridProps) {
   // Create a map for quick lookup of day index (0-365)
   const dayIndexMap = useMemo(() => {
     const map = new Map<string, number>();
@@ -42,14 +34,11 @@ export function HeatmapGrid({
             const shouldAnimate = date && loaded;
             const day = date ? dataMap.get(date) : undefined;
 
-            return (
+            const cell = (
               <div
-                key={date || `empty-${weekIndex}-${dayIndex}`}
                 className={`heatmap-cell ${getColorClass(date, day)} ${
                   shouldAnimate ? 'animate-fade-in' : ''
                 }`}
-                onMouseEnter={e => date && onMouseEnter(e, date)}
-                onMouseLeave={onMouseLeave}
                 style={{
                   visibility: date ? 'visible' : 'hidden',
                   // Use constant interval for faster but still sequential appearance
@@ -61,6 +50,22 @@ export function HeatmapGrid({
                 }}
               />
             );
+
+            if (date) {
+              const dayData = day || {
+                date,
+                success_count: 0,
+                failure_count: 0,
+                services: {},
+              };
+              return (
+                <HeatmapTooltip key={date} day={dayData}>
+                  {cell}
+                </HeatmapTooltip>
+              );
+            }
+
+            return <div key={`empty-${weekIndex}-${dayIndex}`}>{cell}</div>;
           })}
         </div>
       ))}

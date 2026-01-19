@@ -1,13 +1,14 @@
 import { formatDateForTooltip } from '@/lib/heatmap-calendar';
 import type { HeatmapDay } from '@/types';
+import * as Tooltip from '@radix-ui/react-tooltip';
+import { ReactNode } from 'react';
 
 interface HeatmapTooltipProps {
   day: HeatmapDay;
-  x: number;
-  y: number;
+  children: ReactNode;
 }
 
-export function HeatmapTooltip({ day, x, y }: HeatmapTooltipProps) {
+export function HeatmapTooltip({ day, children }: HeatmapTooltipProps) {
   const { success_count, failure_count, date } = day;
   const total = success_count + failure_count;
   const dateText = formatDateForTooltip(date);
@@ -30,22 +31,21 @@ export function HeatmapTooltip({ day, x, y }: HeatmapTooltipProps) {
     .map(([service]) => service.charAt(0).toUpperCase() + service.slice(1));
 
   return (
-    <div
-      className="heatmap-tooltip"
-      style={{
-        position: 'fixed',
-        left: Math.min(Math.max(x, 10), window.innerWidth - 10), // Prevent overflow
-        top: y - 8,
-        transform: 'translate(-50%, -100%)',
-        pointerEvents: 'none', // Prevent flickering
-      }}
-    >
-      <div className="tooltip-date">{message}</div>
-      {failedServices.length > 0 && (
-        <div className="tooltip-services mt-1 text-red-300">
-          Failed: {failedServices.join(', ')}
-        </div>
-      )}
-    </div>
+    <Tooltip.Root delayDuration={100}>
+      <Tooltip.Trigger asChild>{children}</Tooltip.Trigger>
+      <Tooltip.Portal>
+        <Tooltip.Content
+          className="z-50 px-3 py-2 text-xs text-white bg-gray-900 rounded shadow-lg animate-in fade-in zoom-in-95 duration-200"
+          sideOffset={5}
+          side="top"
+        >
+          <div className="font-medium">{message}</div>
+          {failedServices.length > 0 && (
+            <div className="mt-1 text-red-300">Failed: {failedServices.join(', ')}</div>
+          )}
+          <Tooltip.Arrow className="fill-gray-900" />
+        </Tooltip.Content>
+      </Tooltip.Portal>
+    </Tooltip.Root>
   );
 }
