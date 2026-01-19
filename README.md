@@ -1,6 +1,6 @@
 # Workflow Operations System
 
-**v0.8.3**
+**v0.8.8**
 
 这是一个用于防止云服务（Supabase）因不活跃而被暂停的全栈自动化解决方案。它包含每日自动运行的定时任务，具备自动重试机制，以及一个现代化的手动控制台。
 
@@ -19,7 +19,8 @@
   - 自动识别配置错误（表不存在、环境变量缺失等）不重试
   - 网络错误自动重试。
 - **实时健康监控**: 统一的健康检查 API，实时显示服务状态。
-- **现代化控制台 (v0.7.0)**:
+- **现代化控制台 (v0.8.7)**:
+  - **热力图增强**: Anthropic 极简风格年份选择器，支持 Fade-Scroll 滚动交互与箭头指示，优化数据刷新体验（无闪烁追加）。
   - **背景持久化架构**: 创新性地将装饰性极光组件上移至 `RootLayout` 渲染。这不仅彻底消除了登录/注销及页面跳转时的视觉闪烁（Flicker）问题，还保持了 CSS 动画在物理上的不间断运行，提供极佳的沉浸式连续体验。
   - **交替入场动画 (Staggered)**: 利用 Framer Motion 的 `staggerChildren` 特性，使任务卡片以 100ms 的步进间隔逐一由下而上淡入，创造出有序且富有呼吸感的视觉节奏。
   - **Anthropic 极简美学**: 深度适配 Anthropic (Claude) 的 UI 调性。采用米纸色 (`#fdfcf8`) 为底色，极致简约的排版与淡雅的层叠色彩，打造专业、纯净且无干扰的运维工具。
@@ -32,7 +33,6 @@
 
 - **Supabase 配置**: `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`
 - **Bark 配置**: `BARK_DEVICE_KEY`
-
 - **安全配置**: `CRON_SECRET`, `APP_KEY`
 
 ### 2. 创建 Supabase 表
@@ -92,6 +92,7 @@ CREATE INDEX IF NOT EXISTS idx_logs_timestamp_service ON keep_alive_logs (timest
 
 ## 📦 版本历史
 
+- **v0.8.8**: 热力图交互优化 (Fade-Scroll 年份选择器) 与 Tooltip 增强。
 - **v0.8.3**: 彻底移除 LeanCloud 集成，重构 TaskCard 组件。
 - **v0.8.2**: 代码架构重构，提取公用服务逻辑与日历工具函数，新增组件与工具函数全量测试。
 - **v0.8.1**: 修复 Serverless 开启鉴权后的日志记录与 GLaDOS 重复签到逻辑。

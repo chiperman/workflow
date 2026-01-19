@@ -231,8 +231,10 @@ CREATE INDEX IF NOT EXISTS idx_logs_timestamp_service ON keep_alive_logs (timest
 
 ## 变更日志
 
-### v0.8.7 (2026-01-19)
+### v0.8.8 (2026-01-20)
 
+- ✅ **新增**: 热力图年份选择器增强 API (`/api/stats/heatmap/years` 返回值逻辑优化说明)。
+- ✅ **新增**: `keep_alive_logs` 表记录完整性 (支持 Unexecuted 状态推断)。
 - ✅ **重构**: 全面代码优化 (O1-O8)，包括废弃代码清理、常量提取。
 - ✅ **新增**: 统一日志级别控制 `LOG_LEVEL`。
 - ✅ **新增**: 标准 API 响应接口定义 `ApiResponse<T>`。
@@ -291,4 +293,4 @@ CREATE INDEX IF NOT EXISTS idx_logs_timestamp_service ON keep_alive_logs (timest
 
 ---
 
-**最后更新**: 2026-01-17 (v0.8.3)
+**最后更新**: 2026-01-20 (v0.8.8)
