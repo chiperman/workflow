@@ -1,38 +1,9 @@
-import { SERVICES } from '@/config/constants';
 import { env } from '@/lib/env';
 import { gladosService } from '@/lib/services/GladosService';
 import { supabaseService } from '@/lib/services/SupabaseService';
-import { supabase } from '@/lib/supabase';
-import type { KeepAliveResult } from '@/types';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
-
-interface ServiceConfig {
-  service: string;
-  enabled: boolean;
-}
-
-async function getServiceConfigs(): Promise<Record<string, boolean>> {
-  const { data, error } = await supabase.from('keep_alive').select('service, enabled');
-
-  if (error || !data) {
-    // 默认所有服务开启
-    return {
-      [SERVICES.SUPABASE]: true,
-      [SERVICES.GLADOS]: true,
-    };
-  }
-
-  const configs: Record<string, boolean> = {
-    [SERVICES.SUPABASE]: true,
-    [SERVICES.GLADOS]: true,
-  };
-  data.forEach((row: ServiceConfig) => {
-    configs[row.service] = row.enabled ?? true;
-  });
-  return configs;
-}
 
 /**
  * 统一 cron job 端点
@@ -48,29 +19,10 @@ export async function GET(request: Request) {
     }
   }
 
-  // 获取服务配置
-  const configs = await getServiceConfigs();
-
-  // 定义服务执行器
-  const executeIfEnabled = async (
-    serviceName: string,
-    runner: () => Promise<KeepAliveResult>
-  ): Promise<KeepAliveResult> => {
-    if (!configs[serviceName]) {
-      return {
-        success: true,
-        message: 'Skipped: service disabled',
-        duration: 0,
-        skipped: true,
-      } as KeepAliveResult & { skipped: boolean };
-    }
-    return runner();
-  };
-
-  // 并行执行所有服务
+  // 并行执行所有服务（开关检查已由 ServiceExecutor 处理）
   const [supabaseResult, gladosResult] = await Promise.all([
-    executeIfEnabled(SERVICES.SUPABASE, () => supabaseService.run('auto')),
-    executeIfEnabled(SERVICES.GLADOS, () => gladosService.run('auto')),
+    supabaseService.run('auto'),
+    gladosService.run('auto'),
   ]);
 
   // 构建响应

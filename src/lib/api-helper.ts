@@ -1,3 +1,4 @@
+import { ServiceExecutor } from '@/lib/ServiceExecutor';
 import { checkTriggerPermission, verifyAuth } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 import { BaseService } from './services/BaseService';
@@ -56,7 +57,7 @@ export async function handleKeepAliveRequest(request: Request, service: BaseServ
   // 3. 执行保活逻辑
 
   try {
-    const result = await service.run(trigger);
+    const result = await ServiceExecutor.runService(service, trigger);
     if (!result.success) {
       return NextResponse.json(result, { status: 500 });
     }

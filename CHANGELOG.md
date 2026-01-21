@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.8.9](https://github.com/chiperman/workflow/compare/v0.8.8...v0.8.9) (2026-01-21)
+
+### Refactor
+
+- **service:** 统一服务执行逻辑到 ServiceExecutor
+- **service:** 瘦身 BaseService，移除冗余方法
+- **api:** 更新 api-helper 使用 ServiceExecutor
+
 ### [0.8.8](https://github.com/chiperman/workflow/compare/v0.8.7...v0.8.8) (2026-01-19)
 
 ### Features

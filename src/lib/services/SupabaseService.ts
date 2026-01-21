@@ -3,12 +3,15 @@ import { getBeijingTime } from '@/lib/utils';
 import type { KeepAliveResult } from '@/types';
 import { BaseService } from './BaseService';
 
+import { ServiceExecutor } from '@/lib/ServiceExecutor';
+
 export class SupabaseService extends BaseService {
   constructor() {
     super('Supabase');
     this.notificationLevel = 'failure-only';
   }
 
+  // 业务逻辑保持不变，仍在 executeKeepAlive 中实现
   protected async executeKeepAlive(trigger: 'auto' | 'manual' = 'auto'): Promise<KeepAliveResult> {
     try {
       logger.info(`[Supabase] Updating Supabase...`);
@@ -35,6 +38,11 @@ export class SupabaseService extends BaseService {
       logger.error(`[Supabase] executeKeepAlive error:`, errorMessage);
       return { success: false, message: errorMessage, duration: 0, error: errorMessage };
     }
+  }
+
+  // 统一入口，由 ServiceExecutor 负责开关、日志、错误处理
+  public async run(trigger: 'auto' | 'manual' = 'auto'): Promise<KeepAliveResult> {
+    return ServiceExecutor.runService(this, trigger);
   }
 }
 

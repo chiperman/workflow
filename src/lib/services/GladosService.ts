@@ -1,5 +1,6 @@
 import { env } from '@/lib/env';
 import { logger } from '@/lib/logger';
+import { ServiceExecutor } from '@/lib/ServiceExecutor';
 import { getBeijingTime } from '@/lib/utils';
 import type { KeepAliveResult } from '@/types';
 import { BaseService } from './BaseService';
@@ -108,6 +109,11 @@ export class GladosService extends BaseService {
       logger.error(`[GLaDOS] executeKeepAlive error:`, errorMessage);
       return { success: false, message: errorMessage, duration: 0, error: errorMessage };
     }
+  }
+
+  // 统一入口，由 ServiceExecutor 负责开关、日志、错误处理
+  public async run(trigger: 'auto' | 'manual' = 'auto'): Promise<KeepAliveResult> {
+    return ServiceExecutor.runService(this, trigger);
   }
 }
 

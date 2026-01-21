@@ -2,6 +2,7 @@
  * @jest-environment node
  */
 import { checkTriggerPermission, verifyAuth } from '@/lib/auth';
+import { ServiceExecutor } from '@/lib/ServiceExecutor';
 import { KeepAliveResult } from '@/types';
 import { handleKeepAliveRequest } from '../api-helper';
 import { BaseService } from '../services/BaseService';
@@ -10,6 +11,12 @@ import { BaseService } from '../services/BaseService';
 jest.mock('@/lib/auth', () => ({
   checkTriggerPermission: jest.fn(),
   verifyAuth: jest.fn(),
+}));
+
+jest.mock('@/lib/ServiceExecutor', () => ({
+  ServiceExecutor: {
+    runService: jest.fn(),
+  },
 }));
 
 // Mock BaseService
@@ -38,7 +45,7 @@ describe('handleKeepAliveRequest', () => {
     jest.clearAllMocks();
     mockService = new MockService();
 
-    runSpy = jest.spyOn(mockService, 'run').mockResolvedValue({
+    runSpy = (ServiceExecutor.runService as jest.Mock).mockResolvedValue({
       success: true,
       message: 'Success',
       duration: 123,
@@ -121,7 +128,7 @@ describe('handleKeepAliveRequest', () => {
 
     expect(response.status).toBe(200);
     expect(data.success).toBe(true);
-    expect(mockService.run).toHaveBeenCalledWith('manual');
+    expect(ServiceExecutor.runService).toHaveBeenCalledWith(mockService, 'manual');
   });
 
   it('should return 500 if service run returns failure', async () => {
