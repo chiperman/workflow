@@ -12,6 +12,10 @@ const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 /**
  * GitHub 风格的签到热力图组件
+ *
+ * 渲染行为：
+ * - 首次加载/切换年份：播放 fade-in 顺序动画
+ * - 刷新数据：格子保持静止，颜色通过 CSS transition 平滑过渡
  */
 export function Heatmap() {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -25,14 +29,20 @@ export function Heatmap() {
   const availableYears =
     yearsData?.success && yearsData.years ? yearsData.years : [new Date().getFullYear()];
 
-  // 获取指定年份的热力图数据 (使用 SWR 缓存)
+  // 获取指定年份的热力图数据 (使用 SWR 缓存，keepPreviousData 避免刷新时格子消失)
   const {
     data: heatmapResponse,
     isLoading: loading,
     error: fetchError,
-  } = useSWR<HeatmapData>(`/api/stats/heatmap?year=${selectedYear}`, fetcher, SWR_CONFIG);
+  } = useSWR<HeatmapData>(`/api/stats/heatmap?year=${selectedYear}`, fetcher, {
+    ...SWR_CONFIG,
+    keepPreviousData: true,
+  });
 
-  const data = heatmapResponse?.success && heatmapResponse.data ? heatmapResponse.data : [];
+  const data = useMemo(
+    () => (heatmapResponse?.success && heatmapResponse.data ? heatmapResponse.data : []),
+    [heatmapResponse]
+  );
   const error = fetchError
     ? fetchError instanceof Error
       ? fetchError.message
@@ -43,17 +53,24 @@ export function Heatmap() {
 
   // 生成选中年份的日期数组 (Jan 1 - Dec 31)，使用 useMemo 缓存
   const days = useMemo(() => generateYearDays(selectedYear), [selectedYear]);
-  const dataMap = new Map(data.map(d => [d.date, d]));
+  const dataMap = useMemo(() => new Map(data.map(d => [d.date, d])), [data]);
 
-  // Control animation start to avoid initial render blocking AND wait for data
-  const [loaded, setLoaded] = useState(false);
+  // 追踪已完成初始动画的年份，避免刷新时重复播放
+  const [animatedYears, setAnimatedYears] = useState<Set<number>>(new Set());
 
+  // 判断当前年份是否需要播放初始动画
+  const isInitialLoad = !animatedYears.has(selectedYear) && data.length > 0;
+
+  // 动画完成后记录该年份
   useEffect(() => {
-    const timer = requestAnimationFrame(() => {
-      setLoaded(true);
-    });
-    return () => cancelAnimationFrame(timer);
-  }, [selectedYear]);
+    if (data.length > 0 && !animatedYears.has(selectedYear)) {
+      // 等待动画完成后标记
+      const timer = setTimeout(() => {
+        setAnimatedYears(prev => new Set(prev).add(selectedYear));
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [data.length, selectedYear, animatedYears]);
 
   // 按周分组
   const weeks = groupByWeeks(days);
@@ -95,7 +112,12 @@ export function Heatmap() {
                 </div>
 
                 {/* 热力图网格 */}
-                <HeatmapGrid weeks={weeks} days={days} dataMap={dataMap} loaded={loaded} />
+                <HeatmapGrid
+                  weeks={weeks}
+                  days={days}
+                  dataMap={dataMap}
+                  isInitialLoad={isInitialLoad}
+                />
               </div>
 
               {/* 底部：图例 (右对齐) & 错误提示 */}

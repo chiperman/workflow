@@ -70,8 +70,8 @@ export function useSystemHealth(): UseSystemHealthResult {
         mutate(), // Refresh health data
         globalMutate(
           key => typeof key === 'string' && key.startsWith('/api/stats/heatmap'),
-          undefined,
-          { revalidate: true }
+          undefined, // 不修改缓存数据
+          { revalidate: true } // 只触发重新验证
         ),
       ]);
     } finally {
