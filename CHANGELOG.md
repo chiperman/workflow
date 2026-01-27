@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.8.10](https://github.com/chiperman/workflow/compare/v0.8.8...v0.8.10) (2026-01-27)
+
+### Bug Fixes
+
+- **heatmap:** 修复刷新时格子闪烁问题 ([2ac974c](https://github.com/chiperman/workflow/commit/2ac974c4f04e1295951c7a70a89bc0a0d43256af))
+
 ### [0.8.9](https://github.com/chiperman/workflow/compare/v0.8.8...v0.8.9) (2026-01-21)
 
 ### Refactor
