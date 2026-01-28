@@ -77,7 +77,7 @@ export function Heatmap() {
   const monthLabels = getMonthLabels(weeks);
 
   return (
-    <Tooltip.Provider>
+    <Tooltip.Provider disableHoverableContent>
       <div className="heatmap-container">
         <div className="heatmap-layout relative">
           {/* 左侧：热力图主体 */}

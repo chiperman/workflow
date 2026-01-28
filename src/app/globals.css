@@ -145,7 +145,7 @@ h6 {
 }
 
 .heatmap-cell:hover {
-  transform: scale(1.15);
+  /* No transform to keep capture area precise */
 }
 
 /* Color levels - Simplified 3 States */

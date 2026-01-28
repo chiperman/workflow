@@ -38,6 +38,13 @@ const MemoizedCell = memo(
     // 只有首次加载且尚未播放过动画时才添加动画 class
     const shouldAnimate = isInitialLoad && !hasAnimated;
 
+    const tooltipData = dayData || {
+      date,
+      success_count: 0,
+      failure_count: 0,
+      services: {},
+    };
+
     const cell = (
       <div
         className={`heatmap-cell cursor-pointer ${getColorClass(date, dayData)} ${
@@ -51,13 +58,6 @@ const MemoizedCell = memo(
         }}
       />
     );
-
-    const tooltipData = dayData || {
-      date,
-      success_count: 0,
-      failure_count: 0,
-      services: {},
-    };
 
     return <HeatmapTooltip day={tooltipData}>{cell}</HeatmapTooltip>;
   },

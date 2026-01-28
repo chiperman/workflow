@@ -37,12 +37,13 @@ export function HeatmapTooltip({ day, children }: HeatmapTooltipProps) {
   );
 
   return (
-    <Tooltip.Root delayDuration={100}>
+    <Tooltip.Root delayDuration={0}>
       <Tooltip.Trigger asChild>{children}</Tooltip.Trigger>
       <Tooltip.Portal>
         <Tooltip.Content
-          className="z-50 px-3 py-2 text-xs text-white bg-gray-900 rounded shadow-lg animate-in fade-in zoom-in-95 duration-200 hidden md:block"
-          sideOffset={5}
+          className="z-50 px-2 py-1 text-xs text-white bg-gray-900 rounded-sm shadow-md animate-in fade-in zoom-in-95 duration-75 hidden md:block pointer-events-none"
+          style={{ pointerEvents: 'none' }}
+          sideOffset={4}
           side="top"
         >
           <div className="font-medium">{message}</div>
@@ -52,7 +53,6 @@ export function HeatmapTooltip({ day, children }: HeatmapTooltipProps) {
           {unexecutedServices.length > 0 && (
             <div className="mt-1 text-gray-400">Unexecuted: {unexecutedServices.join(', ')}</div>
           )}
-          <Tooltip.Arrow className="fill-gray-900" />
         </Tooltip.Content>
       </Tooltip.Portal>
     </Tooltip.Root>
