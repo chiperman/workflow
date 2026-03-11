@@ -43,11 +43,7 @@ describe('auth.ts', () => {
     });
 
     it('should NOT recognize other paths as public', () => {
-      const privatePaths = [
-        '/api/supabase-keep-alive',
-        '/api/glados-checkin',
-        '/api/service-config',
-      ];
+      const privatePaths = ['/api/tasks/supabase', '/api/tasks/glados', '/api/service-config'];
       privatePaths.forEach(path => {
         const req = createRequest(path);
         const result = verifyAuth(req);
@@ -56,7 +52,7 @@ describe('auth.ts', () => {
     });
 
     it('should authorize if session cookie is present even on private paths', () => {
-      const req = new NextRequest('http://localhost/api/supabase-keep-alive');
+      const req = new NextRequest('http://localhost/api/tasks/supabase');
       req.cookies.set('workflow_session', 'authenticated');
 
       const result = verifyAuth(req);

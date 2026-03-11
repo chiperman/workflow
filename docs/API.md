@@ -145,44 +145,30 @@ GET /api/stats/heatmap
 
 ---
 
-## 手动触发接口
+## 统一任务执行 API (Task Protocol)
 
-### Supabase 保活
+> v0.8.3 统一
 
-- **端点**: `/api/supabase-keep-alive`
-- **方法**: POST (手动) / GET (自动)
-- **响应**:
-  ```json
-  {
-    "success": true,
-    "message": "Keep-alive successful",
-    "duration": 125,
-    "data": { "auto_count": 43, "manual_count": 15 }
-  }
-  ```
+所有服务的执行均通过动态任务端点完成。
 
-### GLaDOS 签到
+```
+POST /api/tasks/[id]
+```
 
-- **端点**: `/api/glados-checkin`
-- **方法**: POST (手动) / GET (自动)
-- **响应** (首次签到成功):
-  ```json
-  {
-    "success": true,
-    "message": "GLaDOS Success: Updated record at 北京时间 10:00 (auto). Auto=26, Manual=5.",
-    "duration": 250,
-    "data": { "auto_count": 26, "manual_count": 5 }
-  }
-  ```
-- **响应** (重复签到):
-  ```json
-  {
-    "success": true,
-    "message": "GLaDOS Checked-in: \"Checkin Repeats! Please Try Tomorrow\" [Executed at 北京时间 10:00 (auto)]",
-    "duration": 180,
-    "data": { "auto_count": 25, "manual_count": 5 }
-  }
-  ```
+- **id**: 数据库中的 `service` 标识符（如 `supabase`, `glados`）。
+- **查询参数**: `trigger=manual` (默认) 或 `trigger=auto`。
+- **鉴权**: 需要有效凭证（Session/App-Key/Cron）。
+
+### 响应示例
+
+```json
+{
+  "success": true,
+  "message": "GLaDOS Success: Updated record at 北京时间 10:00",
+  "duration": 250,
+  "data": { "auto_count": 26, "manual_count": 5, "failure_count": 0 }
+}
+```
 
 ---
 

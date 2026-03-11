@@ -24,7 +24,7 @@ describe('TaskCard', () => {
   const defaultProps = {
     title: 'Supabase',
     description: 'Database maintenance task',
-    endpoint: '/api/supabase-keep-alive',
+    endpoint: '/api/tasks/supabase',
     category: 'Database Maintenance',
     method: 'POST' as const,
     serviceName: 'supabase',
@@ -82,7 +82,7 @@ describe('TaskCard', () => {
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/supabase-keep-alive'),
+        expect.stringContaining('/api/tasks/supabase'),
         expect.objectContaining({ method: 'POST' })
       );
     });
