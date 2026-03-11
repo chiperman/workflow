@@ -136,7 +136,7 @@ export class DynamicService extends BaseService {
     if (lastError) {
       return {
         success: false,
-        message: `${this.config.name} 失败: ${lastError.message}`,
+        message: `${this.config.name} 所有配置节点请求均失败。最后错误: ${lastError.message}`,
         duration: 0,
         error: lastError.message,
       };
@@ -202,7 +202,7 @@ export class DynamicService extends BaseService {
     const keys = path.split('.');
     let current: unknown = obj;
     for (const key of keys) {
-      if (current === null || current === undefined) return undefined;
+      if (current === null || typeof current !== 'object') return undefined;
       current = (current as Record<string, unknown>)[key];
     }
     return current;

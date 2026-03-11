@@ -1,3 +1,4 @@
+import { PUBLIC_PATH_PREFIXES, PUBLIC_PATHS } from '@/config/constants';
 import { Result } from '@/types';
 import type { NextRequest } from 'next/server';
 
@@ -31,13 +32,8 @@ export function verifyAuth(req: Request | NextRequest): AuthResult {
 
   // 1. 公开路径检查 (Public)
   const isPublicPath =
-    pathname === '/' ||
-    pathname === '/login' ||
-    pathname === '/api/health' ||
-    pathname.startsWith('/api/stats/heatmap') ||
-    pathname.startsWith('/_next') ||
-    pathname.startsWith('/api/auth') || // 登录/登出接口自行处理
-    pathname.includes('favicon.ico');
+    PUBLIC_PATHS.some(p => p === pathname) ||
+    PUBLIC_PATH_PREFIXES.some(p => pathname.startsWith(p));
 
   // 注意：即使是公开路径，如果携带了凭证，我们也优先验证凭证（以便 API 明确调用者身份）
   // 但对于 middleware 拦截来说，公开路径可以直接放行。

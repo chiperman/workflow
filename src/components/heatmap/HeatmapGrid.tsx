@@ -94,9 +94,18 @@ export function HeatmapGrid({ weeks, days, dataMap, isInitialLoad }: HeatmapGrid
             const dayData = dataMap.get(date);
             const globalIndex = dayIndexMap.get(date) ?? 0;
 
+            if (!date) {
+              return (
+                <div
+                  key={`pad-${weekIndex}-${dayIndex}`}
+                  className="w-full aspect-square bg-transparent"
+                />
+              );
+            }
+
             return (
               <MemoizedCell
-                key={date || `pad-${weekIndex}-${dayIndex}`}
+                key={date}
                 date={date}
                 dayData={dayData}
                 globalIndex={globalIndex}

@@ -12,6 +12,7 @@
 
 # testing
 /coverage
+coverage_report.txt
 
 # next.js
 /.next/
@@ -40,6 +41,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# IDE settings
+.vscode/
+
 # local notes (AI tasks, personal docs)
 .notes/
-\n# IDE settings\n.vscode/

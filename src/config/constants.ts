@@ -94,3 +94,19 @@ export const HEATMAP_COLORS = {
   ACTIVE_YEAR: '#d97757',
   INACTIVE_YEAR: 'transparent',
 } as const;
+
+/**
+ * 允许公开访问的路径列表 (无需显式登录)
+ */
+export const PUBLIC_PATHS = [
+  '/',
+  '/login',
+  '/api/health',
+  '/api/auth', // 登录/登出接口自行处理
+  '/favicon.ico',
+] as const;
+
+/**
+ * 允许公开访问的路径前缀
+ */
+export const PUBLIC_PATH_PREFIXES = ['/api/stats/heatmap', '/_next'] as const;
