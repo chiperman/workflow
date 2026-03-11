@@ -172,37 +172,18 @@ export function TaskConfigModal({ isOpen, onClose, serviceId, onSuccess }: TaskC
                 className="w-full px-3 py-2 bg-[#f9f9f9] border border-[#e5e5e0] rounded-lg text-sm focus:outline-none focus:border-[#d97757]/50"
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-medium text-[#555555]">Task Type</label>
-                <select
-                  value={config.type}
-                  onChange={e =>
-                    setConfig({ ...config, type: e.target.value as 'http' | 'supabase_internal' })
-                  }
-                  className="w-full px-3 py-2 bg-[#f9f9f9] border border-[#e5e5e0] rounded-lg text-sm focus:outline-none focus:border-[#d97757]/50"
-                >
-                  <option value="http">HTTP Request</option>
-                  <option value="supabase_internal">Supabase Internal</option>
-                </select>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-medium text-[#555555]">Notification Level</label>
-                <select
-                  value={config.notification_level}
-                  onChange={e =>
-                    setConfig({
-                      ...config,
-                      notification_level: e.target.value as 'always' | 'failure-only' | 'none',
-                    })
-                  }
-                  className="w-full px-3 py-2 bg-[#f9f9f9] border border-[#e5e5e0] rounded-lg text-sm focus:outline-none focus:border-[#d97757]/50"
-                >
-                  <option value="always">Always Notify</option>
-                  <option value="failure-only">On Failure Only</option>
-                  <option value="none">Disabled</option>
-                </select>
-              </div>
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-medium text-[#555555]">Task Type</label>
+              <select
+                value={config.type}
+                onChange={e =>
+                  setConfig({ ...config, type: e.target.value as 'http' | 'supabase_internal' })
+                }
+                className="w-full px-3 py-2 bg-[#f9f9f9] border border-[#e5e5e0] rounded-lg text-sm focus:outline-none focus:border-[#d97757]/50"
+              >
+                <option value="http">HTTP Request</option>
+                <option value="supabase_internal">Supabase Internal</option>
+              </select>
             </div>
           </section>
 
