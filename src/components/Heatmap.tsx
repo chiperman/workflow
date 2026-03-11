@@ -11,25 +11,20 @@ import useSWR from 'swr';
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 /**
- * GitHub 风格的签到热力图组件
- *
- * 渲染行为：
- * - 首次加载/切换年份：播放 fade-in 顺序动画
- * - 刷新数据：格子保持静止，颜色通过 CSS transition 平滑过渡
+ * GitHub 风格的签到热力图组件 - 完全基于 Tailwind Utility Classes
  */
 export function Heatmap() {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
-  // 获取有数据的年份列表 (使用 SWR 缓存)
   const { data: yearsData, isLoading: yearsLoading } = useSWR<YearsData>(
     '/api/stats/heatmap/years',
     fetcher,
     { ...SWR_CONFIG, keepPreviousData: true }
   );
+
   const availableYears =
     yearsData?.success && yearsData.years ? yearsData.years : [new Date().getFullYear()];
 
-  // 获取指定年份的热力图数据 (使用 SWR 缓存，keepPreviousData 避免刷新时格子消失)
   const {
     data: heatmapResponse,
     isLoading: loading,
@@ -43,6 +38,7 @@ export function Heatmap() {
     () => (heatmapResponse?.success && heatmapResponse.data ? heatmapResponse.data : []),
     [heatmapResponse]
   );
+
   const error = fetchError
     ? fetchError instanceof Error
       ? fetchError.message
@@ -51,20 +47,14 @@ export function Heatmap() {
       ? heatmapResponse.error
       : null;
 
-  // 生成选中年份的日期数组 (Jan 1 - Dec 31)，使用 useMemo 缓存
   const days = useMemo(() => generateYearDays(selectedYear), [selectedYear]);
   const dataMap = useMemo(() => new Map(data.map(d => [d.date, d])), [data]);
 
-  // 追踪已完成初始动画的年份，避免刷新时重复播放
   const [animatedYears, setAnimatedYears] = useState<Set<number>>(new Set());
-
-  // 判断当前年份是否需要播放初始动画
   const isInitialLoad = !animatedYears.has(selectedYear) && data.length > 0;
 
-  // 动画完成后记录该年份
   useEffect(() => {
     if (data.length > 0 && !animatedYears.has(selectedYear)) {
-      // 等待动画完成后标记
       const timer = setTimeout(() => {
         setAnimatedYears(prev => new Set(prev).add(selectedYear));
       }, 1000);
@@ -72,20 +62,19 @@ export function Heatmap() {
     }
   }, [data.length, selectedYear, animatedYears]);
 
-  // 按周分组
   const weeks = groupByWeeks(days);
   const monthLabels = getMonthLabels(weeks);
 
   return (
     <Tooltip.Provider disableHoverableContent>
-      <div className="heatmap-container">
-        <div className="heatmap-layout relative">
-          {/* 左侧：热力图主体 */}
-          <div className="heatmap-main">
-            <div className="heatmap-wrapper">
-              {/* 月份标签 */}
+      <div className="relative">
+        <div className="relative">
+          {/* Main Heatmap Area */}
+          <div className="w-full p-6 bg-white rounded-lg border border-border-custom overflow-x-auto">
+            <div className="w-full min-w-[600px]">
+              {/* Months Row */}
               <div
-                className="heatmap-months"
+                className="grid pl-[36px] w-full box-border mb-2"
                 style={{
                   gridTemplateColumns: `repeat(${weeks.length}, 1fr)`,
                 }}
@@ -93,7 +82,7 @@ export function Heatmap() {
                 {monthLabels.map((label, i) => (
                   <span
                     key={i}
-                    className="heatmap-month-label"
+                    className="text-[13px] text-[#666] whitespace-nowrap"
                     style={{ gridColumnStart: label.weekIndex + 1 }}
                   >
                     {label.name}
@@ -101,17 +90,17 @@ export function Heatmap() {
                 ))}
               </div>
 
-              <div className="heatmap-body">
-                {/* 星期标签 */}
-                <div className="heatmap-weekdays">
+              <div className="flex gap-2 w-full">
+                {/* Weekdays Column */}
+                <div className="flex flex-col justify-between pr-1 shrink-0 w-[28px] pb-1.5">
                   {WEEKDAYS.map((day, i) => (
-                    <div key={day} className="heatmap-weekday-label">
+                    <div key={day} className="text-[11px] text-[#666] leading-none text-right">
                       {i % 2 === 1 ? day : ''}
                     </div>
                   ))}
                 </div>
 
-                {/* 热力图网格 */}
+                {/* Grid */}
                 <HeatmapGrid
                   weeks={weeks}
                   days={days}
@@ -120,12 +109,12 @@ export function Heatmap() {
                 />
               </div>
 
-              {/* 底部：图例 (右对齐) & 错误提示 */}
+              {/* Legend & Error */}
               <HeatmapLegend error={error} />
             </div>
           </div>
 
-          {/* 右侧：年份选择器 */}
+          {/* Year Selector */}
           <HeatmapYearSelector
             years={availableYears}
             selectedYear={selectedYear}

@@ -5,16 +5,6 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Anthropic-inspired "Warm Paper" Theme */
-  /* Warm off-white, like paper */
-  /* Soft black */
-
-  /* Accents */
-  --accent-primary: #d97757;
-  /* Terracotta */
-  --accent-secondary: #3f6212;
-  /* Deep olive */
-  --border-color: #e5e5e0;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -53,17 +43,26 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
-  /* Typography - Serif for Headings, Sans for Body */
+  /* Typography */
   --font-serif: 'Times New Roman', Times, 'Georgia', serif;
   --font-sans: var(--font-sans);
-
   --font-display: var(--font-serif);
   --font-body: var(--font-sans);
-
-  /* Monospace for logs and IDs */
   --font-mono:
     'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono',
     'Courier New', monospace;
+
+  /* Theme Colors */
+  --color-accent-primary: #d97757;
+  --color-accent-secondary: #3f6212;
+  --color-border-custom: #e5e5e0;
+
+  /* Heatmap Colors */
+  --color-heatmap-level-0: #ebedf0;
+  --color-heatmap-level-success: #40c463;
+  --color-heatmap-level-failure: #ff6b6b;
+
+  /* UI Variables */
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -93,6 +92,7 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -116,205 +116,6 @@ h5,
 h6 {
   font-family: var(--font-display);
   font-weight: 500;
-  /* Regular-ish weight for serif feels more academic */
-}
-
-/* ========== Heatmap Styles (GitHub Style) ========== */
-
-.heatmap-container {
-  position: relative;
-}
-
-.heatmap-layout {
-  display: block; /* Layout handled by absolute positioning */
-}
-
-.heatmap-main {
-  width: 100%;
-  padding: 1.5rem;
-  background: white;
-  border-radius: 0.5rem;
-  border: 1px solid #e5e5e0;
-  overflow-x: auto;
-}
-
-.heatmap-wrapper {
-  width: 100%;
-  min-width: 600px; /* Prevent it from getting too small and squished */
-}
-
-/* 月份标签行 */
-.heatmap-months {
-  display: grid;
-  /* width(weekdays) 28px + gap(body) 8px = 36px */
-  padding-left: 36px;
-  width: 100%;
-  box-sizing: border-box;
-  /* Need to account for the gap in the grid vs the weekdays sidebar */
-  /* Actually, easiest is to make the heatmap-body a grid too, or keep padding matches */
-}
-
-.heatmap-month-label {
-  font-size: 13px; /* Increased from 11px */
-  color: #666;
-  white-space: nowrap;
-}
-
-/* 主体区域（星期标签 + 网格） */
-.heatmap-body {
-  display: flex;
-  gap: 8px; /* Increased gap between labels and grid */
-  width: 100%;
-}
-
-/* 星期标签列 */
-.heatmap-weekdays {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between; /* Distribute evenly to match grid rows */
-  padding-right: 4px;
-  flex-shrink: 0;
-  width: 28px; /* Slightly wider */
-  padding-bottom: 6px; /* Adjust for cell visual height if needed */
-}
-
-.heatmap-weekday-label {
-  font-size: 11px; /* Increased from 9px */
-  color: #666;
-  height: auto; /* Let it flow */
-  line-height: 1;
-  text-align: right;
-  /* We might need to manually align specific days or rely on flex distribution */
-}
-
-/* 热力图网格 */
-.heatmap-grid {
-  display: grid;
-  /* columns set via inline style */
-  gap: 3px; /* Slightly increase gap */
-  flex: 1; /* Take up remaining space */
-  width: 100%;
-}
-
-.heatmap-week {
-  display: flex;
-  flex-direction: column;
-  gap: 3px; /* Match horizontal gap */
-}
-
-.heatmap-cell {
-  width: 100%;
-  aspect-ratio: 1 / 1; /* Keep perfect square */
-  border-radius: 2px;
-  cursor: pointer;
-  transition:
-    transform 0.1s ease,
-    background-color 0.8s ease;
-}
-
-.heatmap-cell:hover {
-  /* No transform to keep capture area precise */
-}
-
-/* Color levels - Simplified 3 States */
-.heatmap-level-0 {
-  background-color: #ebedf0;
-}
-
-.heatmap-level-success {
-  background-color: #40c463; /* Standard Green */
-}
-
-/* failure handled below */
-
-.heatmap-level-failure {
-  background-color: #ff6b6b;
-}
-
-/* Footer with legend and year selector */
-/* .heatmap-footer handled by Tailwind */
-
-/* Fix for legend cells disappearing due to responsive 100% width */
-.heatmap-legend .heatmap-cell {
-  width: 10px;
-  height: 10px;
-  min-width: 10px; /* prevent shrinking */
-  aspect-ratio: auto; /* reset aspect ratio */
-  cursor: default;
-}
-
-.heatmap-legend .heatmap-cell:hover {
-  transform: none;
-}
-
-/* Year sidebar layout handled by Tailwind (md:absolute) */
-/* .heatmap-years-sidebar { ... } */
-
-.heatmap-year-btn {
-  /* Only keep base styles that are not layout releated if needed, 
-     but we moved most to Tailwind. Keeping minimal reset just in case. */
-  font-family: var(--font-serif), Georgia, serif;
-}
-
-/* Tooltip */
-.heatmap-tooltip {
-  background: rgba(0, 0, 0, 0.85);
-  color: #fff;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  z-index: 1000;
-  pointer-events: none;
-  white-space: nowrap;
-}
-
-.tooltip-date {
-  font-weight: 600;
-  margin-bottom: 4px;
-}
-
-.tooltip-stats {
-  opacity: 0.9;
-}
-
-.tooltip-services {
-  margin-top: 4px;
-  padding-top: 4px;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.service-success {
-  color: #9be9a8;
-}
-
-.service-failure {
-  color: #ff6b6b;
-}
-
-.heatmap-loading,
-.heatmap-error {
-  text-align: center;
-  padding: 2rem;
-  color: #666;
-}
-
-.heatmap-error {
-  color: #ff6b6b;
-}
-
-/* Animations */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.animate-fade-in {
-  opacity: 0;
-  animation: fadeIn 0.2s ease-out forwards;
 }
 
 @layer utilities {
@@ -326,7 +127,7 @@ h6 {
     scrollbar-width: none;
   }
 
-  /* Horizontal Fade (Mobile) */
+  /* Fades */
   .mask-fade-x {
     mask-image: linear-gradient(
       to right,
@@ -344,7 +145,6 @@ h6 {
     );
   }
 
-  /* Vertical Fade (Desktop) - Soft Edge */
   .mask-fade-y {
     mask-image: linear-gradient(to bottom, transparent 0%, black 25%, black 75%, transparent 100%);
     -webkit-mask-image: linear-gradient(
@@ -357,7 +157,19 @@ h6 {
   }
 }
 
-/* Year selector fade-in animation */
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
 @keyframes yearFadeIn {
   from {
     opacity: 0;
@@ -368,9 +180,7 @@ h6 {
     transform: translateY(0);
   }
 }
-
 .year-fade-in {
-  opacity: 0;
   animation: yearFadeIn 0.2s ease-out forwards;
 }
 
@@ -414,8 +224,5 @@ h6 {
   }
   body {
     @apply bg-background text-foreground;
-  }
-  html {
-    @apply font-sans;
   }
 }
