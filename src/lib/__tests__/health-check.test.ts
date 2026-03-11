@@ -1,181 +1,123 @@
-import { checkSupabaseHealth } from '../health-check';
+import { checkSupabaseHealth, checkServiceHealth } from '../health-check';
+import { ServiceFactory } from '../services/ServiceFactory';
 
 // Mock Supabase client
 jest.mock('../supabase', () => ({
   supabase: {
-    from: jest.fn(),
+    from: jest.fn(() => ({
+      select: jest.fn(() => ({
+        eq: jest.fn(() => ({
+          gte: jest.fn(() => ({
+            count: 0,
+            error: null,
+          })),
+        })),
+      })),
+    })),
   },
 }));
 
-// Mock env
+// Mock ServiceFactory
+jest.mock('../services/ServiceFactory');
 
-import { supabase } from '../supabase';
-
-describe('checkSupabaseHealth', () => {
+describe('health-check logic', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('成功获取数据', async () => {
-    const mockData = {
-      id: 1,
-      auto_count: 10,
-      manual_count: 5,
-    };
+  describe('checkServiceHealth', () => {
+    it('当服务配置不存在时应返回 misconfigured', async () => {
+      (ServiceFactory.getService as jest.Mock).mockResolvedValue(null);
 
-    (supabase.from as jest.Mock).mockReturnValue({
-      select: jest.fn().mockReturnValue({
-        eq: jest.fn().mockReturnValue({
-          single: jest.fn().mockResolvedValue({
-            data: mockData,
-            error: null,
-          }),
-        }),
-      }),
+      const result = await checkServiceHealth('unknown-service');
+
+      expect(result.status).toBe('misconfigured');
+      expect(result.message).toContain('not found');
     });
 
-    const result = await checkSupabaseHealth();
+    it('成功获取服务状态时应返回 operational', async () => {
+      const mockStats = {
+        ok: true,
+        data: {
+          enabled: true,
+          tableExists: true,
+          auto_count: 10,
+          manual_count: 5,
+          failure_count: 0,
+        },
+      };
 
-    expect(result).toEqual({
-      status: 'operational',
-      enabled: true,
-      tableExists: true,
-      stats: {
-        auto_count: 10,
-        manual_count: 5,
-        failure_count: 0,
-      },
-      todayCheckedIn: false,
-    });
-  });
+      const mockService = {
+        getStats: jest.fn().mockResolvedValue(mockStats),
+        displayName: 'Mock Service',
+        type: 'http',
+        description: 'Test',
+        category: 'Test Category',
+      };
 
-  it('表存在但无数据 (PGRST116)', async () => {
-    (supabase.from as jest.Mock).mockReturnValue({
-      select: jest.fn().mockReturnValue({
-        eq: jest.fn().mockReturnValue({
-          single: jest.fn().mockResolvedValue({
-            data: null,
-            error: { code: 'PGRST116', message: 'No rows found' },
-          }),
-        }),
-      }),
-    });
+      (ServiceFactory.getService as jest.Mock).mockResolvedValue(mockService);
 
-    const result = await checkSupabaseHealth();
+      const result = await checkServiceHealth('mock-service');
 
-    expect(result).toEqual({
-      status: 'operational',
-      enabled: true,
-      tableExists: true,
-      stats: {
-        auto_count: 0,
-        manual_count: 0,
-        failure_count: 0,
-      },
-      todayCheckedIn: false,
-    });
-  });
-
-  it('表不存在 (42P01)', async () => {
-    (supabase.from as jest.Mock).mockReturnValue({
-      select: jest.fn().mockReturnValue({
-        eq: jest.fn().mockReturnValue({
-          single: jest.fn().mockResolvedValue({
-            data: null,
-            error: {
-              code: '42P01',
-              message: 'relation "keep_alive" does not exist',
-            },
-          }),
-        }),
-      }),
+      expect(result).toEqual({
+        status: 'operational',
+        enabled: true,
+        tableExists: true,
+        stats: {
+          auto_count: 10,
+          manual_count: 5,
+          failure_count: 0,
+        },
+        todayCheckedIn: false,
+        name: 'Mock Service',
+        type: 'http',
+        description: 'Test',
+        category: 'Test Category',
+      });
     });
 
-    const result = await checkSupabaseHealth();
+    it('服务 getStats 失败时应返回错误信息', async () => {
+      const mockStats = {
+        ok: false,
+        error: 'Database connection failed',
+      };
 
-    expect(result).toEqual({
-      status: 'misconfigured',
-      tableExists: false,
-      stats: {
-        auto_count: 0,
-        manual_count: 0,
-        failure_count: 0,
-      },
-      message: "Table 'keep_alive' does not exist",
-      todayCheckedIn: false,
+      const mockService = {
+        getStats: jest.fn().mockResolvedValue(mockStats),
+      };
+
+      (ServiceFactory.getService as jest.Mock).mockResolvedValue(mockService);
+
+      const result = await checkServiceHealth('mock-service');
+
+      expect(result.status).toBe('misconfigured');
+      expect(result.message).toBe('Database connection failed');
     });
   });
 
-  it('其他数据库错误', async () => {
-    (supabase.from as jest.Mock).mockReturnValue({
-      select: jest.fn().mockReturnValue({
-        eq: jest.fn().mockReturnValue({
-          single: jest.fn().mockResolvedValue({
-            data: null,
-            error: {
-              code: 'SOME_ERROR',
-              message: 'Database error',
-            },
-          }),
-        }),
-      }),
-    });
+  describe('checkSupabaseHealth (compatibility)', () => {
+    it('应调用通用的 checkServiceHealth', async () => {
+      const mockStats = {
+        ok: true,
+        data: {
+          enabled: true,
+          tableExists: true,
+          auto_count: 0,
+          manual_count: 0,
+          failure_count: 0,
+        },
+      };
 
-    const result = await checkSupabaseHealth();
+      const mockService = {
+        getStats: jest.fn().mockResolvedValue(mockStats),
+        displayName: 'Supabase',
+      };
 
-    expect(result.status).toBe('misconfigured');
-    expect(result.tableExists).toBe(false);
-    expect(result.message).toBeDefined();
-  });
+      (ServiceFactory.getService as jest.Mock).mockResolvedValue(mockService);
 
-  it('网络错误', async () => {
-    (supabase.from as jest.Mock).mockReturnValue({
-      select: jest.fn().mockReturnValue({
-        eq: jest.fn().mockReturnValue({
-          single: jest.fn().mockRejectedValue(new Error('Network error')),
-        }),
-      }),
-    });
-
-    const result = await checkSupabaseHealth();
-
-    expect(result).toEqual({
-      status: 'misconfigured', // 网络错误导致无法连接表，也被视为配置问题或初始状态
-      tableExists: false,
-      stats: {
-        auto_count: 0,
-        manual_count: 0,
-        failure_count: 0,
-      },
-      message: 'Network error',
-      todayCheckedIn: false,
-    });
-  });
-
-  it('数据字段缺失时使用默认值', async () => {
-    (supabase.from as jest.Mock).mockReturnValue({
-      select: jest.fn().mockReturnValue({
-        eq: jest.fn().mockReturnValue({
-          single: jest.fn().mockResolvedValue({
-            data: { id: 1 }, // 缺少 auto_count 和 manual_count
-            error: null,
-          }),
-        }),
-      }),
-    });
-
-    const result = await checkSupabaseHealth();
-
-    expect(result).toEqual({
-      status: 'operational',
-      enabled: true,
-      tableExists: true,
-      stats: {
-        auto_count: 0,
-        manual_count: 0,
-        failure_count: 0,
-      },
-      todayCheckedIn: false,
+      const result = await checkSupabaseHealth();
+      expect(ServiceFactory.getService).toHaveBeenCalledWith('supabase');
+      expect(result.status).toBe('operational');
     });
   });
 });

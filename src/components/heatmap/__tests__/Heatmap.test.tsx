@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { SWRConfig } from 'swr';
-import { Heatmap } from '../Heatmap';
+import { Heatmap } from '../../Heatmap';
 
 // Mock the heatmap-calendar module
 jest.mock('@/lib/heatmap-calendar', () => ({

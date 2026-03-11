@@ -1,6 +1,6 @@
 import type { ServiceHealth } from '@/types';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { TaskCard } from '../task-card';
+import { TaskCard } from '../TaskCard';
 
 // Mock lucide-react icons
 jest.mock('lucide-react', () => ({
@@ -9,15 +9,41 @@ jest.mock('lucide-react', () => ({
   Loader2: () => <span data-testid="loader-icon" />,
   Play: () => <span data-testid="play-icon" />,
   X: () => <span data-testid="close-icon" />,
+  Settings: () => <span data-testid="settings-icon" />,
+  ExternalLink: () => <span data-testid="link-icon" />,
 }));
 
 // Mock child components
-jest.mock('../CreateGuide', () => ({
-  CreateGuide: () => null,
+jest.mock('../../RollingNumber', () => ({
+  RollingNumber: ({ value }: { value: number }) => <span>{value}</span>,
 }));
 
-jest.mock('../RollingNumber', () => ({
-  RollingNumber: ({ value }: { value: number }) => <span>{value}</span>,
+// Mock Tooltip
+jest.mock('@/components/ui/tooltip', () => ({
+  Tooltip: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  TooltipTrigger: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  TooltipContent: () => null,
+}));
+
+// Mock Switch to avoid JSDOM PointerEvent issues
+jest.mock('@/components/ui/switch', () => ({
+  Switch: ({
+    checked,
+    onCheckedChange,
+    disabled,
+  }: {
+    checked: boolean;
+    onCheckedChange: (val: boolean) => void;
+    disabled?: boolean;
+  }) => (
+    <input
+      type="checkbox"
+      role="switch"
+      checked={checked}
+      disabled={disabled}
+      onChange={() => onCheckedChange(!checked)}
+    />
+  ),
 }));
 
 describe('TaskCard', () => {
@@ -151,8 +177,7 @@ describe('TaskCard', () => {
 
     render(<TaskCard {...defaultProps} />);
 
-    // 找到开关按钮（根据 title 属性定位）
-    const toggleButton = screen.getByTitle(/disable auto cron/i);
+    const toggleButton = screen.getByRole('switch');
     fireEvent.click(toggleButton);
 
     await waitFor(() => {
