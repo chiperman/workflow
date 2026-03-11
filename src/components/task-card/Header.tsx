@@ -1,5 +1,9 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { memo } from 'react';
+import { Switch } from '@/components/ui/switch';
+import { Settings } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface HeaderProps {
   title: string;
@@ -11,6 +15,8 @@ interface HeaderProps {
   todayCheckedIn?: boolean;
   onToggle: () => void;
   isGuest?: boolean;
+  onEdit?: (id: string) => void;
+  serviceName: string;
 }
 
 export const Header = memo(function Header({
@@ -23,6 +29,8 @@ export const Header = memo(function Header({
   todayCheckedIn,
   onToggle,
   isGuest,
+  onEdit,
+  serviceName,
 }: HeaderProps) {
   return (
     <div className="mb-4">
@@ -58,7 +66,7 @@ export const Header = memo(function Header({
             )}
           </AnimatePresence>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <AnimatePresence mode="wait">
             {displayStatus !== 'idle' && (
               <motion.span
@@ -83,24 +91,47 @@ export const Header = memo(function Header({
               </motion.span>
             )}
           </AnimatePresence>
-          <button
-            onClick={onToggle}
-            disabled={isToggling || isGuest}
-            className={`relative w-9 h-5 rounded-full transition-colors duration-200 ${
-              localEnabled ? 'bg-emerald-500' : 'bg-gray-300'
-            } ${isToggling || isGuest ? 'opacity-50 cursor-not-allowed' : ''}`}
-            title={
-              isGuest
-                ? 'Sign in to configure'
-                : localEnabled
-                  ? 'Disable auto cron'
-                  : 'Enable auto cron'
-            }
-          >
-            <span
-              className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${localEnabled ? 'translate-x-4' : 'translate-x-0'}`}
-            />
-          </button>
+          <div className="flex items-center gap-1">
+            {!isGuest && onEdit && (
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onEdit(serviceName)}
+                      className="h-8 w-8 text-[#888888] hover:text-[#d97757] hover:bg-[#f9f9f9] opacity-0 group-hover:opacity-100 transition-all duration-200"
+                    />
+                  }
+                >
+                  <Settings className="w-3.5 h-3.5" />
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <p className="text-xs">Edit Configuration</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
+            <Tooltip>
+              <TooltipTrigger render={<div className="flex items-center" />}>
+                <Switch
+                  checked={localEnabled}
+                  onCheckedChange={onToggle}
+                  disabled={isToggling || isGuest}
+                  className="data-[state=checked]:bg-emerald-500"
+                />
+              </TooltipTrigger>
+              <TooltipContent side="top">
+                {' '}
+                <p className="text-xs">
+                  {isGuest
+                    ? 'Sign in to configure'
+                    : localEnabled
+                      ? 'Disable auto cron'
+                      : 'Enable auto cron'}
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
         </div>
       </div>
       <h2 className="text-xl font-medium text-[#191919] mb-2 font-serif">{title}</h2>

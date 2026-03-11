@@ -1,8 +1,7 @@
 import type { ServiceHealth } from '@/types';
-import { gladosService } from './services/GladosService';
-import { supabaseService } from './services/SupabaseService';
 import { supabase } from './supabase';
 import { getBeijingDateString } from './utils';
+import { ServiceFactory } from './services/ServiceFactory';
 
 /**
  * 检查今日是否有签到记录
@@ -15,7 +14,7 @@ async function checkTodayCheckin(service: string): Promise<boolean> {
     const { count, error } = await supabase
       .from('keep_alive_logs')
       .select('*', { count: 'exact', head: true })
-      .eq('service', service)
+      .eq('service', service.toLowerCase())
       .gte('timestamp', todayStart);
 
     if (error) {
@@ -29,10 +28,21 @@ async function checkTodayCheckin(service: string): Promise<boolean> {
 }
 
 /**
- * 统一的 Supabase 健康检查函数
+ * 统一的服务健康检查函数 (Generic)
  */
-export async function checkSupabaseHealth(): Promise<ServiceHealth> {
-  const result = await supabaseService.getStats();
+export async function checkServiceHealth(serviceId: string): Promise<ServiceHealth> {
+  const service = await ServiceFactory.getService(serviceId);
+  if (!service) {
+    return {
+      status: 'misconfigured',
+      tableExists: true,
+      stats: { auto_count: 0, manual_count: 0, failure_count: 0 },
+      message: `Service config for "${serviceId}" not found`,
+      todayCheckedIn: false,
+    };
+  }
+
+  const result = await service.getStats();
 
   if (!result.ok) {
     return {
@@ -45,7 +55,7 @@ export async function checkSupabaseHealth(): Promise<ServiceHealth> {
   }
 
   const { enabled, tableExists, ...stats } = result.data;
-  const todayCheckedIn = await checkTodayCheckin('supabase');
+  const todayCheckedIn = await checkTodayCheckin(serviceId);
 
   return {
     status: 'operational',
@@ -53,33 +63,42 @@ export async function checkSupabaseHealth(): Promise<ServiceHealth> {
     stats,
     enabled,
     todayCheckedIn,
+    name: service.displayName,
+    type: service.type,
+    description: service.description,
+    category: service.category,
   };
 }
 
 /**
- * 统一的 GLaDOS 健康检查函数
+ * 检查所有可用服务的健康状态
+ */
+export async function checkAllServicesHealth(): Promise<Record<string, ServiceHealth>> {
+  const { data: configs, error } = await supabase.from('keep_alive').select('service');
+
+  if (error || !configs) return {};
+
+  const healthResults: Record<string, ServiceHealth> = {};
+
+  await Promise.all(
+    configs.map(async cfg => {
+      healthResults[cfg.service] = await checkServiceHealth(cfg.service);
+    })
+  );
+
+  return healthResults;
+}
+
+/**
+ * 统一的 Supabase 健康检查函数 (保持兼容性)
+ */
+export async function checkSupabaseHealth(): Promise<ServiceHealth> {
+  return checkServiceHealth('supabase');
+}
+
+/**
+ * 统一的 GLaDOS 健康检查函数 (保持兼容性)
  */
 export async function checkGladosHealth(): Promise<ServiceHealth> {
-  const result = await gladosService.getStats();
-
-  if (!result.ok) {
-    return {
-      status: 'misconfigured',
-      tableExists: false,
-      stats: { auto_count: 0, manual_count: 0, failure_count: 0 },
-      message: result.error || 'Database setup required',
-      todayCheckedIn: false,
-    };
-  }
-
-  const { enabled, tableExists, ...stats } = result.data;
-  const todayCheckedIn = await checkTodayCheckin('glados');
-
-  return {
-    status: 'operational',
-    tableExists,
-    stats,
-    enabled,
-    todayCheckedIn,
-  };
+  return checkServiceHealth('glados');
 }

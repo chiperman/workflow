@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import useSWR, { mutate as globalMutate } from 'swr';
 
 import type { HealthCheckResponse, ServiceHealth, SystemStatus } from '@/types';
@@ -9,12 +9,11 @@ interface UseSystemHealthResult {
   stats: HealthCheckResponse | undefined;
   isLoading: boolean;
   error: unknown;
-  supabaseHealth: ServiceHealth;
-  gladosHealth: ServiceHealth;
+  services: Record<string, ServiceHealth>;
   systemStatus: SystemStatus;
   failingServices: string[];
   refreshAll: () => Promise<void>;
-  isRefreshing: boolean; // simple boolean state for refreshing UI
+  isRefreshing: boolean;
   authType: 'cron' | 'app-key' | 'session' | 'public' | 'none';
 }
 
@@ -29,42 +28,21 @@ export function useSystemHealth(): UseSystemHealthResult {
     revalidateOnMount: true,
   });
 
-  // 2. Derive Service Health
-  const supabaseHealth: ServiceHealth = useMemo(
-    () =>
-      data?.services?.supabase || {
-        status: 'unknown',
-        stats: { auto_count: 0, manual_count: 0, failure_count: 0 },
-      },
-    [data]
-  );
-
-  const gladosHealth: ServiceHealth = useMemo(
-    () =>
-      data?.services?.glados || {
-        status: 'unknown',
-        stats: { auto_count: 0, manual_count: 0, failure_count: 0 },
-      },
-    [data]
-  );
+  // 2. Derive Service Health (Dynamic)
+  const services = useMemo(() => data?.services || {}, [data]);
 
   // 3. Derive System Info
   const systemStatus = data?.status || 'Checking';
   const authType = data?.auth?.type || 'none';
 
   const failingServices = useMemo(() => {
-    const failing: string[] = [];
-    if (supabaseHealth.status === 'outage' || supabaseHealth.status === 'misconfigured') {
-      failing.push('Supabase');
-    }
-    if (gladosHealth.status === 'outage' || gladosHealth.status === 'misconfigured') {
-      failing.push('GLaDOS');
-    }
-    return failing;
-  }, [supabaseHealth.status, gladosHealth.status]);
+    return Object.entries(services)
+      .filter(([_, health]) => health.status === 'outage' || health.status === 'misconfigured')
+      .map(([name, _]) => name.charAt(0).toUpperCase() + name.slice(1));
+  }, [services]);
 
   // 4. Global Refresh Handler
-  const refreshAll = async () => {
+  const refreshAll = useCallback(async () => {
     if (isRefreshing) return;
     setIsRefreshing(true);
     try {
@@ -72,21 +50,20 @@ export function useSystemHealth(): UseSystemHealthResult {
         mutate(), // Refresh health data
         globalMutate(
           key => typeof key === 'string' && key.startsWith('/api/stats/heatmap'),
-          undefined, // 不修改缓存数据
-          { revalidate: true } // 只触发重新验证
+          undefined,
+          { revalidate: true }
         ),
       ]);
     } finally {
       setIsRefreshing(false);
     }
-  };
+  }, [isRefreshing, mutate]);
 
   return {
     stats: data,
     isLoading,
     error,
-    supabaseHealth,
-    gladosHealth,
+    services,
     systemStatus,
     failingServices,
     refreshAll,

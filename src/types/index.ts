@@ -6,25 +6,6 @@
 
 /**
  * 统一的结果类型 (Result Pattern)
- *
- * 用于表示可能成功或失败的操作结果。
- * - 成功时: { ok: true, data: T }
- * - 失败时: { ok: false, error: E }
- *
- * @example
- * ```typescript
- * function divide(a: number, b: number): Result<number, string> {
- *   if (b === 0) return { ok: false, error: 'Division by zero' };
- *   return { ok: true, data: a / b };
- * }
- *
- * const result = divide(10, 2);
- * if (result.ok) {
- *   console.log(result.data); // 5
- * } else {
- *   console.error(result.error);
- * }
- * ```
  */
 export type Result<T, E = string> = { ok: true; data: T } | { ok: false; error: E };
 
@@ -53,12 +34,79 @@ export interface ServiceHealth {
   enabled?: boolean;
   /** 今日是否已有签到记录 */
   todayCheckedIn?: boolean;
+  /** 任务元数据 */
+  name?: string;
+  type?: string;
+  description?: string;
+  category?: string;
 }
 
 /**
  * 系统整体状态
  */
 export type SystemStatus = 'Operational' | 'Degraded' | 'Checking';
+
+/**
+ * 服务通知级别
+ */
+export type NotificationLevel = 'always' | 'failure-only' | 'none';
+
+/**
+ * 校验规则操作符
+ */
+export type RuleOperator = 'eq' | 'neq' | 'gt' | 'lt' | 'in' | 'contains';
+
+/**
+ * 校验规则条目
+ */
+export interface RuleEntry {
+  path: string;
+  operator: RuleOperator;
+  value: unknown;
+}
+
+/**
+ * 校验规则集合
+ */
+export interface ValidationRules {
+  status?: number;
+  json?: RuleEntry[];
+}
+
+/**
+ * HTTP 配置
+ */
+export interface HttpConfig {
+  url?: string;
+  urls?: string[]; // 支持多个 URL 轮询
+  method?: string;
+  headers?: Record<string, string>;
+  body?: string;
+  timeout?: number;
+}
+
+/**
+ * 服务完整配置 (对应 keep_alive 表结构)
+ */
+export interface ServiceConfig {
+  service: string;
+  name: string;
+  description?: string;
+  category?: string;
+  type: 'http' | 'supabase_internal';
+  config: HttpConfig;
+  rules: {
+    success?: ValidationRules;
+    increment?: ValidationRules;
+  };
+  notification_level: NotificationLevel;
+  enabled: boolean;
+  manual_count: number;
+  auto_count: number;
+  failure_count: number;
+  timestamp: string;
+  last_run_at?: string;
+}
 
 /**
  * 标准 API 响应格式
@@ -78,10 +126,7 @@ export interface HealthCheckResponse {
   auth?: {
     type: 'cron' | 'app-key' | 'session' | 'public' | 'none';
   };
-  services: {
-    supabase: ServiceHealth;
-    glados: ServiceHealth;
-  };
+  services: Record<string, ServiceHealth>;
 }
 
 /**

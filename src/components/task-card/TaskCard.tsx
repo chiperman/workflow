@@ -16,17 +16,12 @@ interface TaskCardProps {
   serviceHealth: ServiceHealth;
   serviceName: string;
   onStatsUpdate: (newHealth: ServiceHealth) => void;
+  onEdit?: (id: string) => void;
   isGuest?: boolean;
 }
 
 /**
  * 任务卡片组件 (Refactored)
- *
- * 拆分后结构：
- * - Header: 标题、描述、状态标签、开关
- * - Stats: 统计数字
- * - Actions: 运行按钮、引导弹窗
- * - Message: 状态消息反馈 (可关闭)
  */
 function TaskCardComponent({
   title,
@@ -37,6 +32,7 @@ function TaskCardComponent({
   serviceHealth,
   serviceName,
   onStatsUpdate,
+  onEdit,
   isGuest,
 }: TaskCardProps) {
   const [localStatus, setLocalStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -162,7 +158,7 @@ function TaskCardComponent({
   }, [isToggling, localEnabled, serviceName, serviceHealth, onStatsUpdate]);
 
   return (
-    <div className="flex flex-col h-full bg-white border border-[#e5e5e0] p-6 rounded-lg transition-all hover:shadow-sm">
+    <div className="group relative flex flex-col h-full bg-white border border-[#e5e5e0] p-6 rounded-lg transition-all hover:shadow-sm">
       <Header
         title={title}
         description={description}
@@ -173,6 +169,8 @@ function TaskCardComponent({
         todayCheckedIn={serviceHealth.todayCheckedIn}
         onToggle={handleToggle}
         isGuest={isGuest}
+        onEdit={onEdit}
+        serviceName={serviceName}
       />
 
       <Stats stats={serviceHealth.stats} displayStatus={displayStatus} />

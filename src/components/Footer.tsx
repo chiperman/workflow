@@ -5,10 +5,7 @@ interface FooterProps {
   version: string;
   systemStatus: SystemStatus;
   failingServices: string[];
-  serviceStatuses?: {
-    supabase: ServiceStatus;
-    glados: ServiceStatus;
-  };
+  serviceStatuses?: Record<string, ServiceStatus | undefined>;
 }
 
 export function Footer({ version, systemStatus, failingServices, serviceStatuses }: FooterProps) {
