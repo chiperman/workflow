@@ -113,7 +113,7 @@ describe('handleKeepAliveRequest', () => {
     const response = await handleKeepAliveRequest(req, mockService);
     const data = await response.json();
 
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(403);
     expect(data.success).toBe(false);
     expect(data.message).toBe('Forbidden');
   });

@@ -1,43 +1,30 @@
-import { checkTriggerPermission, verifyAuth } from '@/lib/auth';
+import { withApiHandler } from '@/lib/api-helper';
 import { supabase } from '@/lib/supabase';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
 /**
- * 服务配置 API
- * GET: 获取所有服务配置
- * PATCH: 更新服务的 enabled 状态
- * PUT: 更新完整的服务配置
+ * 获取所有服务配置
  */
-export async function GET(request: Request) {
-  const authResult = verifyAuth(request);
-  if (!authResult.authorized) {
-    return NextResponse.json({ success: false, message: authResult.message }, { status: 401 });
-  }
-
-  try {
+export const GET = withApiHandler(
+  async () => {
     const { data, error } = await supabase
       .from('keep_alive')
       .select('*')
       .order('service', { ascending: true });
 
     if (error) throw error;
+    return data;
+  },
+  { requireAuth: true }
+);
 
-    return NextResponse.json({ success: true, data });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ success: false, message }, { status: 500 });
-  }
-}
-
-export async function PUT(request: Request) {
-  const authResult = verifyAuth(request);
-  if (!authResult.authorized) {
-    return NextResponse.json({ success: false, message: authResult.message }, { status: 401 });
-  }
-
-  try {
+/**
+ * 更新完整的服务配置
+ */
+export const PUT = withApiHandler(
+  async request => {
     const body = await request.json();
     const { service, ...config } = body;
 
@@ -49,23 +36,18 @@ export async function PUT(request: Request) {
     }
 
     const { error } = await supabase.from('keep_alive').update(config).eq('service', service);
-
     if (error) throw error;
 
-    return NextResponse.json({ success: true, message: `Service ${service} updated` });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ success: false, message }, { status: 500 });
-  }
-}
+    return { message: `Service ${service} updated` };
+  },
+  { requireAuth: true }
+);
 
-export async function POST(request: Request) {
-  const authResult = verifyAuth(request);
-  if (!authResult.authorized) {
-    return NextResponse.json({ success: false, message: authResult.message }, { status: 401 });
-  }
-
-  try {
+/**
+ * 创建新服务配置
+ */
+export const POST = withApiHandler(
+  async request => {
     const body = await request.json();
     const { service } = body;
 
@@ -77,23 +59,18 @@ export async function POST(request: Request) {
     }
 
     const { error } = await supabase.from('keep_alive').insert([body]);
-
     if (error) throw error;
 
-    return NextResponse.json({ success: true, message: `Service ${service} created` });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ success: false, message }, { status: 500 });
-  }
-}
+    return { message: `Service ${service} created` };
+  },
+  { requireAuth: true }
+);
 
-export async function DELETE(request: Request) {
-  const authResult = verifyAuth(request);
-  if (!authResult.authorized) {
-    return NextResponse.json({ success: false, message: authResult.message }, { status: 401 });
-  }
-
-  try {
+/**
+ * 删除服务配置
+ */
+export const DELETE = withApiHandler(
+  async request => {
     const { searchParams } = new URL(request.url);
     const service = searchParams.get('service');
 
@@ -104,7 +81,6 @@ export async function DELETE(request: Request) {
       );
     }
 
-    // 不允许删除核心内置服务 (可选的安全策略)
     if (['supabase', 'glados'].includes(service.toLowerCase())) {
       return NextResponse.json(
         { success: false, message: 'Cannot delete core system services' },
@@ -113,74 +89,32 @@ export async function DELETE(request: Request) {
     }
 
     const { error } = await supabase.from('keep_alive').delete().eq('service', service);
-
     if (error) throw error;
 
-    return NextResponse.json({ success: true, message: `Service ${service} deleted` });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ success: false, message }, { status: 500 });
-  }
-}
+    return { message: `Service ${service} deleted` };
+  },
+  { requireAuth: true }
+);
 
-export async function PATCH(request: Request) {
-  // 1. 统一鉴权与授权检查 (操作类型：manual)
-  const authResult = verifyAuth(request);
-  if (!authResult.authorized) {
-    return NextResponse.json({ success: false, message: authResult.message }, { status: 401 });
-  }
-
-  const permission = checkTriggerPermission(authResult.type, 'manual');
-  if (!permission.ok) {
-    return NextResponse.json({ success: false, message: permission.error }, { status: 401 });
-  }
-
-  try {
+/**
+ * 更新服务启用状态 (包含细粒度权限检查)
+ */
+export const PATCH = withApiHandler(
+  async request => {
     const body = await request.json();
     const { service, enabled } = body;
 
-    // 验证请求体
     if (!service || typeof enabled !== 'boolean') {
       return NextResponse.json(
-        {
-          success: false,
-          message: 'Invalid request body. Required: { service: string, enabled: boolean }',
-        },
+        { success: false, message: 'Invalid request body' },
         { status: 400 }
       );
     }
 
-    // 验证服务名称是否存在
-    const { data: exists } = await supabase
-      .from('keep_alive')
-      .select('service')
-      .eq('service', service)
-      .single();
-
-    if (!exists) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: `Invalid service: ${service}. Service not found in database.`,
-        },
-        { status: 400 }
-      );
-    }
-
-    // 更新数据库
     const { error } = await supabase.from('keep_alive').update({ enabled }).eq('service', service);
+    if (error) throw error;
 
-    if (error) {
-      return NextResponse.json({ success: false, message: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json({
-      success: true,
-      service,
-      enabled,
-    });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ success: false, message }, { status: 500 });
-  }
-}
+    return { service, enabled };
+  },
+  { requireAuth: true, requiredPermission: 'manual' }
+);
