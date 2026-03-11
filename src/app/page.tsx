@@ -16,12 +16,12 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 /**
- * Workflow Dashboard - 核心控制面板 (Refactored)
+ * Workflow Dashboard - 核心控制面板 (已恢复原始布局)
  */
 export default function Home() {
   const router = useRouter();
 
-  // 核心业务 Hook
+  // 使用重构后的业务 Hook，但保持 UI 结构不变
   const {
     taskCards,
     serviceStatuses,
@@ -227,10 +227,11 @@ export default function Home() {
                           ease: MOTION.ease,
                         }}
                         onClick={() => setShowLogoutConfirm(true)}
-                        className="flex items-center justify-center p-2 rounded-lg border border-[#e5e5e0] text-[#888888] hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors duration-300"
+                        className="flex items-center justify-center sm:justify-start gap-2 p-2 sm:px-3 sm:py-2 text-[10px] font-medium tracking-tight text-[#888888] border border-[#e5e5e0] rounded-lg hover:bg-white hover:text-[#191919] hover:border-[#d97757]/30 transition-colors duration-300 whitespace-nowrap shadow-sm"
                         title="Sign out"
                       >
                         <LogOut className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">Sign out</span>
                       </motion.button>
                     )}
                   </div>
@@ -243,15 +244,29 @@ export default function Home() {
                     duration: MOTION.duration,
                     ease: MOTION.ease,
                   }}
-                  className="text-sm text-[#666666] leading-relaxed max-w-xl"
+                  className="text-sm text-[#555555] max-w-xl leading-relaxed font-light text-left"
                 >
-                  Automated infrastructure maintenance and synchronization control center. Monitor
-                  real-time task health and historical execution patterns.
+                  Control center for automated maintenance protocols and cross-service data
+                  synchronization.
                 </motion.p>
               </header>
 
-              {/* Task Cards Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-12 relative min-h-[200px]">
+              {/* Heatmap Section - 恢复至 Header 下方 */}
+              <motion.div
+                initial={{ opacity: 0, y: MOTION.yOffset }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  delay: MOTION.delay.heatmap,
+                  duration: MOTION.duration,
+                  ease: MOTION.ease,
+                }}
+                className="mb-8"
+              >
+                <Heatmap />
+              </motion.div>
+
+              {/* Task Cards List - 恢复为单列垂直布局 */}
+              <div className="grid grid-cols-1 gap-6 mb-12 relative min-h-[200px]">
                 {isLoading ? (
                   <div className="absolute inset-0 flex items-center justify-center">
                     <RefreshCw className="w-6 h-6 animate-spin text-[#d97757]/30" />
@@ -282,25 +297,6 @@ export default function Home() {
                   </AnimatePresence>
                 )}
               </div>
-
-              {/* Stats Heatmap */}
-              <motion.section
-                initial={{ opacity: 0, y: MOTION.yOffset }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  delay: MOTION.delay.heatmap,
-                  duration: MOTION.duration,
-                  ease: MOTION.ease,
-                }}
-                className="mb-12"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xs font-semibold text-[#888888] uppercase tracking-wider">
-                    Protocol Execution History
-                  </h3>
-                </div>
-                <Heatmap />
-              </motion.section>
 
               <Footer
                 version={APP_VERSION}
