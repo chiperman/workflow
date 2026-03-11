@@ -128,7 +128,11 @@ export class DynamicService extends BaseService {
         }
       } catch (error) {
         lastError = error instanceof Error ? error : new Error('Unknown error');
-        logger.warn(`[${this.serviceName}] API ${url} failed:`, lastError.message);
+        const isTimeout =
+          lastError.name === 'TimeoutError' || lastError.message.includes('timeout');
+        const errorType = isTimeout ? 'Timeout' : 'Network/Request Error';
+
+        logger.warn(`[${this.serviceName}] API ${url} failed (${errorType}):`, lastError.message);
         continue;
       }
     }
@@ -198,8 +202,15 @@ export class DynamicService extends BaseService {
    * 简单的路径取值逻辑 (a.b.c)
    */
   private getValueByPath(obj: unknown, path: string): unknown {
+    const MAX_DEPTH = 10;
     if (!path || !obj || typeof obj !== 'object') return obj;
     const keys = path.split('.');
+    if (keys.length > MAX_DEPTH) {
+      logger.warn(
+        `[${this.serviceName}] Path depth exceeded maximum limit (${MAX_DEPTH}): ${path}`
+      );
+      return undefined;
+    }
     let current: unknown = obj;
     for (const key of keys) {
       if (current === null || typeof current !== 'object') return undefined;

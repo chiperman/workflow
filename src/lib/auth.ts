@@ -18,6 +18,9 @@ export type AuthResult =
 export const AUTH_COOKIE_NAME = 'workflow_session';
 export const AUTH_COOKIE_VALUE = 'authenticated';
 
+// 预先将公开路径转换为 Set 以实现 O(1) 查找性能
+const PUBLIC_PATHS_SET = new Set<string>(PUBLIC_PATHS);
+
 /**
  * 验证请求的权限
  *
@@ -32,8 +35,7 @@ export function verifyAuth(req: Request | NextRequest): AuthResult {
 
   // 1. 公开路径检查 (Public)
   const isPublicPath =
-    PUBLIC_PATHS.some(p => p === pathname) ||
-    PUBLIC_PATH_PREFIXES.some(p => pathname.startsWith(p));
+    PUBLIC_PATHS_SET.has(pathname) || PUBLIC_PATH_PREFIXES.some(p => pathname.startsWith(p));
 
   // 注意：即使是公开路径，如果携带了凭证，我们也优先验证凭证（以便 API 明确调用者身份）
   // 但对于 middleware 拦截来说，公开路径可以直接放行。

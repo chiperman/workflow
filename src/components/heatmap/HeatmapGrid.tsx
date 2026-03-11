@@ -11,6 +11,9 @@ interface MemoizedCellProps {
   isInitialLoad: boolean;
 }
 
+// 基础格子布局样式 (共享)
+const CELL_BASE_CLASS = 'w-full aspect-square rounded-[2px]';
+
 const MemoizedCell = memo(
   function MemoizedCell({ date, dayData, globalIndex, isInitialLoad }: MemoizedCellProps) {
     const [hasAnimated, setHasAnimated] = useState(!isInitialLoad);
@@ -42,7 +45,7 @@ const MemoizedCell = memo(
     return (
       <HeatmapTooltip day={tooltipData}>
         <div
-          className={`w-full aspect-square rounded-[2px] cursor-pointer transition-[transform,background-color] duration-75 ease-out ${colorClass} ${
+          className={`${CELL_BASE_CLASS} cursor-pointer transition-[transform,background-color] duration-75 ease-out ${colorClass} ${
             shouldAnimate ? 'animate-fade-in' : ''
           }`}
           style={{
@@ -98,7 +101,7 @@ export function HeatmapGrid({ weeks, days, dataMap, isInitialLoad }: HeatmapGrid
               return (
                 <div
                   key={`pad-${weekIndex}-${dayIndex}`}
-                  className="w-full aspect-square bg-transparent"
+                  className={`${CELL_BASE_CLASS} bg-transparent`}
                 />
               );
             }
