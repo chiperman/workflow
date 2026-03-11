@@ -58,6 +58,6 @@
 3. **环境变量兼容性**: 部分关键变量（如 GLaDOS Cookie）仍优先从系统环境变量读取，未来应考虑全面迁移至数据库加密存储。
 4. **空数据状态**: 如果数据库中没有任务记录，首页缺乏明显的「快速开始」引导。
 
-## 5. 迁移建议
+## 5. 数据库同步 (Database Setup)
 
-用户必须按顺序执行 `docs/migrations/migration_v1.0.sql` 和 `docs/migrations/migration_v1.1.sql` 来同步最新的数据库表结构。如果是新安装，请直接使用 `docs/database-setup.sql`。
+所有任务元数据及配置均存储在数据库中。请务必在启动应用前执行 [**docs/database-setup.sql**](./database-setup.sql) 以初始化最新的表结构与内置任务。

@@ -188,11 +188,9 @@ GET /api/stats/heatmap
 
 ## 数据库设置
 
-首次部署时，请在 Supabase Dashboard → SQL Editor 执行最新的初始化脚本。
+首次部署时，请在 Supabase Dashboard → SQL Editor 执行初始化脚本：
 
-**完整脚本路径**: `docs/database-setup.sql`
-
-> ⚠️ **注意**: 如果您是从旧版本升级，请执行 `docs/migrations/` 下的相关迁移脚本。
+👉 [**docs/database-setup.sql**](./database-setup.sql)
 
 ---
 
