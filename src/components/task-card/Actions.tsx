@@ -1,22 +1,13 @@
 import { Loader2, Play } from 'lucide-react';
 import { memo } from 'react';
-import { CreateGuide } from '../CreateGuide';
 
 interface ActionsProps {
   displayStatus: 'idle' | 'loading' | 'success' | 'error';
   onRun: () => void;
-  showCreateGuide: boolean;
-  onCopyGuide: (text: string) => void;
   isGuest?: boolean;
 }
 
-export const Actions = memo(function Actions({
-  displayStatus,
-  onRun,
-  showCreateGuide,
-  onCopyGuide,
-  isGuest,
-}: ActionsProps) {
+export const Actions = memo(function Actions({ displayStatus, onRun, isGuest }: ActionsProps) {
   return (
     <div className="mt-auto pt-6 border-t border-[#f0f0ed]">
       <div className="flex items-center gap-4">
@@ -41,8 +32,6 @@ export const Actions = memo(function Actions({
           Run Task
         </button>
       </div>
-
-      <CreateGuide service="supabase" show={showCreateGuide} onCopy={onCopyGuide} />
     </div>
   );
 });

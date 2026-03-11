@@ -73,13 +73,6 @@ function TaskCardComponent({
 
   const displayMessage = isDismissed ? '' : rawMessage;
 
-  const showCreateGuide = useMemo(() => {
-    return (
-      (serviceHealth.tableExists === false || serviceHealth.status === 'misconfigured') &&
-      serviceHealth.status !== 'operational'
-    );
-  }, [serviceHealth.tableExists, serviceHealth.status]);
-
   const handleRun = useCallback(async () => {
     if (localStatus === 'loading') return;
 
@@ -115,16 +108,6 @@ function TaskCardComponent({
       setLocalMessage(error instanceof Error ? error.message : 'Network failure');
     }
   }, [endpoint, method, localStatus, onStatsUpdate]);
-
-  const copyToClipboard = useCallback(async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setLocalMessage('✓ SQL copied to clipboard!');
-      setTimeout(() => setLocalMessage(''), 2000);
-    } catch (_err) {
-      setLocalMessage('Failed to copy SQL');
-    }
-  }, []);
 
   const handleToggle = useCallback(async () => {
     if (isToggling) return;
@@ -175,13 +158,7 @@ function TaskCardComponent({
 
       <Stats stats={serviceHealth.stats} displayStatus={displayStatus} />
 
-      <Actions
-        displayStatus={displayStatus}
-        onRun={handleRun}
-        showCreateGuide={showCreateGuide}
-        onCopyGuide={copyToClipboard}
-        isGuest={isGuest}
-      />
+      <Actions displayStatus={displayStatus} onRun={handleRun} isGuest={isGuest} />
 
       <Message
         message={displayMessage}
