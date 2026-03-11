@@ -1,12 +1,12 @@
 /**
  * @jest-environment node
  */
-import { getHeatmapData } from '@/lib/heatmap-utils';
+import { getHeatmapData } from '@/services/heatmap-data';
 import { NextRequest } from 'next/server';
 import { GET } from '../route';
 
 // Mock dependencies
-jest.mock('@/lib/heatmap-utils', () => ({
+jest.mock('@/services/heatmap-data', () => ({
   getHeatmapData: jest.fn(),
 }));
 

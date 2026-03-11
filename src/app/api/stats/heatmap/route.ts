@@ -1,5 +1,5 @@
 import { withApiHandler } from '@/lib/api-helper';
-import { getHeatmapData } from '@/lib/heatmap-utils';
+import { getHeatmapData } from '@/services/heatmap-data';
 
 export const dynamic = 'force-dynamic';
 

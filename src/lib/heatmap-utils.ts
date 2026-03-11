@@ -1,8 +1,6 @@
 import { HEATMAP_COLORS } from '@/config/constants';
 import type { HeatmapDay } from '@/types';
 import { getBeijingDateString } from './utils';
-import { supabase } from './supabase';
-import { logger } from './logger';
 
 export interface LogEntry {
   service: string;
@@ -16,20 +14,12 @@ interface DayServiceStatus {
 
 /**
  * 按北京时间的日期聚合日志 (Eventual Consistency)
- * 逻辑：
- * 1. 按日期分组
- * 2. 在每一天内，按服务分组
- * 3. 如果某服务当天有任何一条 success 记录 (status=true)，则该服务当天视为 success
- * 4. 仅当某服务当天只有 failure 记录时，该服务当天视为 failure
  */
 export function aggregateByDay(logs: LogEntry[]): HeatmapDay[] {
   const dayMap = new Map<string, DayServiceStatus>();
 
-  // 1. 遍历日志，确定每个服务在每一天的最终状态
   for (const log of logs) {
-    // 转换为北京时间并取日期部分
     const beijingDate = getBeijingDateString(new Date(log.timestamp));
-
     if (!dayMap.has(beijingDate)) {
       dayMap.set(beijingDate, {});
     }
@@ -37,24 +27,16 @@ export function aggregateByDay(logs: LogEntry[]): HeatmapDay[] {
     const dayServices = dayMap.get(beijingDate)!;
     const currentStatus = dayServices[log.service];
 
-    // 如果已经是 success，保持 success (success 优先级最高，覆盖 failure)
-    if (currentStatus === 'success') {
-      continue;
-    }
+    if (currentStatus === 'success') continue;
 
-    // 如果是 success 记录，更新为 success
     if (log.status === true) {
       dayServices[log.service] = 'success';
-    }
-    // 如果是 failure 记录，且当前没有状态，或者是 failure，则标记为 failure
-    else if (!currentStatus) {
+    } else if (!currentStatus) {
       dayServices[log.service] = 'failure';
     }
   }
 
-  // 2. 将中间状态转换为前端需要的 HeatmapDay 格式
   const result: HeatmapDay[] = [];
-
   for (const [date, services] of dayMap.entries()) {
     let successCount = 0;
     let failureCount = 0;
@@ -62,11 +44,8 @@ export function aggregateByDay(logs: LogEntry[]): HeatmapDay[] {
 
     for (const [serviceName, status] of Object.entries(services)) {
       servicesMap[serviceName] = status;
-      if (status === 'success') {
-        successCount++;
-      } else {
-        failureCount++;
-      }
+      if (status === 'success') successCount++;
+      else failureCount++;
     }
 
     result.push({
@@ -81,46 +60,12 @@ export function aggregateByDay(logs: LogEntry[]): HeatmapDay[] {
 }
 
 /**
- * 获取指定年份的热力图聚合数据
- */
-export async function getHeatmapData(year: number) {
-  try {
-    const startOfYear = new Date(year, 0, 1).toISOString();
-    const endOfYear = new Date(year, 11, 31, 23, 59, 59, 999).toISOString();
-
-    const { data: rawData, error } = await supabase
-      .from('keep_alive_logs')
-      .select('service, status, timestamp')
-      .gte('timestamp', startOfYear)
-      .lte('timestamp', endOfYear)
-      .order('timestamp', { ascending: true });
-
-    if (error) {
-      logger.error('[Heatmap Utils] Supabase query failed:', error.message);
-      throw error;
-    }
-
-    return aggregateByDay(rawData || []);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    logger.error('[Heatmap Utils] Unexpected error:', message);
-    throw error;
-  }
-}
-
-/**
  * 根据数据计算热力图单元格颜色
- * Simplified 3-State Logic
+ * 纯函数，浏览器安全
  */
 export function getColorClass(date: string, day?: HeatmapDay): string {
   if (!date || !day) return HEATMAP_COLORS.LEVEL_0;
-
-  // Priority 1: Failure (Red) - If ANY service failed eventually, the day is imperfect.
   if (day.failure_count > 0) return HEATMAP_COLORS.LEVEL_FAILURE;
-
-  // Priority 2: Success (Green) - Only if NO failures and AT LEAST one success.
   if (day.success_count > 0) return HEATMAP_COLORS.LEVEL_SUCCESS;
-
-  // Default: Empty (Grey)
   return HEATMAP_COLORS.LEVEL_0;
 }

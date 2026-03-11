@@ -1,101 +1,139 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import type { ServiceConfig } from '@/types';
+import type { ServiceConfig, ApiResponse } from '@/types';
 import { toast } from 'sonner';
-import { X, Save, Plus, Trash2, Globe, Settings, CheckCircle } from 'lucide-react';
+import { X, Save, Plus, Trash2, Globe, Settings, CheckCircle, RefreshCw } from 'lucide-react';
 
 interface TaskConfigModalProps {
   isOpen: boolean;
   onClose: () => void;
   serviceId?: string; // If provided, we're editing. If not, we're creating.
-  onSuccess: () => void;
+  onSuccess?: () => void;
 }
 
 export function TaskConfigModal({ isOpen, onClose, serviceId, onSuccess }: TaskConfigModalProps) {
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [config, setConfig] = useState<Partial<ServiceConfig>>({
     service: '',
     name: '',
     type: 'http',
-    notification_level: 'failure-only',
     enabled: true,
-    config: {
-      urls: [],
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: '',
-    },
-    rules: {
-      success: { status: 200 },
-      increment: {},
-    },
+    notification_level: 'failure-only',
+    config: { urls: [''], method: 'POST', headers: {}, body: '' },
+    rules: { success: { status: 200 } },
   });
 
   useEffect(() => {
-    if (serviceId && isOpen) {
-      fetchServiceConfig();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [serviceId, isOpen]);
-
-  const fetchServiceConfig = async () => {
-    setLoading(true);
-    try {
-      await fetch(`/api/tasks/${serviceId}?mode=config`); // In reality, we need an endpoint to get the config.
-      // Alternatively, we use the GET /api/service-config and filter.
-      const listRes = await fetch('/api/service-config');
-      const listData = await listRes.json();
-      if (listData.success) {
-        const found = listData.data.find((s: ServiceConfig) => s.service === serviceId);
-        if (found) setConfig(found);
+    async function fetchConfig() {
+      if (!serviceId) {
+        setConfig({
+          service: '',
+          name: '',
+          type: 'http',
+          enabled: true,
+          notification_level: 'failure-only',
+          config: { urls: [''], method: 'POST', headers: {}, body: '' },
+          rules: { success: { status: 200 } },
+        });
+        return;
       }
-    } catch (_err) {
-      toast.error('Failed to load service config');
-    } finally {
-      setLoading(false);
+
+      setIsLoading(true);
+      try {
+        const response = await fetch('/api/service-config');
+        const resData: ApiResponse<ServiceConfig[]> = await response.json();
+
+        if (resData.success && resData.data) {
+          const service = resData.data.find(s => s.service === serviceId);
+          if (service) {
+            setConfig({
+              ...service,
+              config: service.config || { urls: [''], method: 'POST', headers: {}, body: '' },
+              rules: service.rules || { success: { status: 200 } },
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch config:', error);
+        toast.error('Failed to load task configuration');
+      } finally {
+        setIsLoading(false);
+      }
     }
-  };
+
+    if (isOpen) {
+      fetchConfig();
+    }
+  }, [isOpen, serviceId]);
 
   const handleSave = async () => {
-    setLoading(true);
+    if (!config.service) {
+      toast.error('Service ID is required');
+      return;
+    }
+
+    setIsSaving(true);
     try {
       const method = serviceId ? 'PUT' : 'POST';
-      const res = await fetch('/api/service-config', {
+      const response = await fetch('/api/service-config', {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(config),
       });
-      const data = await res.json();
-      if (data.success) {
+
+      const resData = await response.json();
+      if (resData.success) {
         toast.success(serviceId ? 'Task updated' : 'Task created');
-        onSuccess();
+        onSuccess?.();
         onClose();
       } else {
-        toast.error(data.message || 'Save failed');
+        toast.error(resData.message || 'Failed to save configuration');
       }
-    } catch (_err) {
-      toast.error('An error occurred');
+    } catch (error) {
+      console.error('Save failed:', error);
+      toast.error('Network error. Failed to save.');
     } finally {
-      setLoading(false);
+      setIsSaving(false);
     }
+  };
+
+  const addUrl = () => {
+    const urls = [...(config.config?.urls || [''])];
+    urls.push('');
+    setConfig({ ...config, config: { ...config.config!, urls } });
+  };
+
+  const removeUrl = (index: number) => {
+    const urls = [...(config.config?.urls || [''])];
+    if (urls.length <= 1) return;
+    urls.splice(index, 1);
+    setConfig({ ...config, config: { ...config.config!, urls } });
+  };
+
+  const updateUrl = (index: number, value: string) => {
+    const urls = [...(config.config?.urls || [''])];
+    urls[index] = value;
+    setConfig({ ...config, config: { ...config.config!, urls } });
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-[2px] animate-in fade-in duration-200">
+      <div className="bg-white w-full max-w-xl max-h-[90vh] overflow-hidden rounded-2xl shadow-2xl border border-[#e5e5e0] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-[#f0f0f0]">
-          <h2 className="text-xl font-medium text-[#191919] flex items-center gap-2">
-            {serviceId ? (
-              <Settings className="w-5 h-5 text-[#d97757]" />
-            ) : (
-              <Plus className="w-5 h-5 text-[#d97757]" />
-            )}
-            {serviceId ? 'Edit Task' : 'New Task'}
-          </h2>
+        <div className="px-6 py-4 border-b border-[#f0f0ed] flex justify-between items-center bg-[#fdfcf8]">
+          <div>
+            <h2 className="text-lg font-semibold text-[#191919] font-serif">
+              {serviceId ? 'Edit Protocol Task' : 'New Maintenance Protocol'}
+            </h2>
+            <p className="text-xs text-[#888888] mt-0.5">
+              {' '}
+              Configure execution and validation rules{' '}
+            </p>
+          </div>
           <button
             onClick={onClose}
             className="text-[#888888] hover:text-[#191919] p-1 transition-colors"
@@ -118,8 +156,8 @@ export function TaskConfigModal({ isOpen, onClose, serviceId, onSuccess }: TaskC
                 </label>
                 <input
                   disabled={!!serviceId}
-                  value={config.service || ''}
-                  onChange={e => setConfig({ ...config, service: e.target.value })}
+                  value={config.service}
+                  onChange={e => setConfig({ ...config, service: e.target.value.toLowerCase() })}
                   placeholder="e.g. glados"
                   className="w-full px-3 py-2 bg-[#f9f9f9] border border-[#e5e5e0] rounded-lg text-sm focus:outline-none focus:border-[#d97757]/50 disabled:opacity-50"
                 />
@@ -129,7 +167,7 @@ export function TaskConfigModal({ isOpen, onClose, serviceId, onSuccess }: TaskC
                 <input
                   value={config.name || ''}
                   onChange={e => setConfig({ ...config, name: e.target.value })}
-                  placeholder="e.g. GLaDOS Check-in"
+                  placeholder="e.g. GLaDOS Checkin"
                   className="w-full px-3 py-2 bg-[#f9f9f9] border border-[#e5e5e0] rounded-lg text-sm focus:outline-none focus:border-[#d97757]/50"
                 />
               </div>
@@ -188,41 +226,50 @@ export function TaskConfigModal({ isOpen, onClose, serviceId, onSuccess }: TaskC
           </section>
 
           {config.type === 'http' && (
-            <section className="space-y-4">
+            <section className="space-y-4 pt-4 border-t border-[#f0f0ed]">
               <h3 className="text-xs font-semibold text-[#888888] uppercase tracking-wider flex items-center gap-2">
                 <Globe className="w-3.5 h-3.5" /> HTTP Settings
               </h3>
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-medium text-[#555555]">
-                  Target URL(s) (one per line)
-                </label>
-                <textarea
-                  rows={2}
-                  value={config.config?.urls?.join('\n') || ''}
-                  onChange={e =>
-                    setConfig({
-                      ...config,
-                      config: {
-                        ...config.config!,
-                        urls: e.target.value.split('\n').filter(Boolean),
-                      },
-                    })
-                  }
-                  className="w-full px-3 py-2 bg-[#f9f9f9] border border-[#e5e5e0] rounded-lg text-sm font-mono focus:outline-none focus:border-[#d97757]/50"
-                />
+              <div className="space-y-3">
+                <label className="text-[11px] font-medium text-[#555555]">Target URL(s)</label>
+                {(config.config?.urls || ['']).map((url, index) => (
+                  <div key={index} className="flex gap-2">
+                    <input
+                      value={url}
+                      onChange={e => updateUrl(index, e.target.value)}
+                      placeholder="https://api.example.com/checkin"
+                      className="flex-1 px-3 py-2 bg-[#f9f9f9] border border-[#e5e5e0] rounded-lg text-sm focus:outline-none focus:border-[#d97757]/50"
+                    />
+                    <button
+                      onClick={() => removeUrl(index)}
+                      className="p-2 text-gray-400 hover:text-red-500"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  onClick={addUrl}
+                  className="text-xs flex items-center gap-1 text-[#d97757] hover:underline font-medium"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Add another node
+                </button>
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-medium text-[#555555]">Method</label>
                   <select
-                    value={config.config?.method || 'GET'}
+                    value={config.config?.method}
                     onChange={e =>
                       setConfig({
                         ...config,
-                        config: { ...config.config!, method: e.target.value },
+                        config: {
+                          ...config.config!,
+                          method: e.target.value as 'GET' | 'POST' | 'PUT',
+                        },
                       })
                     }
-                    className="w-full px-3 py-2 bg-[#f9f9f9] border border-[#e5e5e0] rounded-lg text-sm focus:outline-none focus:border-[#d97757]/50"
+                    className="w-full px-3 py-2 bg-[#f9f9f9] border border-[#e5e5e0] rounded-lg text-sm"
                   >
                     <option value="GET">GET</option>
                     <option value="POST">POST</option>
@@ -232,101 +279,62 @@ export function TaskConfigModal({ isOpen, onClose, serviceId, onSuccess }: TaskC
                 <div className="col-span-2 space-y-1.5">
                   <label className="text-[11px] font-medium text-[#555555]">Headers (JSON)</label>
                   <input
-                    value={JSON.stringify(config.config?.headers)}
+                    value={JSON.stringify(config.config?.headers || {})}
                     onChange={e => {
                       try {
                         const h = JSON.parse(e.target.value);
                         setConfig({ ...config, config: { ...config.config!, headers: h } });
-                      } catch (_err) {}
+                      } catch (_err) {
+                        // Silently handle invalid JSON while typing
+                      }
                     }}
-                    className="w-full px-3 py-2 bg-[#f9f9f9] border border-[#e5e5e0] rounded-lg text-sm font-mono focus:outline-none focus:border-[#d97757]/50"
+                    className="w-full px-3 py-2 bg-[#f9f9f9] border border-[#e5e5e0] rounded-lg text-sm font-mono"
                   />
                 </div>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-medium text-[#555555]">Body (String/JSON)</label>
-                <textarea
-                  rows={2}
-                  value={config.config?.body || ''}
-                  onChange={e =>
-                    setConfig({
-                      ...config,
-                      config: { ...config.config!, body: e.target.value },
-                    })
-                  }
-                  className="w-full px-3 py-2 bg-[#f9f9f9] border border-[#e5e5e0] rounded-lg text-sm font-mono focus:outline-none focus:border-[#d97757]/50"
-                />
               </div>
             </section>
           )}
 
-          <section className="space-y-4 pb-4">
+          {/* Rules Section */}
+          <section className="space-y-4 pt-4 border-t border-[#f0f0ed]">
             <h3 className="text-xs font-semibold text-[#888888] uppercase tracking-wider flex items-center gap-2">
               <CheckCircle className="w-3.5 h-3.5" /> Validation Rules
             </h3>
-            <div className="space-y-1.5">
+            <div className="space-y-3">
               <label className="text-[11px] font-medium text-[#555555]">Success Rule (JSON)</label>
               <textarea
-                rows={2}
-                value={JSON.stringify(config.rules?.success)}
+                rows={3}
+                value={JSON.stringify(config.rules?.success || {}, null, 2)}
                 onChange={e => {
                   try {
-                    const r = JSON.parse(e.target.value);
-                    setConfig({ ...config, rules: { ...config.rules!, success: r } });
-                  } catch (_err) {}
+                    const s = JSON.parse(e.target.value);
+                    setConfig({ ...config, rules: { ...config.rules!, success: s } });
+                  } catch (_err) {
+                    // Silently handle invalid JSON while typing
+                  }
                 }}
-                className="w-full px-3 py-2 bg-[#f9f9f9] border border-[#e5e5e0] rounded-lg text-sm font-mono focus:outline-none focus:border-[#d97757]/50"
+                className="w-full px-3 py-2 bg-[#f9f9f9] border border-[#e5e5e0] rounded-lg text-sm font-mono"
               />
             </div>
           </section>
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-[#f0f0f0] flex justify-between items-center bg-gray-50/50">
-          <button
-            disabled={
-              !serviceId || loading || ['supabase', 'glados'].includes(serviceId.toLowerCase())
-            }
-            onClick={async () => {
-              if (confirm(`Are you sure you want to delete ${config.name}?`)) {
-                setLoading(true);
-                try {
-                  const res = await fetch(`/api/service-config?service=${serviceId}`, {
-                    method: 'DELETE',
-                  });
-                  const data = await res.json();
-                  if (data.success) {
-                    toast.success('Task deleted successfully');
-                    onSuccess();
-                    onClose();
-                  } else {
-                    toast.error(data.message || 'Delete failed');
-                  }
-                } catch (_err) {
-                  toast.error('An error occurred while deleting');
-                } finally {
-                  setLoading(false);
-                }
-              }
-            }}
-            className="flex items-center gap-2 text-red-500 hover:text-red-600 text-xs font-medium disabled:opacity-0 transition-all"
-          >
-            <Trash2 className="w-4 h-4" /> Delete Task
-          </button>
-          <div className="flex gap-3">
+        <div className="p-6 border-t border-[#f0f0ed] bg-[#fdfcf8]">
+          <div className="flex justify-between items-center">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-[#555555] hover:text-[#191919] transition-colors"
+              className="text-sm font-medium text-[#666666] hover:text-[#191919] px-4"
             >
               Cancel
             </button>
             <button
+              disabled={isSaving || isLoading}
               onClick={handleSave}
-              disabled={loading}
-              className="px-6 py-2 bg-[#d97757] hover:bg-[#c66a4a] text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 shadow-sm shadow-[#d97757]/20 disabled:opacity-50"
+              className="px-6 py-2.5 bg-[#191919] text-[#fdfcf8] rounded-lg text-sm font-medium hover:bg-[#333333] transition-all flex items-center gap-2 disabled:opacity-50 shadow-md"
             >
-              {loading ? (
-                'Saving...'
+              {isSaving ? (
+                <RefreshCw className="w-4 h-4 animate-spin" />
               ) : (
                 <>
                   <Save className="w-4 h-4" /> Save Configuration

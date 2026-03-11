@@ -3,7 +3,7 @@ import { HeatmapLegend } from '@/components/heatmap/HeatmapLegend';
 import { HeatmapYearSelector } from '@/components/heatmap/HeatmapYearSelector';
 import { SWR_CONFIG } from '@/config/swr';
 import { generateYearDays, getMonthLabels, groupByWeeks, WEEKDAYS } from '@/lib/heatmap-calendar';
-import type { HeatmapData, YearsData } from '@/types';
+import type { ApiResponse, HeatmapDay } from '@/types';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import { useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
@@ -16,20 +16,22 @@ const fetcher = (url: string) => fetch(url).then(res => res.json());
 export function Heatmap() {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
-  const { data: yearsData, isLoading: yearsLoading } = useSWR<YearsData>(
+  const { data: yearsResponse, isLoading: yearsLoading } = useSWR<ApiResponse<{ years: number[] }>>(
     '/api/stats/heatmap/years',
     fetcher,
     { ...SWR_CONFIG, keepPreviousData: true }
   );
 
   const availableYears =
-    yearsData?.success && yearsData.years ? yearsData.years : [new Date().getFullYear()];
+    yearsResponse?.success && yearsResponse.data?.years
+      ? yearsResponse.data.years
+      : [new Date().getFullYear()];
 
   const {
     data: heatmapResponse,
     isLoading: loading,
     error: fetchError,
-  } = useSWR<HeatmapData>(`/api/stats/heatmap?year=${selectedYear}`, fetcher, {
+  } = useSWR<ApiResponse<HeatmapDay[]>>(`/api/stats/heatmap?year=${selectedYear}`, fetcher, {
     ...SWR_CONFIG,
     keepPreviousData: true,
   });
@@ -48,7 +50,11 @@ export function Heatmap() {
       : null;
 
   const days = useMemo(() => generateYearDays(selectedYear), [selectedYear]);
-  const dataMap = useMemo(() => new Map(data.map(d => [d.date, d])), [data]);
+  const dataMap = useMemo(() => {
+    const map = new Map<string, HeatmapDay>();
+    data.forEach(d => map.set(d.date, d));
+    return map;
+  }, [data]);
 
   const [animatedYears, setAnimatedYears] = useState<Set<number>>(new Set());
   const isInitialLoad = !animatedYears.has(selectedYear) && data.length > 0;

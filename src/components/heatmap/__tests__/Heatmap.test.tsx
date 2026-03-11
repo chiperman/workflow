@@ -36,7 +36,7 @@ describe('Heatmap', () => {
       if (url.includes('/years')) {
         return Promise.resolve({
           ok: true,
-          json: () => Promise.resolve({ success: true, years: [2026] }),
+          json: () => Promise.resolve({ success: true, data: { years: [2026] } }),
         });
       }
       // Mock heatmap data API
@@ -67,7 +67,7 @@ describe('Heatmap', () => {
   it('应渲染图例', async () => {
     (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve({ success: true, data: [], years: [2026] }),
+      json: () => Promise.resolve({ success: true, data: [] }),
     });
 
     render(<Heatmap />, { wrapper: TestWrapper });
@@ -84,7 +84,7 @@ describe('Heatmap', () => {
       if (url.includes('/years')) {
         return Promise.resolve({
           ok: true,
-          json: () => Promise.resolve({ success: true, years: [2026, 2025] }),
+          json: () => Promise.resolve({ success: true, data: { years: [2026, 2025] } }),
         });
       }
       return Promise.resolve({
@@ -97,6 +97,7 @@ describe('Heatmap', () => {
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: '2026' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: '2025' })).toBeInTheDocument();
     });
   });
 
@@ -105,7 +106,7 @@ describe('Heatmap', () => {
       if (url.includes('/years')) {
         return Promise.resolve({
           ok: true,
-          json: () => Promise.resolve({ success: true, years: [2026] }),
+          json: () => Promise.resolve({ success: true, data: { years: [2026] } }),
         });
       }
       return Promise.resolve({
@@ -124,7 +125,7 @@ describe('Heatmap', () => {
   it('应渲染星期标签', async () => {
     (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve({ success: true, data: [], years: [2026] }),
+      json: () => Promise.resolve({ success: true, data: [] }),
     });
 
     render(<Heatmap />, { wrapper: TestWrapper });
@@ -142,7 +143,7 @@ describe('Heatmap', () => {
       if (url.includes('/years')) {
         return Promise.resolve({
           ok: true,
-          json: () => Promise.resolve({ success: true, years: [2026, 2025] }),
+          json: () => Promise.resolve({ success: true, data: { years: [2026, 2025] } }),
         });
       }
       return Promise.resolve({
