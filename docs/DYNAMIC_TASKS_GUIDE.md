@@ -60,4 +60,4 @@
 
 ## 5. 迁移建议
 
-用户必须执行 `docs/migration_v1.0.sql` 和 `docs/migration_v1.1.sql` 来同步最新的数据库表结构。
+用户必须按顺序执行 `docs/migrations/migration_v1.0.sql` 和 `docs/migrations/migration_v1.1.sql` 来同步最新的数据库表结构。如果是新安装，请直接使用 `docs/database-setup.sql`。
