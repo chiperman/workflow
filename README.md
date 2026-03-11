@@ -32,7 +32,7 @@ cp env.example .env.local
 ### 4. 初始化数据库 (Database Setup)
 
 登录 [Supabase Dashboard](https://supabase.com/dashboard)，进入 SQL Editor，执行以下文件中的完整脚本：
-👉 [**docs/database-setup.sql**](./docs/database-setup.sql)
+👉 [**supabase/setup.sql**](./supabase/setup.sql)
 
 ### 5. 启动开发服务器 (Run)
 

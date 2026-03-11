@@ -60,4 +60,4 @@
 
 ## 5. 数据库同步 (Database Setup)
 
-所有任务元数据及配置均存储在数据库中。请务必在启动应用前执行 [**docs/database-setup.sql**](./database-setup.sql) 以初始化最新的表结构与内置任务。
+所有任务元数据及配置均存储在数据库中。请务必在启动应用前执行 [**supabase/setup.sql**](../supabase/setup.sql) 以初始化最新的表结构与内置任务。

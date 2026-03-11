@@ -190,7 +190,7 @@ GET /api/stats/heatmap
 
 首次部署时，请在 Supabase Dashboard → SQL Editor 执行初始化脚本：
 
-👉 [**docs/database-setup.sql**](./database-setup.sql)
+👉 [**supabase/setup.sql**](../supabase/setup.sql)
 
 ---
 
