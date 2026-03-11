@@ -1,7 +1,7 @@
 import type { ServiceHealth } from '@/types';
 import { supabase } from './supabase';
 import { getBeijingDateString } from './utils';
-import { ServiceFactory } from './services/ServiceFactory';
+import { ServiceFactory } from '@/services/ServiceFactory';
 
 /**
  * 检查今日是否有签到记录

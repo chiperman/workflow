@@ -1,5 +1,5 @@
 import { handleKeepAliveRequest } from '@/lib/api-helper';
-import { ServiceFactory } from '@/lib/services/ServiceFactory';
+import { ServiceFactory } from '@/services/ServiceFactory';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';

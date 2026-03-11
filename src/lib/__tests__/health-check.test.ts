@@ -1,5 +1,5 @@
 import { checkSupabaseHealth, checkServiceHealth } from '../health-check';
-import { ServiceFactory } from '../services/ServiceFactory';
+import { ServiceFactory } from '@/services/ServiceFactory';
 
 // Mock Supabase client
 jest.mock('../supabase', () => ({
@@ -18,7 +18,7 @@ jest.mock('../supabase', () => ({
 }));
 
 // Mock ServiceFactory
-jest.mock('../services/ServiceFactory');
+jest.mock('@/services/ServiceFactory');
 
 describe('health-check logic', () => {
   beforeEach(() => {

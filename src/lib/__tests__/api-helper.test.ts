@@ -5,7 +5,7 @@ import { checkTriggerPermission, verifyAuth } from '@/lib/auth';
 import { ServiceExecutor } from '@/lib/ServiceExecutor';
 import { KeepAliveResult } from '@/types';
 import { handleKeepAliveRequest } from '../api-helper';
-import { BaseService } from '../services/BaseService';
+import { BaseService } from '@/services/BaseService';
 
 // Mock dependencies
 jest.mock('@/lib/auth', () => ({

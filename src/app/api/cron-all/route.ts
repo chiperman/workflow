@@ -1,5 +1,5 @@
 import { env } from '@/lib/env';
-import { ServiceFactory } from '@/lib/services/ServiceFactory';
+import { ServiceFactory } from '@/services/ServiceFactory';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';

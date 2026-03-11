@@ -1,4 +1,4 @@
-import { BaseService } from '@/lib/services/BaseService';
+import { BaseService } from '@/services/BaseService';
 import { supabase } from '@/lib/supabase';
 import { KeepAliveResult } from '@/types';
 

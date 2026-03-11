@@ -1,6 +1,6 @@
 import { sendBarkNotification } from '@/lib/bark';
 import { logger } from '@/lib/logger';
-import type { BaseService } from '@/lib/services/BaseService';
+import type { BaseService } from '@/services/BaseService';
 import { supabase } from '@/lib/supabase';
 import { withRetry } from '@/lib/utils';
 import type { KeepAliveResult } from '@/types';
