@@ -9,11 +9,11 @@ export const metadata: Metadata = {
 };
 
 import { PageBackground } from '@/components/PageBackground';
-import { Geist } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import { cn } from '@/lib/utils';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
-const geist = Geist({ subsets: ['latin'], variable: '--font-sans' });
+const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
 export default function RootLayout({
   children,
@@ -21,8 +21,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={cn('font-sans', geist.variable)}>
-      <body className="antialiased min-h-screen bg-[#fdfcf8] text-[#191919]">
+    <html lang="en" className={cn('font-sans', inter.variable)}>
+      <body className="antialiased">
         <TooltipProvider>
           <PageBackground />
           <div className="relative z-10">

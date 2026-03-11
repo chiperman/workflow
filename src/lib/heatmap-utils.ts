@@ -1,6 +1,8 @@
 import { HEATMAP_COLORS } from '@/config/constants';
 import type { HeatmapDay } from '@/types';
 import { getBeijingDateString } from './utils';
+import { supabase } from './supabase';
+import { logger } from './logger';
 
 export interface LogEntry {
   service: string;
@@ -26,7 +28,6 @@ export function aggregateByDay(logs: LogEntry[]): HeatmapDay[] {
   // 1. 遍历日志，确定每个服务在每一天的最终状态
   for (const log of logs) {
     // 转换为北京时间并取日期部分
-
     const beijingDate = getBeijingDateString(new Date(log.timestamp));
 
     if (!dayMap.has(beijingDate)) {
@@ -77,6 +78,34 @@ export function aggregateByDay(logs: LogEntry[]): HeatmapDay[] {
   }
 
   return result.sort((a, b) => a.date.localeCompare(b.date));
+}
+
+/**
+ * 获取指定年份的热力图聚合数据
+ */
+export async function getHeatmapData(year: number) {
+  try {
+    const startOfYear = new Date(year, 0, 1).toISOString();
+    const endOfYear = new Date(year, 11, 31, 23, 59, 59, 999).toISOString();
+
+    const { data: rawData, error } = await supabase
+      .from('keep_alive_logs')
+      .select('service, status, timestamp')
+      .gte('timestamp', startOfYear)
+      .lte('timestamp', endOfYear)
+      .order('timestamp', { ascending: true });
+
+    if (error) {
+      logger.error('[Heatmap Utils] Supabase query failed:', error.message);
+      throw error;
+    }
+
+    return aggregateByDay(rawData || []);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    logger.error('[Heatmap Utils] Unexpected error:', message);
+    throw error;
+  }
 }
 
 /**

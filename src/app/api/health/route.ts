@@ -1,32 +1,22 @@
+import { withApiHandler } from '@/lib/api-helper';
 import { verifyAuth } from '@/lib/auth';
 import { checkAllServicesHealth } from '@/lib/health-check';
-import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: NextRequest) {
-  // 鉴权检查 (允许公开访问，但如果有凭证则记录身份)
+/**
+ * 全系统健康检查接口
+ * 聚合所有服务的当前状态、统计信息及权限身份
+ */
+export const GET = withApiHandler(async request => {
   const authResult = verifyAuth(request);
-
   const services = await checkAllServicesHealth();
 
-  const isHealthy = Object.values(services).every(s => s.status === 'operational');
-
-  const overallStatus = isHealthy ? 'Operational' : 'Degraded';
-
-  return NextResponse.json(
-    {
-      status: overallStatus,
-      timestamp: new Date().toISOString(),
-      auth: {
-        type: authResult.type,
-      },
-      services,
+  return {
+    status: 'Operational',
+    auth: {
+      type: authResult.type,
     },
-    {
-      headers: {
-        'Cache-Control': 'no-store',
-      },
-    }
-  );
-}
+    services,
+  };
+});

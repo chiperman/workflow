@@ -47,9 +47,9 @@
 
   /* Typography */
   --font-serif: 'Times New Roman', Times, 'Georgia', serif;
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-sans), var(--font-sans-fallback);
   --font-display: var(--font-serif);
-  --font-body: var(--font-sans);
+  --font-body: var(--font-sans), var(--font-sans-fallback);
   --font-mono:
     'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono',
     'Courier New', monospace;
