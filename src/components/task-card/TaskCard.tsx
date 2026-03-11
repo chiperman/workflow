@@ -16,6 +16,7 @@ interface TaskCardProps {
   serviceHealth: ServiceHealth;
   serviceName: string;
   onStatsUpdate: (newHealth: ServiceHealth) => void;
+  isGuest?: boolean;
 }
 
 /**
@@ -36,6 +37,7 @@ function TaskCardComponent({
   serviceHealth,
   serviceName,
   onStatsUpdate,
+  isGuest,
 }: TaskCardProps) {
   const [localStatus, setLocalStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [localMessage, setLocalMessage] = useState('');
@@ -170,6 +172,7 @@ function TaskCardComponent({
         isToggling={isToggling}
         todayCheckedIn={serviceHealth.todayCheckedIn}
         onToggle={handleToggle}
+        isGuest={isGuest}
       />
 
       <Stats stats={serviceHealth.stats} displayStatus={displayStatus} />
@@ -179,6 +182,7 @@ function TaskCardComponent({
         onRun={handleRun}
         showCreateGuide={showCreateGuide}
         onCopyGuide={copyToClipboard}
+        isGuest={isGuest}
       />
 
       <Message

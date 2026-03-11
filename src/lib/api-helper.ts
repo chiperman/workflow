@@ -18,16 +18,18 @@ export async function handleKeepAliveRequest(request: Request, service: BaseServ
   const trigger =
     triggerParam === 'manual' || triggerParam === 'auto' ? triggerParam : defaultTrigger;
 
-  // 特例：mode === 'status' 也需要鉴权（S3 安全加固）
+  // 特例：mode === 'status' 允许公开访问 (用于主页状态展示)
   {
     const authResult = verifyAuth(request);
 
     // 1. 身份验证 (Authentication)
+    // 如果不是公开路径且不满足鉴权，则拒绝
     if (!authResult.authorized) {
       return NextResponse.json({ success: false, message: authResult.message }, { status: 401 });
     }
 
-    // 2. 权限检查 (Authorization) - 仅对非 status 模式检查触发权限
+    // 2. 权限检查 (Authorization)
+    // 仅对非 status 模式 (即执行操作) 检查触发权限
     if (mode !== 'status') {
       const permission = checkTriggerPermission(authResult.type, trigger as 'auto' | 'manual');
       if (!permission.ok) {

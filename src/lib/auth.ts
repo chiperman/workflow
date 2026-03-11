@@ -31,7 +31,10 @@ export function verifyAuth(req: Request | NextRequest): AuthResult {
 
   // 1. 公开路径检查 (Public)
   const isPublicPath =
+    pathname === '/' ||
     pathname === '/login' ||
+    pathname === '/api/health' ||
+    pathname.startsWith('/api/stats/heatmap') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api/auth') || // 登录/登出接口自行处理
     pathname.includes('favicon.ico');

@@ -15,6 +15,7 @@ interface UseSystemHealthResult {
   failingServices: string[];
   refreshAll: () => Promise<void>;
   isRefreshing: boolean; // simple boolean state for refreshing UI
+  authType: 'cron' | 'app-key' | 'session' | 'public' | 'none';
 }
 
 export function useSystemHealth(): UseSystemHealthResult {
@@ -49,6 +50,7 @@ export function useSystemHealth(): UseSystemHealthResult {
 
   // 3. Derive System Info
   const systemStatus = data?.status || 'Checking';
+  const authType = data?.auth?.type || 'none';
 
   const failingServices = useMemo(() => {
     const failing: string[] = [];
@@ -89,5 +91,6 @@ export function useSystemHealth(): UseSystemHealthResult {
     failingServices,
     refreshAll,
     isRefreshing,
+    authType,
   };
 }

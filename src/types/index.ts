@@ -75,6 +75,9 @@ export interface ApiResponse<T = unknown> {
  */
 export interface HealthCheckResponse {
   status: SystemStatus;
+  auth?: {
+    type: 'cron' | 'app-key' | 'session' | 'public' | 'none';
+  };
   services: {
     supabase: ServiceHealth;
     glados: ServiceHealth;

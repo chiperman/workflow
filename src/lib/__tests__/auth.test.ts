@@ -1,4 +1,8 @@
-import { AuthResult, checkTriggerPermission } from '@/lib/auth';
+/**
+ * @jest-environment node
+ */
+import { AuthResult, checkTriggerPermission, verifyAuth } from '@/lib/auth';
+import { NextRequest } from 'next/server';
 
 describe('auth.ts', () => {
   // Setup environment variables
@@ -15,6 +19,74 @@ describe('auth.ts', () => {
 
   afterAll(() => {
     process.env = originalEnv;
+  });
+
+  describe('verifyAuth', () => {
+    const createRequest = (pathname: string) => {
+      return new Request(`http://localhost${pathname}`);
+    };
+
+    it('should recognize public paths', () => {
+      const publicPaths = [
+        '/',
+        '/login',
+        '/api/health',
+        '/api/stats/heatmap',
+        '/api/stats/heatmap/2024',
+      ];
+      publicPaths.forEach(path => {
+        const req = createRequest(path);
+        const result = verifyAuth(req);
+        expect(result.authorized).toBe(true);
+        expect(result.type).toBe('public');
+      });
+    });
+
+    it('should NOT recognize other paths as public', () => {
+      const privatePaths = [
+        '/api/supabase-keep-alive',
+        '/api/glados-checkin',
+        '/api/service-config',
+      ];
+      privatePaths.forEach(path => {
+        const req = createRequest(path);
+        const result = verifyAuth(req);
+        expect(result.authorized).toBe(false);
+      });
+    });
+
+    it('should authorize if session cookie is present even on private paths', () => {
+      const req = new NextRequest('http://localhost/api/supabase-keep-alive');
+      req.cookies.set('workflow_session', 'authenticated');
+
+      const result = verifyAuth(req);
+      expect(result.authorized).toBe(true);
+      expect(result.type).toBe('session');
+    });
+
+    it('should authorize with cron secret in header', () => {
+      const req = new Request('http://localhost/api/test', {
+        headers: {
+          authorization: 'Bearer test-cron-secret',
+        },
+      });
+
+      const result = verifyAuth(req);
+      expect(result.authorized).toBe(true);
+      expect(result.type).toBe('cron');
+    });
+
+    it('should authorize with app key in header', () => {
+      const req = new Request('http://localhost/api/test', {
+        headers: {
+          'x-app-key': 'test-app-key',
+        },
+      });
+
+      const result = verifyAuth(req);
+      expect(result.authorized).toBe(true);
+      expect(result.type).toBe('app-key');
+    });
   });
 
   describe('checkTriggerPermission', () => {

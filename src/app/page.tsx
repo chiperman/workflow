@@ -9,7 +9,7 @@ import { Heatmap } from '@/components/Heatmap';
 import { TaskCard } from '@/components/task-card';
 import { APP_VERSION, MOTION_CONFIG as MOTION, SERVICES } from '@/config/constants';
 import { useSystemHealth } from '@/hooks/useSystemHealth';
-import { AlertCircle, Check, LogOut, RefreshCw } from 'lucide-react';
+import { AlertCircle, Check, LogIn, LogOut, RefreshCw, Workflow } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import { toast } from 'sonner';
@@ -20,8 +20,17 @@ export default function Home() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   // Use Custom Hook
-  const { error, supabaseHealth, gladosHealth, systemStatus, failingServices, refreshAll } =
-    useSystemHealth();
+  const {
+    error,
+    supabaseHealth,
+    gladosHealth,
+    systemStatus,
+    failingServices,
+    refreshAll,
+    authType,
+  } = useSystemHealth();
+
+  const isGuest = authType === 'public' || authType === 'none';
 
   // Local refresh status for UI feedback (idle -> loading -> success/error -> idle)
   const [refreshUIStatus, setRefreshUIStatus] = useState<'idle' | 'loading' | 'success' | 'error'>(
@@ -29,7 +38,7 @@ export default function Home() {
   );
 
   const handleRefreshClick = async () => {
-    if (refreshUIStatus !== 'idle') return;
+    if (refreshUIStatus !== 'idle' || isGuest) return;
     setRefreshUIStatus('loading');
     const loadingToast = toast.loading('Refreshing system data...');
     try {
@@ -85,11 +94,20 @@ export default function Home() {
                       duration: MOTION.duration,
                       ease: MOTION.ease,
                     }}
-                    className="text-3xl sm:text-4xl font-medium text-[#191919] font-serif tracking-tight leading-tight"
+                    className="text-3xl sm:text-4xl font-medium text-[#191919] font-serif tracking-tight leading-tight flex items-center gap-3"
                   >
-                    System Operations
+                    <Workflow
+                      className="w-8 h-8 sm:w-10 sm:h-10 text-[#d97757]"
+                      strokeWidth={1.5}
+                    />
+                    <span>System Operations</span>
                   </motion.h1>
                   <div className="flex items-center gap-3">
+                    {isGuest && (
+                      <div className="hidden sm:flex items-center px-2 py-1 rounded bg-amber-50 border border-amber-100 text-[10px] text-amber-600 font-medium">
+                        Preview Mode
+                      </div>
+                    )}
                     <motion.button
                       initial={{ opacity: 0, y: MOTION.yOffset }}
                       animate={{ opacity: 1, y: 0 }}
@@ -99,7 +117,7 @@ export default function Home() {
                         ease: MOTION.ease,
                       }}
                       onClick={handleRefreshClick}
-                      disabled={refreshUIStatus !== 'idle'}
+                      disabled={refreshUIStatus !== 'idle' || isGuest}
                       className={`
                       flex items-center justify-center p-2 rounded-lg border transition-colors duration-300 group
                       ${
@@ -107,14 +125,19 @@ export default function Home() {
                           ? 'border-red-200 bg-red-50 text-red-600'
                           : refreshUIStatus === 'success'
                             ? 'border-emerald-200 bg-emerald-50 text-emerald-600'
-                            : 'border-[#e5e5e0] text-[#888888] hover:bg-white hover:text-[#191919] hover:border-[#d97757]/30'
+                            : isGuest
+                              ? 'border-[#f0f0f0] text-[#cccccc] cursor-not-allowed bg-gray-50'
+                              : 'border-[#e5e5e0] text-[#888888] hover:bg-white hover:text-[#191919] hover:border-[#d97757]/30'
                       }
-                      ${refreshUIStatus !== 'idle' ? 'cursor-not-allowed' : ''}
                     `}
-                      title="Refresh data"
+                      title={isGuest ? 'Sign in to refresh' : 'Refresh data'}
                     >
                       {refreshUIStatus === 'idle' ? (
-                        <RefreshCw className="w-3.5 h-3.5 group-hover:rotate-180 transition-transform duration-500" />
+                        <RefreshCw
+                          className={`w-3.5 h-3.5 transition-transform duration-500 ${
+                            isGuest ? '' : 'group-hover:rotate-180'
+                          }`}
+                        />
                       ) : (
                         <AnimatePresence mode="wait">
                           {refreshUIStatus === 'loading' ? (
@@ -148,21 +171,39 @@ export default function Home() {
                         </AnimatePresence>
                       )}
                     </motion.button>
-                    <motion.button
-                      initial={{ opacity: 0, y: MOTION.yOffset }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{
-                        delay: MOTION.delay.header,
-                        duration: MOTION.duration,
-                        ease: MOTION.ease,
-                      }}
-                      onClick={() => setShowLogoutConfirm(true)}
-                      className="flex items-center justify-center sm:justify-start gap-2 p-2 sm:px-3 sm:py-2 text-[10px] font-medium tracking-tight text-[#888888] border border-[#e5e5e0] rounded-lg hover:bg-white hover:text-[#191919] hover:border-[#d97757]/30 transition-colors duration-300 whitespace-nowrap"
-                      title="End session"
-                    >
-                      <LogOut className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline">Sign out</span>
-                    </motion.button>
+                    {isGuest ? (
+                      <motion.button
+                        initial={{ opacity: 0, y: MOTION.yOffset }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{
+                          delay: MOTION.delay.header,
+                          duration: MOTION.duration,
+                          ease: MOTION.ease,
+                        }}
+                        onClick={() => router.push('/login')}
+                        className="flex items-center justify-center sm:justify-start gap-2 p-2 sm:px-3 sm:py-2 text-[10px] font-medium tracking-tight text-[#191919] bg-white border border-[#e5e5e0] rounded-lg hover:border-[#d97757]/30 transition-colors duration-300 whitespace-nowrap shadow-sm"
+                        title="Sign in"
+                      >
+                        <LogIn className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">Sign in</span>
+                      </motion.button>
+                    ) : (
+                      <motion.button
+                        initial={{ opacity: 0, y: MOTION.yOffset }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{
+                          delay: MOTION.delay.header,
+                          duration: MOTION.duration,
+                          ease: MOTION.ease,
+                        }}
+                        onClick={() => setShowLogoutConfirm(true)}
+                        className="flex items-center justify-center sm:justify-start gap-2 p-2 sm:px-3 sm:py-2 text-[10px] font-medium tracking-tight text-[#888888] border border-[#e5e5e0] rounded-lg hover:bg-white hover:text-[#191919] hover:border-[#d97757]/30 transition-colors duration-300 whitespace-nowrap"
+                        title="End session"
+                      >
+                        <LogOut className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">Sign out</span>
+                      </motion.button>
+                    )}
                   </div>
                 </div>
                 <motion.p
@@ -244,7 +285,7 @@ export default function Home() {
                       },
                     }}
                   >
-                    <TaskCard {...task} onStatsUpdate={refreshAll} />
+                    <TaskCard {...task} onStatsUpdate={refreshAll} isGuest={isGuest} />
                   </motion.div>
                 ))}
               </motion.div>

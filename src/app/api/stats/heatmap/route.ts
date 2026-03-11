@@ -12,11 +12,9 @@ export const dynamic = 'force-dynamic';
  * 默认返回当前年份的数据
  */
 export async function GET(request: NextRequest) {
-  // 鉴权检查
-  const authResult = verifyAuth(request);
-  if (!authResult.authorized) {
-    return NextResponse.json({ success: false, message: authResult.message }, { status: 401 });
-  }
+  // 鉴权检查 (允许公开访问，记录日志时如果需要可以从 verifyAuth 取，此处暂时不需要)
+  verifyAuth(request);
+  // 不再强制鉴权，允许 public 身份继续执行
 
   try {
     const { searchParams } = new URL(request.url);

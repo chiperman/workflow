@@ -10,6 +10,7 @@ interface HeaderProps {
   isToggling: boolean;
   todayCheckedIn?: boolean;
   onToggle: () => void;
+  isGuest?: boolean;
 }
 
 export const Header = memo(function Header({
@@ -21,6 +22,7 @@ export const Header = memo(function Header({
   isToggling,
   todayCheckedIn,
   onToggle,
+  isGuest,
 }: HeaderProps) {
   return (
     <div className="mb-4">
@@ -83,9 +85,17 @@ export const Header = memo(function Header({
           </AnimatePresence>
           <button
             onClick={onToggle}
-            disabled={isToggling}
-            className={`relative w-9 h-5 rounded-full transition-colors duration-200 ${localEnabled ? 'bg-emerald-500' : 'bg-gray-300'} ${isToggling ? 'opacity-50' : ''}`}
-            title={localEnabled ? 'Disable auto cron' : 'Enable auto cron'}
+            disabled={isToggling || isGuest}
+            className={`relative w-9 h-5 rounded-full transition-colors duration-200 ${
+              localEnabled ? 'bg-emerald-500' : 'bg-gray-300'
+            } ${isToggling || isGuest ? 'opacity-50 cursor-not-allowed' : ''}`}
+            title={
+              isGuest
+                ? 'Sign in to configure'
+                : localEnabled
+                  ? 'Disable auto cron'
+                  : 'Enable auto cron'
+            }
           >
             <span
               className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${localEnabled ? 'translate-x-4' : 'translate-x-0'}`}
