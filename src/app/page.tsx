@@ -1,86 +1,58 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { useState, useMemo, useEffect } from 'react';
+import { useState } from 'react';
 
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { Footer } from '@/components/Footer';
 import { Heatmap } from '@/components/Heatmap';
 import { TaskCard } from '@/components/task-card';
 import { TaskConfigModal } from '@/components/TaskConfigModal';
-import { APP_VERSION, MOTION_CONFIG as MOTION } from '@/config/constants';
-import { useSystemHealth } from '@/hooks/useSystemHealth';
-import type { ServiceStatus } from '@/types';
-import { AlertCircle, Check, LogIn, LogOut, Plus, RefreshCw, Workflow } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 
+import { MOTION_CONFIG as MOTION, APP_VERSION } from '@/config/constants';
+import { useTasks } from '@/hooks/useTasks';
+import { Workflow, RefreshCw, Plus, LogIn, LogOut, Check, AlertCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
+/**
+ * Workflow Dashboard - 核心控制面板 (Refactored)
+ */
 export default function Home() {
   const router = useRouter();
-  const [isExiting, setIsExiting] = useState(false);
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [isConfigOpen, setIsConfigOpen] = useState(false);
-  const [editingServiceId, setEditingServiceId] = useState<string | undefined>();
 
+  // 核心业务 Hook
   const {
-    error,
-    services = {}, // Default to empty object
-    systemStatus,
-    failingServices,
+    taskCards,
+    serviceStatuses,
     refreshAll,
     authType,
     isLoading,
-  } = useSystemHealth();
-
-  useEffect(() => {
-    console.log('[Home] Rendered. Services count:', Object.keys(services).length);
-    if (error) console.error('[Home] Health check error:', error);
-  }, [services, error]);
+    systemStatus,
+    failingServices,
+  } = useTasks();
 
   const isGuest = authType === 'public' || authType === 'none';
 
-  const openCreateModal = () => {
-    setEditingServiceId(undefined);
-    setIsConfigOpen(true);
-  };
+  // 状态管理
+  const [isConfigOpen, setIsConfigOpen] = useState(false);
+  const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
+  const [isExiting, setIsExiting] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [refreshUIStatus, setRefreshUIStatus] = useState<'idle' | 'loading' | 'success' | 'error'>(
+    'idle'
+  );
 
+  // 交互处理器
   const openEditModal = (id: string) => {
     setEditingServiceId(id);
     setIsConfigOpen(true);
   };
 
-  // Derive service statuses for footer
-  const serviceStatuses = useMemo(() => {
-    const statuses: Record<string, ServiceStatus | undefined> = {};
-    Object.entries(services).forEach(([name, health]) => {
-      statuses[name] = health.status;
-    });
-    return statuses;
-  }, [services]);
-
-  // Derive task configurations
-  const taskCards = useMemo(() => {
-    return Object.entries(services).map(([id, health]) => {
-      const isInternal = health.type === 'supabase_internal' || id === 'supabase';
-
-      return {
-        id,
-        title: health.name || id.charAt(0).toUpperCase() + id.slice(1),
-        category: health.category || (isInternal ? 'Database Maintenance' : 'Access Protocol'),
-        description: health.description || 'Automated maintenance protocol.',
-        endpoint: `/api/tasks/${id}`,
-        method: 'POST' as const,
-        serviceHealth: health,
-        serviceName: id,
-      };
-    });
-  }, [services]);
-
-  // Local refresh status for UI feedback
-  const [refreshUIStatus, setRefreshUIStatus] = useState<'idle' | 'loading' | 'success' | 'error'>(
-    'idle'
-  );
+  const openCreateModal = () => {
+    setEditingServiceId(null);
+    setIsConfigOpen(true);
+  };
 
   const handleRefreshClick = async () => {
     if (refreshUIStatus !== 'idle' || isGuest) return;
@@ -255,11 +227,10 @@ export default function Home() {
                           ease: MOTION.ease,
                         }}
                         onClick={() => setShowLogoutConfirm(true)}
-                        className="flex items-center justify-center sm:justify-start gap-2 p-2 sm:px-3 sm:py-2 text-[10px] font-medium tracking-tight text-[#888888] border border-[#e5e5e0] rounded-lg hover:bg-white hover:text-[#191919] hover:border-[#d97757]/30 transition-colors duration-300 whitespace-nowrap"
-                        title="End session"
+                        className="flex items-center justify-center p-2 rounded-lg border border-[#e5e5e0] text-[#888888] hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors duration-300"
+                        title="Sign out"
                       >
                         <LogOut className="w-3.5 h-3.5" />
-                        <span className="hidden sm:inline">Sign out</span>
                       </motion.button>
                     )}
                   </div>
@@ -272,15 +243,48 @@ export default function Home() {
                     duration: MOTION.duration,
                     ease: MOTION.ease,
                   }}
-                  className="text-sm text-[#555555] max-w-xl leading-relaxed font-light text-left"
+                  className="text-sm text-[#666666] leading-relaxed max-w-xl"
                 >
-                  Control center for automated maintenance protocols and cross-service data
-                  synchronization.
+                  Automated infrastructure maintenance and synchronization control center. Monitor
+                  real-time task health and historical execution patterns.
                 </motion.p>
               </header>
 
-              {/* Heatmap Section */}
-              <motion.div
+              {/* Task Cards Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-12 relative min-h-[200px]">
+                {isLoading ? (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <RefreshCw className="w-6 h-6 animate-spin text-[#d97757]/30" />
+                  </div>
+                ) : (
+                  <AnimatePresence mode="popLayout">
+                    {taskCards.map((task, index) => (
+                      <motion.div
+                        key={task.id}
+                        layout
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{
+                          delay: index * MOTION.delay.cardStagger,
+                          duration: MOTION.duration,
+                          ease: MOTION.ease,
+                        }}
+                      >
+                        <TaskCard
+                          {...task}
+                          onStatsUpdate={() => refreshAll()}
+                          onEdit={openEditModal}
+                          isGuest={isGuest}
+                        />
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                )}
+              </div>
+
+              {/* Stats Heatmap */}
+              <motion.section
                 initial={{ opacity: 0, y: MOTION.yOffset }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{
@@ -288,111 +292,22 @@ export default function Home() {
                   duration: MOTION.duration,
                   ease: MOTION.ease,
                 }}
-                className="mb-8"
+                className="mb-12"
               >
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xs font-semibold text-[#888888] uppercase tracking-wider">
+                    Protocol Execution History
+                  </h3>
+                </div>
                 <Heatmap />
-              </motion.div>
+              </motion.section>
 
-              {/* Cards Section */}
-              <div className="grid grid-cols-1 gap-6 min-h-[400px]">
-                <AnimatePresence mode="wait">
-                  {isLoading ? (
-                    <motion.div
-                      key="loading-skeleton"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0, transition: { duration: 0.2 } }}
-                      className="space-y-6 w-full"
-                    >
-                      {[1, 2].map(i => (
-                        <div
-                          key={i}
-                          className="h-[280px] bg-gray-50/50 border border-[#e5e5e0] rounded-xl animate-pulse flex flex-col p-6 space-y-4"
-                        >
-                          <div className="flex justify-between items-start">
-                            <div className="space-y-2">
-                              <div className="h-3 w-20 bg-gray-200 rounded" />
-                              <div className="h-6 w-32 bg-gray-200 rounded" />
-                            </div>
-                            <div className="h-5 w-10 bg-gray-200 rounded-full" />
-                          </div>
-                          <div className="h-4 w-full bg-gray-100 rounded" />
-                          <div className="h-20 w-full bg-gray-50 rounded-lg mt-auto" />
-                        </div>
-                      ))}
-                    </motion.div>
-                  ) : taskCards.length > 0 ? (
-                    <motion.div
-                      key="content-list"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="space-y-6 w-full"
-                    >
-                      {taskCards.map((task, index) => (
-                        <motion.div
-                          key={task.id}
-                          initial={{ opacity: 0, y: 15 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{
-                            duration: 0.4,
-                            delay: index * 0.1,
-                          }}
-                        >
-                          <TaskCard
-                            title={task.title}
-                            category={task.category}
-                            description={task.description}
-                            endpoint={task.endpoint}
-                            method={task.method}
-                            serviceHealth={task.serviceHealth}
-                            serviceName={task.serviceName}
-                            onStatsUpdate={refreshAll}
-                            onEdit={openEditModal}
-                            isGuest={isGuest}
-                          />
-                        </motion.div>
-                      ))}
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="empty-state"
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="text-center py-20 border border-dashed border-[#e5e5e0] rounded-xl text-[#888888] text-sm flex flex-col items-center justify-center bg-gray-50/20"
-                    >
-                      <Workflow className="w-10 h-10 mb-4 text-[#e5e5e0]" strokeWidth={1} />
-                      <p>No active tasks found.</p>
-                      {!isGuest && (
-                        <button
-                          onClick={openCreateModal}
-                          className="mt-4 px-4 py-2 bg-white border border-[#e5e5e0] rounded-lg text-[#d97757] hover:border-[#d97757]/30 transition-all font-medium text-xs"
-                        >
-                          Add your first task
-                        </button>
-                      )}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* Footer */}
-              <motion.div
-                initial={{ opacity: 0, y: MOTION.yOffset }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  delay: MOTION.delay.footer,
-                  duration: MOTION.duration,
-                  ease: MOTION.ease,
-                }}
-              >
-                <Footer
-                  version={APP_VERSION}
-                  systemStatus={systemStatus}
-                  failingServices={failingServices}
-                  serviceStatuses={serviceStatuses}
-                />
-              </motion.div>
+              <Footer
+                version={APP_VERSION}
+                systemStatus={systemStatus}
+                failingServices={failingServices}
+                serviceStatuses={serviceStatuses}
+              />
             </div>
           </motion.main>
         )}
@@ -401,13 +316,16 @@ export default function Home() {
       <TaskConfigModal
         isOpen={isConfigOpen}
         onClose={() => setIsConfigOpen(false)}
-        serviceId={editingServiceId}
-        onSuccess={refreshAll}
+        serviceId={editingServiceId || undefined}
+        onSuccess={() => {
+          setIsConfigOpen(false);
+          refreshAll();
+        }}
       />
 
       <ConfirmDialog
         isOpen={showLogoutConfirm}
-        title="End Session"
+        title="Sign Out"
         message="You're about to sign out. Any unsaved progress may be lost."
         confirmText="Sign out"
         cancelText="Stay"

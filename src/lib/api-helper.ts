@@ -18,8 +18,10 @@ interface HandlerOptions {
  * 处理鉴权、错误捕获及统一响应格式
  */
 export function withApiHandler<T>(handler: ApiHandler<T>, options: HandlerOptions = {}) {
-  return async (request: Request, context?: { params: Record<string, string> }) => {
+  return async (request: Request, context?: { params: Promise<Record<string, string>> }) => {
     try {
+      const params = context ? await context.params : undefined;
+
       // 1. 鉴权检查 (可选)
       if (options.requireAuth) {
         const authResult = verifyAuth(request);
@@ -42,7 +44,7 @@ export function withApiHandler<T>(handler: ApiHandler<T>, options: HandlerOption
         }
       }
 
-      const result = await handler(request, context?.params);
+      const result = await handler(request, params);
 
       if (result instanceof NextResponse) {
         return result;
