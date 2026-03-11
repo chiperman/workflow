@@ -32,10 +32,10 @@ export function HeatmapTooltip({ day, children }: HeatmapTooltipProps) {
     .map(([service]) => service.charAt(0).toUpperCase() + service.slice(1));
 
   // Find unexecuted services (exist in config but not in day's records)
-  const unexecutedServices = VALID_SERVICES.filter(service => !day.services[service]).map(
-    service => service.charAt(0).toUpperCase() + service.slice(1)
-  );
-
+  // 未执行的服务 (推断)
+  const unexecutedServices = (VALID_SERVICES as readonly string[])
+    .filter(service => !day.services[service])
+    .map(service => service.charAt(0).toUpperCase() + service.slice(1));
   return (
     <Tooltip.Root delayDuration={0}>
       <Tooltip.Trigger asChild>{children}</Tooltip.Trigger>
