@@ -20,7 +20,7 @@ export function useTasks() {
   const { services, ...healthRest } = useSystemHealth();
 
   const taskCards = useMemo(() => {
-    return Object.entries(services).map(([id, health]) => {
+    const cards = Object.entries(services).map(([id, health]) => {
       const isInternal = health.type === 'supabase_internal' || id === 'supabase';
 
       return {
@@ -34,6 +34,9 @@ export function useTasks() {
         serviceName: id,
       } as TaskCardData;
     });
+
+    // 显式排序，确保顺序稳定，不随 services 对象属性顺序改变
+    return cards.sort((a, b) => a.id.localeCompare(b.id));
   }, [services]);
 
   const serviceStatuses = useMemo(() => {

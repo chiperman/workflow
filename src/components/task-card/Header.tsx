@@ -112,12 +112,11 @@ export const Header = memo(function Header({
               </Tooltip>
             )}
             <Tooltip>
-              <TooltipTrigger render={<div className="flex items-center" />}>
+              <TooltipTrigger>
                 <Switch
                   checked={localEnabled}
                   onCheckedChange={onToggle}
                   disabled={isToggling || isGuest}
-                  className="data-[state=checked]:bg-emerald-500"
                 />
               </TooltipTrigger>
               <TooltipContent side="top">
