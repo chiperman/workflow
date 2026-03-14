@@ -44,6 +44,44 @@ npm run dev
 
 ---
 
+## ⚙️ 配置说明 (Configuration)
+
+### 1. 环境变量 (.env)
+
+| 变量名                      | 说明                             | 示例                      |
+| :-------------------------- | :------------------------------- | :------------------------ |
+| `NEXT_PUBLIC_SUPABASE_URL`  | Supabase 项目 API 地址           | `https://xyz.supabase.co` |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase 服务角色密钥 (不可泄露) | `ey...`                   |
+| `APP_KEY`                   | 访问控制面板的专用密钥           | `my-secret-key`           |
+| `CRON_SECRET`               | Vercel Cron 任务鉴权密钥         | `cron-secret-123`         |
+| `GLADOS_COOKIE`             | GLaDOS 自动签到所需的 Cookie     | `koa:sess=...`            |
+| `BARK_DEVICE_KEY`           | Bark iOS 推送设备密钥            | `abc123def456`            |
+| `LOG_LEVEL`                 | 日志级别 (debug/info/warn/error) | `info`                    |
+
+### 2. 任务配置项 (Task Settings)
+
+通过 UI 编辑任务时，可配置以下核心参数：
+
+- **Service ID**: 任务唯一标识符，用于 API 定位。
+- **Task Type**:
+  - `http`: 外部接口保活 (支持多 URL 冗余、自定义 Method/Headers/Body)。
+  - `supabase_internal`: 数据库内部保活逻辑。
+- **Notification Level**:
+  - `always`: 每次执行均推送通知。
+  - `failure-only`: 仅在执行失败时推送。
+  - `none`: 不推送通知。
+- **Success Rules**: 基于 JSON 路径、操作符（eq, neq, gt, lt, in, contains）及期望值灵活定义执行成功标准。
+
+### 3. 在线配置 (Online Configuration)
+
+本系统支持**零代码、免重启**的动态配置：
+
+- **即时生效**: 通过控制面板底部的 `+ Add Task` 或任务卡片上的 `Edit` 按钮即可进入配置界面。所有更改直接保存至 Supabase 数据库，后端 Cron 任务及前端展示将立即同步更新。
+- **安全隔离**: 敏感配置项（如 API Keys）建议在 UI 中使用环境变量占位符，避免在数据库中直接明文存储。
+- **配置导出**: 如果需要备份或迁移，可直接在 Supabase Dashboard 导出 `service_config` 表的数据。
+
+---
+
 ## 🎨 核心功能
 
 - **可视化热力图**: GitHub 风格的签到统计，任务状态一目了然。
