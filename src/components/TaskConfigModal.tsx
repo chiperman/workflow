@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import type { ServiceConfig, ApiResponse } from '@/types';
+import type { ServiceConfig } from '@/types';
 import { toast } from 'sonner';
 import { X, Save, Plus, Trash2, Globe, Settings, CheckCircle, RefreshCw } from 'lucide-react';
 
@@ -9,6 +9,7 @@ interface TaskConfigModalProps {
   isOpen: boolean;
   onClose: () => void;
   serviceId?: string; // If provided, we're editing. If not, we're creating.
+  initialConfig?: Partial<ServiceConfig>; // 直接传入已有配置，消除二次获取
   onSuccess?: () => void;
 }
 
@@ -22,12 +23,16 @@ const DEFAULT_CONFIG: Partial<ServiceConfig> = {
   rules: { success: { status: 200 } },
 };
 
-export function TaskConfigModal({ isOpen, onClose, serviceId, onSuccess }: TaskConfigModalProps) {
-  const [isLoading, setIsLoading] = useState(false);
+export function TaskConfigModal({
+  isOpen,
+  onClose,
+  serviceId,
+  initialConfig,
+  onSuccess,
+}: TaskConfigModalProps) {
   const [isSaving, setIsSaving] = useState(false);
 
   const [config, setConfig] = useState<Partial<ServiceConfig>>(DEFAULT_CONFIG);
-
   // 局部状态处理 JSON 字符串，避免直接绑定 JSON.stringify 导致的编辑卡顿
   const [headersStr, setHeadersStr] = useState('{}');
   const [rulesStr, setRulesStr] = useState('{\n  "status": 200\n}');
@@ -35,43 +40,25 @@ export function TaskConfigModal({ isOpen, onClose, serviceId, onSuccess }: TaskC
   useEffect(() => {
     if (!isOpen) return;
 
-    async function fetchConfig() {
-      if (!serviceId) {
-        setConfig(DEFAULT_CONFIG);
-        setHeadersStr('{}');
-        setRulesStr('{\n  "status": 200\n}');
-        return;
-      }
-
-      setIsLoading(true);
-      try {
-        const response = await fetch('/api/service-config');
-        const resData: ApiResponse<ServiceConfig[]> = await response.json();
-
-        if (resData.success && resData.data) {
-          const service = resData.data.find(s => s.service === serviceId);
-          if (service) {
-            const finalConfig = {
-              ...service,
-              config: service.config || { urls: [''], method: 'POST', headers: {}, body: '' },
-              rules: service.rules || { success: { status: 200 } },
-            };
-            setConfig(finalConfig);
-            setHeadersStr(JSON.stringify(finalConfig.config?.headers || {}, null, 2));
-            setRulesStr(JSON.stringify(finalConfig.rules?.success || {}, null, 2));
-          }
-        }
-      } catch (error) {
-        console.error('Failed to fetch config:', error);
-        toast.error('Failed to load task configuration');
-      } finally {
-        setIsLoading(false);
-      }
+    if (!serviceId) {
+      setConfig(DEFAULT_CONFIG);
+      setHeadersStr('{}');
+      setRulesStr('{\n  "status": 200\n}');
+      return;
     }
 
-    fetchConfig();
-  }, [isOpen, serviceId]);
-
+    // 如果传入了 initialConfig，直接同步到本地状态，不再调用 API
+    if (initialConfig) {
+      const finalConfig = {
+        ...initialConfig,
+        config: initialConfig.config || { urls: [''], method: 'POST', headers: {}, body: '' },
+        rules: initialConfig.rules || { success: { status: 200 } },
+      };
+      setConfig(finalConfig);
+      setHeadersStr(JSON.stringify(finalConfig.config?.headers || {}, null, 2));
+      setRulesStr(JSON.stringify(finalConfig.rules?.success || {}, null, 2));
+    }
+  }, [isOpen, serviceId, initialConfig]);
   const handleSave = async () => {
     if (!config.service) {
       toast.error('Service ID is required');

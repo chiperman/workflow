@@ -67,6 +67,8 @@ export async function checkServiceHealth(serviceId: string): Promise<ServiceHeal
     type: service.type,
     description: service.description,
     category: service.category,
+    config: service.config, // 包含 URLs, Method 等
+    rules: service.rules, // 包含校验规则
   };
 }
 

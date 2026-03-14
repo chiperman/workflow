@@ -39,6 +39,11 @@ export interface ServiceHealth {
   type?: string;
   description?: string;
   category?: string;
+  config?: HttpConfig;
+  rules?: {
+    success?: ValidationRules;
+    increment?: ValidationRules;
+  };
 }
 
 /**

@@ -372,6 +372,11 @@ export default function Home() {
         isOpen={isConfigOpen}
         onClose={() => setIsConfigOpen(false)}
         serviceId={editingServiceId || undefined}
+        initialConfig={
+          editingServiceId
+            ? (serviceStatuses[editingServiceId] as unknown as Partial<ServiceConfig>)
+            : undefined
+        }
         onSuccess={() => {
           setIsConfigOpen(false);
           refreshAll();
