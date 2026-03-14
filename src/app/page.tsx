@@ -86,7 +86,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-transparent overflow-hidden relative">
+    <div className="min-h-screen bg-transparent relative overflow-x-hidden overflow-y-auto">
       <AnimatePresence>
         {!isExiting && (
           <motion.main
@@ -94,7 +94,7 @@ export default function Home() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, filter: 'blur(8px)' }}
             transition={{ duration: MOTION.duration, ease: MOTION.ease }}
-            className="py-8 px-6 sm:px-12 flex flex-col justify-center min-h-screen"
+            className="pt-16 pb-20 px-6 sm:px-12 flex flex-col min-h-screen"
           >
             <div className="w-full max-w-3xl mx-auto">
               {/* Header Section */}
