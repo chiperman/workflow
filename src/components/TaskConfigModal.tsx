@@ -12,31 +12,34 @@ interface TaskConfigModalProps {
   onSuccess?: () => void;
 }
 
+const DEFAULT_CONFIG: Partial<ServiceConfig> = {
+  service: '',
+  name: '',
+  type: 'http',
+  enabled: true,
+  notification_level: 'failure-only',
+  config: { urls: [''], method: 'POST', headers: {}, body: '' },
+  rules: { success: { status: 200 } },
+};
+
 export function TaskConfigModal({ isOpen, onClose, serviceId, onSuccess }: TaskConfigModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [config, setConfig] = useState<Partial<ServiceConfig>>({
-    service: '',
-    name: '',
-    type: 'http',
-    enabled: true,
-    notification_level: 'failure-only',
-    config: { urls: [''], method: 'POST', headers: {}, body: '' },
-    rules: { success: { status: 200 } },
-  });
+
+  const [config, setConfig] = useState<Partial<ServiceConfig>>(DEFAULT_CONFIG);
+
+  // 局部状态处理 JSON 字符串，避免直接绑定 JSON.stringify 导致的编辑卡顿
+  const [headersStr, setHeadersStr] = useState('{}');
+  const [rulesStr, setRulesStr] = useState('{\n  "status": 200\n}');
 
   useEffect(() => {
+    if (!isOpen) return;
+
     async function fetchConfig() {
       if (!serviceId) {
-        setConfig({
-          service: '',
-          name: '',
-          type: 'http',
-          enabled: true,
-          notification_level: 'failure-only',
-          config: { urls: [''], method: 'POST', headers: {}, body: '' },
-          rules: { success: { status: 200 } },
-        });
+        setConfig(DEFAULT_CONFIG);
+        setHeadersStr('{}');
+        setRulesStr('{\n  "status": 200\n}');
         return;
       }
 
@@ -48,11 +51,14 @@ export function TaskConfigModal({ isOpen, onClose, serviceId, onSuccess }: TaskC
         if (resData.success && resData.data) {
           const service = resData.data.find(s => s.service === serviceId);
           if (service) {
-            setConfig({
+            const finalConfig = {
               ...service,
               config: service.config || { urls: [''], method: 'POST', headers: {}, body: '' },
               rules: service.rules || { success: { status: 200 } },
-            });
+            };
+            setConfig(finalConfig);
+            setHeadersStr(JSON.stringify(finalConfig.config?.headers || {}, null, 2));
+            setRulesStr(JSON.stringify(finalConfig.rules?.success || {}, null, 2));
           }
         }
       } catch (error) {
@@ -63,9 +69,7 @@ export function TaskConfigModal({ isOpen, onClose, serviceId, onSuccess }: TaskC
       }
     }
 
-    if (isOpen) {
-      fetchConfig();
-    }
+    fetchConfig();
   }, [isOpen, serviceId]);
 
   const handleSave = async () => {
@@ -279,8 +283,9 @@ export function TaskConfigModal({ isOpen, onClose, serviceId, onSuccess }: TaskC
                 <div className="col-span-2 space-y-1.5">
                   <label className="text-[11px] font-medium text-[#555555]">Headers (JSON)</label>
                   <input
-                    value={JSON.stringify(config.config?.headers || {})}
+                    value={headersStr}
                     onChange={e => {
+                      setHeadersStr(e.target.value);
                       try {
                         const h = JSON.parse(e.target.value);
                         setConfig({ ...config, config: { ...config.config!, headers: h } });
@@ -304,8 +309,9 @@ export function TaskConfigModal({ isOpen, onClose, serviceId, onSuccess }: TaskC
               <label className="text-[11px] font-medium text-[#555555]">Success Rule (JSON)</label>
               <textarea
                 rows={3}
-                value={JSON.stringify(config.rules?.success || {}, null, 2)}
+                value={rulesStr}
                 onChange={e => {
+                  setRulesStr(e.target.value);
                   try {
                     const s = JSON.parse(e.target.value);
                     setConfig({ ...config, rules: { ...config.rules!, success: s } });

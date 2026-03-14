@@ -368,6 +368,7 @@ export default function Home() {
       </AnimatePresence>
 
       <TaskConfigModal
+        key={editingServiceId || 'new'}
         isOpen={isConfigOpen}
         onClose={() => setIsConfigOpen(false)}
         serviceId={editingServiceId || undefined}
