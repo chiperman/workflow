@@ -11,6 +11,7 @@ import { TaskConfigModal } from '@/components/TaskConfigModal';
 
 import { MOTION_CONFIG as MOTION, APP_VERSION } from '@/config/constants';
 import { useTasks } from '@/hooks/useTasks';
+import type { ServiceConfig } from '@/types';
 import { Workflow, RefreshCw, Plus, LogIn, LogOut, Check, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -22,15 +23,8 @@ export default function Home() {
   const router = useRouter();
 
   // 使用重构后的业务 Hook，但保持 UI 结构不变
-  const {
-    groupedTasks,
-    serviceStatuses,
-    refreshAll,
-    authType,
-    isLoading,
-    systemStatus,
-    failingServices,
-  } = useTasks();
+  const { groupedTasks, services, refreshAll, authType, isLoading, systemStatus, failingServices } =
+    useTasks();
 
   const isGuest = authType === 'public' || authType === 'none';
 
@@ -360,7 +354,9 @@ export default function Home() {
                 version={APP_VERSION}
                 systemStatus={systemStatus}
                 failingServices={failingServices}
-                serviceStatuses={serviceStatuses}
+                serviceStatuses={Object.fromEntries(
+                  Object.entries(services).map(([k, v]) => [k, v.status])
+                )}
               />
             </div>
           </motion.main>
@@ -373,8 +369,11 @@ export default function Home() {
         onClose={() => setIsConfigOpen(false)}
         serviceId={editingServiceId || undefined}
         initialConfig={
-          editingServiceId
-            ? (serviceStatuses[editingServiceId] as unknown as Partial<ServiceConfig>)
+          editingServiceId && services[editingServiceId]
+            ? ({
+                ...services[editingServiceId],
+                service: editingServiceId,
+              } as unknown as Partial<ServiceConfig>)
             : undefined
         }
         onSuccess={() => {

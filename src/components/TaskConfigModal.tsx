@@ -147,7 +147,7 @@ export function TaskConfigModal({
                 </label>
                 <input
                   disabled={!!serviceId}
-                  value={config.service}
+                  value={config.service || ''}
                   onChange={e => setConfig({ ...config, service: e.target.value.toLowerCase() })}
                   placeholder="e.g. glados"
                   className="w-full px-3 py-2 bg-[#f9f9f9] border border-[#e5e5e0] rounded-lg text-sm focus:outline-none focus:border-[#d97757]/50 disabled:opacity-50"

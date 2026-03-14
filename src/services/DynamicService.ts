@@ -36,7 +36,7 @@ export class DynamicService extends BaseService {
    */
   protected async executeKeepAlive(trigger: 'auto' | 'manual' = 'auto'): Promise<KeepAliveResult> {
     try {
-      if (this.config.type === 'supabase_internal') {
+      if (this.fullConfig.type === 'supabase_internal') {
         return await this.executeSupabaseInternal(trigger);
       }
 
@@ -59,7 +59,7 @@ export class DynamicService extends BaseService {
     }
     const { action, data: stats } = updateResult.data;
     const beijingTime = getBeijingTime();
-    const message = `${this.config.name} 成功: ${
+    const message = `${this.fullConfig.name} 成功: ${
       action === 'created' ? '创建记录' : '更新记录'
     } 于 ${beijingTime} (${trigger})`;
 
@@ -76,7 +76,7 @@ export class DynamicService extends BaseService {
    * 执行通用 HTTP 请求
    */
   private async executeHttpRequest(trigger: 'auto' | 'manual'): Promise<KeepAliveResult> {
-    const { config, rules } = this.config;
+    const { config, rules } = this.fullConfig;
     const urls = config.urls || (config.url ? [config.url] : []);
 
     if (urls.length === 0) {
@@ -140,7 +140,7 @@ export class DynamicService extends BaseService {
     if (lastError) {
       return {
         success: false,
-        message: `${this.config.name} 所有配置节点请求均失败。最后错误: ${lastError.message}`,
+        message: `${this.fullConfig.name} 所有配置节点请求均失败。最后错误: ${lastError.message}`,
         duration: 0,
         error: lastError.message,
       };
@@ -158,9 +158,9 @@ export class DynamicService extends BaseService {
     const beijingTime = getBeijingTime();
 
     // 构造返回消息
-    let message = `${this.config.name} 成功: 于 ${beijingTime} (${trigger})`;
+    let message = `${this.fullConfig.name} 成功: 于 ${beijingTime} (${trigger})`;
     if (typeof responseData === 'object' && responseData && 'message' in responseData) {
-      message = `${this.config.name}: "${String((responseData as Record<string, unknown>).message)}" [${beijingTime}]`;
+      message = `${this.fullConfig.name}: "${String((responseData as Record<string, unknown>).message)}" [${beijingTime}]`;
     }
 
     return {
