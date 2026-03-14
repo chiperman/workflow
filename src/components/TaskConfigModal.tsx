@@ -322,7 +322,7 @@ export function TaskConfigModal({
               Cancel
             </button>
             <button
-              disabled={isSaving || isLoading}
+              disabled={isSaving}
               onClick={handleSave}
               className="px-6 py-2.5 bg-[#191919] text-[#fdfcf8] rounded-lg text-sm font-medium hover:bg-[#333333] transition-all flex items-center gap-2 disabled:opacity-50 shadow-md"
             >

@@ -2,6 +2,7 @@ import type { ServiceHealth } from '@/types';
 import { supabase } from './supabase';
 import { getBeijingDateString } from './utils';
 import { ServiceFactory } from '@/services/ServiceFactory';
+import { DynamicService } from '@/services/DynamicService';
 
 /**
  * 检查今日是否有签到记录
@@ -57,6 +58,15 @@ export async function checkServiceHealth(serviceId: string): Promise<ServiceHeal
   const { enabled, tableExists, ...stats } = result.data;
   const todayCheckedIn = await checkTodayCheckin(serviceId);
 
+  // 如果是 DynamicService，获取其完整配置以供前端瞬间展示
+  let config = undefined;
+  let rules = undefined;
+
+  if (service instanceof DynamicService) {
+    config = service.fullConfig?.config;
+    rules = service.fullConfig?.rules;
+  }
+
   return {
     status: 'operational',
     tableExists,
@@ -67,8 +77,8 @@ export async function checkServiceHealth(serviceId: string): Promise<ServiceHeal
     type: service.type,
     description: service.description,
     category: service.category,
-    config: service.config, // 包含 URLs, Method 等
-    rules: service.rules, // 包含校验规则
+    config, // 包含 URLs, Method 等
+    rules, // 包含校验规则
   };
 }
 

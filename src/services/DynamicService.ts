@@ -7,28 +7,28 @@ import type { KeepAliveResult, ServiceConfig, ValidationRules } from '@/types';
 import { BaseService } from './BaseService';
 
 export class DynamicService extends BaseService {
-  private config: ServiceConfig;
+  public readonly fullConfig: ServiceConfig;
 
   constructor(config: ServiceConfig) {
     super(config.service);
-    this.config = config;
+    this.fullConfig = config;
     this.notificationLevel = config.notification_level;
   }
 
   public get type(): string {
-    return this.config.type;
+    return this.fullConfig.type;
   }
 
   public get displayName(): string {
-    return this.config.name || this.serviceName;
+    return this.fullConfig.name || this.serviceName;
   }
 
   public get description(): string | undefined {
-    return this.config.description;
+    return this.fullConfig.description;
   }
 
   public get category(): string | undefined {
-    return this.config.category;
+    return this.fullConfig.category;
   }
 
   /**
