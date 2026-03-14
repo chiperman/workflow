@@ -121,6 +121,8 @@ export default function Home() {
                       <div className="flex items-center gap-2 opacity-60">
                         <div className="w-8 h-8 rounded-lg bg-[#e5e5e0] animate-pulse" />
                         <div className="w-8 h-8 rounded-lg bg-[#e5e5e0] animate-pulse" />
+                        <div className="w-16 h-8 rounded-lg bg-[#e5e5e0] animate-pulse hidden sm:block" />
+                        <div className="w-8 h-8 rounded-lg bg-[#e5e5e0] animate-pulse sm:hidden" />
                       </div>
                     ) : (
                       <>
