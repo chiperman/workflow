@@ -279,8 +279,34 @@ export default function Home() {
               {/* Task Cards List - 恢复为单列垂直布局 */}
               <div className="grid grid-cols-1 gap-6 mb-12 relative min-h-[200px]">
                 {isLoading ? (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <RefreshCw className="w-6 h-6 animate-spin text-[#d97757]/30" />
+                  <div className="flex flex-col gap-6 w-full opacity-60">
+                    {[1, 2, 3].map(i => (
+                      <div
+                        key={i}
+                        className="flex flex-col h-full bg-white border border-[#e5e5e0] p-6 rounded-lg animate-pulse"
+                      >
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="flex flex-col gap-2">
+                            <div className="w-16 h-3 bg-[#e5e5e0] rounded" />
+                            <div className="w-48 h-6 bg-[#e5e5e0] rounded" />
+                          </div>
+                          <div className="w-10 h-5 bg-[#e5e5e0] rounded-full" />
+                        </div>
+                        <div className="flex gap-12 mb-6">
+                          <div className="flex flex-col gap-2">
+                            <div className="w-20 h-3 bg-[#e5e5e0] rounded" />
+                            <div className="w-12 h-5 bg-[#e5e5e0] rounded" />
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            <div className="w-20 h-3 bg-[#e5e5e0] rounded" />
+                            <div className="w-12 h-5 bg-[#e5e5e0] rounded" />
+                          </div>
+                        </div>
+                        <div className="mt-auto pt-4 border-t border-gray-50">
+                          <div className="w-24 h-4 bg-[#e5e5e0] rounded" />
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 ) : (
                   <AnimatePresence mode="popLayout">
