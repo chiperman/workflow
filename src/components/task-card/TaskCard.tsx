@@ -41,12 +41,22 @@ function TaskCardComponent({
   const [localEnabled, setLocalEnabled] = useState(serviceHealth.enabled ?? true);
   const [isDismissed, setIsDismissed] = useState(false);
 
-  // 同步 props 变化到 local state
+  // 同步 props 变化到 local state，并自动重置卡片执行状态
   useEffect(() => {
     if (serviceHealth.enabled !== undefined) {
       setLocalEnabled(serviceHealth.enabled);
     }
-  }, [serviceHealth.enabled]);
+
+    // 如果卡片目前处于成功或失败的展示状态，延时 3 秒后自动重置回 idle
+    // 使得全局刷新能够正确响应和接管卡片表现
+    if (localStatus === 'success' || localStatus === 'error') {
+      const timer = setTimeout(() => {
+        setLocalStatus('idle');
+        setLocalMessage('');
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [serviceHealth.enabled, serviceHealth.status, localStatus]);
 
   // 计算最终状态
   const displayStatus = useMemo(() => {

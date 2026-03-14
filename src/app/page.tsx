@@ -117,22 +117,29 @@ export default function Home() {
                     <span>System Operations</span>
                   </motion.h1>
                   <div className="flex items-center gap-3">
-                    {isGuest && (
-                      <div className="hidden sm:flex items-center px-2 py-1 rounded bg-amber-50 border border-amber-100 text-[10px] text-amber-600 font-medium">
-                        Preview Mode
+                    {isLoading ? (
+                      <div className="flex items-center gap-2 opacity-60">
+                        <div className="w-8 h-8 rounded-lg bg-[#e5e5e0] animate-pulse" />
+                        <div className="w-8 h-8 rounded-lg bg-[#e5e5e0] animate-pulse" />
                       </div>
-                    )}
-                    <motion.button
-                      initial={{ opacity: 0, y: MOTION.yOffset }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{
-                        delay: MOTION.delay.header,
-                        duration: MOTION.duration,
-                        ease: MOTION.ease,
-                      }}
-                      onClick={handleRefreshClick}
-                      disabled={refreshUIStatus !== 'idle' || isGuest}
-                      className={`
+                    ) : (
+                      <>
+                        {isGuest && (
+                          <div className="hidden sm:flex items-center px-2 py-1 rounded bg-amber-50 border border-amber-100 text-[10px] text-amber-600 font-medium">
+                            Preview Mode
+                          </div>
+                        )}
+                        <motion.button
+                          initial={{ opacity: 0, y: MOTION.yOffset }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{
+                            delay: MOTION.delay.header,
+                            duration: MOTION.duration,
+                            ease: MOTION.ease,
+                          }}
+                          onClick={handleRefreshClick}
+                          disabled={refreshUIStatus !== 'idle' || isGuest}
+                          className={`
                       flex items-center justify-center p-2 rounded-lg border transition-colors duration-300 group
                       ${
                         refreshUIStatus === 'error'
@@ -144,95 +151,97 @@ export default function Home() {
                               : 'border-[#e5e5e0] text-[#888888] hover:bg-white hover:text-[#191919] hover:border-[#d97757]/30'
                       }
                     `}
-                      title={isGuest ? 'Sign in to refresh' : 'Refresh data'}
-                    >
-                      {refreshUIStatus === 'idle' ? (
-                        <RefreshCw
-                          className={`w-3.5 h-3.5 transition-transform duration-500 ${
-                            isGuest ? '' : 'group-hover:rotate-180'
-                          }`}
-                        />
-                      ) : (
-                        <AnimatePresence mode="wait">
-                          {refreshUIStatus === 'loading' ? (
-                            <motion.div
-                              key="loading"
-                              initial={{ scale: 0.5, opacity: 0 }}
-                              animate={{ scale: 1, opacity: 1 }}
-                              exit={{ scale: 0.5, opacity: 0 }}
-                            >
-                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                            </motion.div>
-                          ) : refreshUIStatus === 'success' ? (
-                            <motion.div
-                              key="success"
-                              initial={{ scale: 0.5, opacity: 0 }}
-                              animate={{ scale: 1, opacity: 1 }}
-                              exit={{ scale: 0.5, opacity: 0 }}
-                            >
-                              <Check className="w-3.5 h-3.5" />
-                            </motion.div>
+                          title={isGuest ? 'Sign in to refresh' : 'Refresh data'}
+                        >
+                          {refreshUIStatus === 'idle' ? (
+                            <RefreshCw
+                              className={`w-3.5 h-3.5 transition-transform duration-500 ${
+                                isGuest ? '' : 'group-hover:rotate-180'
+                              }`}
+                            />
                           ) : (
-                            <motion.div
-                              key="error"
-                              initial={{ scale: 0.5, opacity: 0 }}
-                              animate={{ scale: 1, opacity: 1 }}
-                              exit={{ scale: 0.5, opacity: 0 }}
-                            >
-                              <AlertCircle className="w-3.5 h-3.5" />
-                            </motion.div>
+                            <AnimatePresence mode="wait">
+                              {refreshUIStatus === 'loading' ? (
+                                <motion.div
+                                  key="loading"
+                                  initial={{ scale: 0.5, opacity: 0 }}
+                                  animate={{ scale: 1, opacity: 1 }}
+                                  exit={{ scale: 0.5, opacity: 0 }}
+                                >
+                                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                </motion.div>
+                              ) : refreshUIStatus === 'success' ? (
+                                <motion.div
+                                  key="success"
+                                  initial={{ scale: 0.5, opacity: 0 }}
+                                  animate={{ scale: 1, opacity: 1 }}
+                                  exit={{ scale: 0.5, opacity: 0 }}
+                                >
+                                  <Check className="w-3.5 h-3.5" />
+                                </motion.div>
+                              ) : (
+                                <motion.div
+                                  key="error"
+                                  initial={{ scale: 0.5, opacity: 0 }}
+                                  animate={{ scale: 1, opacity: 1 }}
+                                  exit={{ scale: 0.5, opacity: 0 }}
+                                >
+                                  <AlertCircle className="w-3.5 h-3.5" />
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
                           )}
-                        </AnimatePresence>
-                      )}
-                    </motion.button>
-                    {!isGuest && (
-                      <motion.button
-                        initial={{ opacity: 0, y: MOTION.yOffset }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{
-                          delay: MOTION.delay.header,
-                          duration: MOTION.duration,
-                          ease: MOTION.ease,
-                        }}
-                        onClick={openCreateModal}
-                        className="flex items-center justify-center p-2 rounded-lg border border-[#e5e5e0] text-[#888888] hover:bg-white hover:text-[#191919] hover:border-[#d97757]/30 transition-colors duration-300"
-                        title="Add new task"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                      </motion.button>
-                    )}
-                    {isGuest ? (
-                      <motion.button
-                        initial={{ opacity: 0, y: MOTION.yOffset }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{
-                          delay: MOTION.delay.header,
-                          duration: MOTION.duration,
-                          ease: MOTION.ease,
-                        }}
-                        onClick={() => router.push('/login')}
-                        className="flex items-center justify-center sm:justify-start gap-2 p-2 sm:px-3 sm:py-2 text-[10px] font-medium tracking-tight text-[#191919] bg-white border border-[#e5e5e0] rounded-lg hover:border-[#d97757]/30 transition-colors duration-300 whitespace-nowrap shadow-sm"
-                        title="Sign in"
-                      >
-                        <LogIn className="w-3.5 h-3.5" />
-                        <span className="hidden sm:inline">Sign in</span>
-                      </motion.button>
-                    ) : (
-                      <motion.button
-                        initial={{ opacity: 0, y: MOTION.yOffset }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{
-                          delay: MOTION.delay.header,
-                          duration: MOTION.duration,
-                          ease: MOTION.ease,
-                        }}
-                        onClick={() => setShowLogoutConfirm(true)}
-                        className="flex items-center justify-center sm:justify-start gap-2 p-2 sm:px-3 sm:py-2 text-[10px] font-medium tracking-tight text-[#888888] border border-[#e5e5e0] rounded-lg hover:bg-white hover:text-[#191919] hover:border-[#d97757]/30 transition-colors duration-300 whitespace-nowrap shadow-sm"
-                        title="Sign out"
-                      >
-                        <LogOut className="w-3.5 h-3.5" />
-                        <span className="hidden sm:inline">Sign out</span>
-                      </motion.button>
+                        </motion.button>
+                        {!isGuest && (
+                          <motion.button
+                            initial={{ opacity: 0, y: MOTION.yOffset }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{
+                              delay: MOTION.delay.header,
+                              duration: MOTION.duration,
+                              ease: MOTION.ease,
+                            }}
+                            onClick={openCreateModal}
+                            className="flex items-center justify-center p-2 rounded-lg border border-[#e5e5e0] text-[#888888] hover:bg-white hover:text-[#191919] hover:border-[#d97757]/30 transition-colors duration-300"
+                            title="Add new task"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                          </motion.button>
+                        )}
+                        {isGuest ? (
+                          <motion.button
+                            initial={{ opacity: 0, y: MOTION.yOffset }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{
+                              delay: MOTION.delay.header,
+                              duration: MOTION.duration,
+                              ease: MOTION.ease,
+                            }}
+                            onClick={() => router.push('/login')}
+                            className="flex items-center justify-center sm:justify-start gap-2 p-2 sm:px-3 sm:py-2 text-[10px] font-medium tracking-tight text-[#191919] bg-white border border-[#e5e5e0] rounded-lg hover:border-[#d97757]/30 transition-colors duration-300 whitespace-nowrap shadow-sm"
+                            title="Sign in"
+                          >
+                            <LogIn className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">Sign in</span>
+                          </motion.button>
+                        ) : (
+                          <motion.button
+                            initial={{ opacity: 0, y: MOTION.yOffset }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{
+                              delay: MOTION.delay.header,
+                              duration: MOTION.duration,
+                              ease: MOTION.ease,
+                            }}
+                            onClick={() => setShowLogoutConfirm(true)}
+                            className="flex items-center justify-center sm:justify-start gap-2 p-2 sm:px-3 sm:py-2 text-[10px] font-medium tracking-tight text-[#888888] border border-[#e5e5e0] rounded-lg hover:bg-white hover:text-[#191919] hover:border-[#d97757]/30 transition-colors duration-300 whitespace-nowrap shadow-sm"
+                            title="Sign out"
+                          >
+                            <LogOut className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">Sign out</span>
+                          </motion.button>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
