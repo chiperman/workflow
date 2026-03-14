@@ -39,6 +39,16 @@ export function useTasks() {
     return cards.sort((a, b) => a.id.localeCompare(b.id));
   }, [services]);
 
+  const groupedTasks = useMemo(() => {
+    const groups: Record<string, TaskCardData[]> = {};
+    taskCards.forEach(task => {
+      const cat = task.category || 'Other Protocols';
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(task);
+    });
+    return groups;
+  }, [taskCards]);
+
   const serviceStatuses = useMemo(() => {
     const statuses: Record<string, ServiceStatus | undefined> = {};
     Object.entries(services).forEach(([name, health]) => {
@@ -48,7 +58,7 @@ export function useTasks() {
   }, [services]);
 
   return {
-    taskCards,
+    groupedTasks,
     serviceStatuses,
     services,
     ...healthRest,

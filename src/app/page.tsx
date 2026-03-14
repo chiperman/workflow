@@ -23,7 +23,7 @@ export default function Home() {
 
   // 使用重构后的业务 Hook，但保持 UI 结构不变
   const {
-    taskCards,
+    groupedTasks,
     serviceStatuses,
     refreshAll,
     authType,
@@ -277,7 +277,7 @@ export default function Home() {
               </motion.div>
 
               {/* Task Cards List - 恢复为单列垂直布局 */}
-              <div className="grid grid-cols-1 gap-6 mb-12 relative min-h-[200px]">
+              <div className="flex flex-col gap-12 mb-12 relative min-h-[200px]">
                 {isLoading ? (
                   <div className="flex flex-col gap-6 w-full opacity-60">
                     {[1, 2, 3].map(i => (
@@ -310,26 +310,47 @@ export default function Home() {
                   </div>
                 ) : (
                   <AnimatePresence mode="popLayout">
-                    {taskCards.map((task, index) => (
-                      <motion.div
-                        key={task.id}
-                        layout
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{
-                          delay: index * MOTION.delay.cardStagger,
-                          duration: MOTION.duration,
-                          ease: MOTION.ease,
-                        }}
-                      >
-                        <TaskCard
-                          {...task}
-                          onStatsUpdate={() => refreshAll()}
-                          onEdit={openEditModal}
-                          isGuest={isGuest}
-                        />
-                      </motion.div>
+                    {Object.entries(groupedTasks).map(([category, tasks], groupIndex) => (
+                      <div key={category} className="flex flex-col gap-6">
+                        <motion.div
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{
+                            delay: groupIndex * 0.1,
+                            duration: 0.5,
+                          }}
+                          className="flex items-center gap-3"
+                        >
+                          <h2 className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#888888] pl-1">
+                            {category}
+                          </h2>
+                          <div className="h-[1px] flex-1 bg-gradient-to-r from-[#e5e5e0] to-transparent" />
+                        </motion.div>
+
+                        <div className="grid grid-cols-1 gap-6">
+                          {tasks.map((task, index) => (
+                            <motion.div
+                              key={task.id}
+                              layout
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, scale: 0.95 }}
+                              transition={{
+                                delay: groupIndex * 0.1 + index * MOTION.delay.cardStagger,
+                                duration: MOTION.duration,
+                                ease: MOTION.ease,
+                              }}
+                            >
+                              <TaskCard
+                                {...task}
+                                onStatsUpdate={() => refreshAll()}
+                                onEdit={openEditModal}
+                                isGuest={isGuest}
+                              />
+                            </motion.div>
+                          ))}
+                        </div>
+                      </div>
                     ))}
                   </AnimatePresence>
                 )}
