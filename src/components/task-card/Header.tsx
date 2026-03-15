@@ -100,25 +100,6 @@ export const Header = memo(function Header({
           <div className="flex items-center gap-1">
             {!isGuest && (
               <>
-                {onEdit && (
-                  <Tooltip>
-                    <TooltipTrigger
-                      render={
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => onEdit(serviceName)}
-                          className="h-8 w-8 text-[#888888] hover:text-[#d97757] hover:bg-[#f9f9f9] opacity-0 group-hover:opacity-100 transition-all duration-200"
-                        />
-                      }
-                    >
-                      <Settings className="w-3.5 h-3.5" />
-                    </TooltipTrigger>
-                    <TooltipContent side="top">
-                      <p className="text-xs">Edit Configuration</p>
-                    </TooltipContent>
-                  </Tooltip>
-                )}
                 {onDelete && (
                   <Tooltip>
                     <TooltipTrigger
@@ -135,6 +116,25 @@ export const Header = memo(function Header({
                     </TooltipTrigger>
                     <TooltipContent side="top">
                       <p className="text-xs">Delete Task</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+                {onEdit && (
+                  <Tooltip>
+                    <TooltipTrigger
+                      render={
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onEdit(serviceName)}
+                          className="h-8 w-8 text-[#888888] hover:text-[#d97757] hover:bg-[#f9f9f9] opacity-0 group-hover:opacity-100 transition-all duration-200"
+                        />
+                      }
+                    >
+                      <Settings className="w-3.5 h-3.5" />
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      <p className="text-xs">Edit Configuration</p>
                     </TooltipContent>
                   </Tooltip>
                 )}

@@ -46,12 +46,15 @@ function TaskCardComponent({
   const [isDismissed, setIsDismissed] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  // 同步 props 变化到 local state，并自动重置卡片执行状态
+  // 同步 props 变化到 local state
   useEffect(() => {
     if (serviceHealth.enabled !== undefined) {
       setLocalEnabled(serviceHealth.enabled);
     }
+  }, [serviceHealth.enabled]);
 
+  // 自动重置卡片执行状态
+  useEffect(() => {
     // 如果卡片目前处于成功或失败的展示状态，延时 3 秒后自动重置回 idle
     // 使得全局刷新能够正确响应和接管卡片表现
     if (localStatus === 'success' || localStatus === 'error') {
@@ -61,7 +64,7 @@ function TaskCardComponent({
       }, 3000);
       return () => clearTimeout(timer);
     }
-  }, [serviceHealth.enabled, serviceHealth.status, localStatus]);
+  }, [localStatus]);
 
   // 计算最终状态
   const displayStatus = useMemo(() => {
@@ -127,8 +130,8 @@ function TaskCardComponent({
   const handleToggle = useCallback(async () => {
     if (isToggling) return;
     setIsToggling(true);
-    setLocalMessage('');
     const newEnabled = !localEnabled;
+    let success = false;
     try {
       const res = await fetch('/api/service-config', {
         method: 'PATCH',
@@ -139,19 +142,18 @@ function TaskCardComponent({
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        setLocalEnabled(newEnabled);
-        setLocalStatus('success');
-        setLocalMessage(newEnabled ? 'Auto cron enabled' : 'Auto cron disabled');
         onStatsUpdate({ ...serviceHealth, enabled: newEnabled });
+        success = true;
       } else {
-        setLocalStatus('error');
-        setLocalMessage(data.message || 'Failed to toggle service');
+        toast.error(data.message || 'Failed to toggle service');
       }
     } catch (error: unknown) {
-      setLocalStatus('error');
-      setLocalMessage(error instanceof Error ? error.message : 'Network failure');
+      toast.error(error instanceof Error ? error.message : 'Network failure');
     } finally {
       setIsToggling(false);
+      if (success) {
+        toast.success(newEnabled ? 'Auto cron enabled' : 'Auto cron disabled');
+      }
     }
   }, [isToggling, localEnabled, serviceName, serviceHealth, onStatsUpdate]);
 
