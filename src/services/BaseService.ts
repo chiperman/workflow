@@ -13,6 +13,7 @@ export abstract class BaseService {
    * none: 绝不发送成功通知（失败通知仍可根据逻辑保留）
    */
   protected notificationLevel: NotificationLevel = 'always';
+  protected notificationKey?: string;
 
   constructor(protected serviceName: string) {}
 
@@ -23,6 +24,10 @@ export abstract class BaseService {
 
   public get notifyLevel(): NotificationLevel {
     return this.notificationLevel;
+  }
+
+  public get notifyKey(): string | undefined {
+    return this.notificationKey;
   }
 
   /**
