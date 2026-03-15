@@ -4,7 +4,7 @@ import { RollingNumber } from '../RollingNumber';
 
 interface StatsProps {
   stats: ServiceHealth['stats'];
-  displayStatus: 'idle' | 'loading' | 'success' | 'error';
+  displayStatus: 'idle' | 'loading' | 'success' | 'error' | 'deleting';
 }
 
 export const Stats = memo(function Stats({ stats, displayStatus }: StatsProps) {

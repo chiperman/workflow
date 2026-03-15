@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { memo } from 'react';
 import { Switch } from '@/components/ui/switch';
-import { Settings } from 'lucide-react';
+import { Settings, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -9,13 +9,14 @@ interface HeaderProps {
   title: string;
   description: string;
   category: string;
-  displayStatus: 'idle' | 'loading' | 'success' | 'error';
+  displayStatus: 'idle' | 'loading' | 'success' | 'error' | 'deleting';
   localEnabled: boolean;
   isToggling: boolean;
   todayCheckedIn?: boolean;
   onToggle: () => void;
   isGuest?: boolean;
   onEdit?: (id: string) => void;
+  onDelete?: (id: string) => void;
   serviceName: string;
 }
 
@@ -30,6 +31,7 @@ export const Header = memo(function Header({
   onToggle,
   isGuest,
   onEdit,
+  onDelete,
   serviceName,
 }: HeaderProps) {
   return (
@@ -80,36 +82,63 @@ export const Header = memo(function Header({
                     ? 'text-red-500'
                     : displayStatus === 'success'
                       ? 'text-emerald-600'
-                      : 'text-amber-500'
+                      : displayStatus === 'deleting'
+                        ? 'text-amber-600'
+                        : 'text-amber-500'
                 }`}
               >
                 {displayStatus === 'loading'
                   ? 'Running...'
-                  : displayStatus === 'error'
-                    ? 'Failed'
-                    : 'Success'}
+                  : displayStatus === 'deleting'
+                    ? 'Deleting...'
+                    : displayStatus === 'error'
+                      ? 'Failed'
+                      : 'Success'}
               </motion.span>
             )}
           </AnimatePresence>
           <div className="flex items-center gap-1">
-            {!isGuest && onEdit && (
-              <Tooltip>
-                <TooltipTrigger
-                  render={
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onEdit(serviceName)}
-                      className="h-8 w-8 text-[#888888] hover:text-[#d97757] hover:bg-[#f9f9f9] opacity-0 group-hover:opacity-100 transition-all duration-200"
-                    />
-                  }
-                >
-                  <Settings className="w-3.5 h-3.5" />
-                </TooltipTrigger>
-                <TooltipContent side="top">
-                  <p className="text-xs">Edit Configuration</p>
-                </TooltipContent>
-              </Tooltip>
+            {!isGuest && (
+              <>
+                {onEdit && (
+                  <Tooltip>
+                    <TooltipTrigger
+                      render={
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onEdit(serviceName)}
+                          className="h-8 w-8 text-[#888888] hover:text-[#d97757] hover:bg-[#f9f9f9] opacity-0 group-hover:opacity-100 transition-all duration-200"
+                        />
+                      }
+                    >
+                      <Settings className="w-3.5 h-3.5" />
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      <p className="text-xs">Edit Configuration</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+                {onDelete && (
+                  <Tooltip>
+                    <TooltipTrigger
+                      render={
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onDelete(serviceName)}
+                          className="h-8 w-8 text-[#888888] hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all duration-200"
+                        />
+                      }
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      <p className="text-xs">Delete Task</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+              </>
             )}
             <Tooltip>
               <TooltipTrigger>
