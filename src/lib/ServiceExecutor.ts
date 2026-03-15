@@ -125,12 +125,15 @@ export class ServiceExecutor {
 
     // 处理通知
     const notifyLevel = service.notifyLevel;
+    const notifyKey = service.notifyKey;
+
     if (result.success) {
       if (notifyLevel === 'always') {
         await sendBarkNotification(
           `✅ ${service.name} Success`,
           result.message,
-          `${service.name}-Success`
+          `${service.name}-Success`,
+          notifyKey
         );
       }
     } else {
@@ -138,7 +141,8 @@ export class ServiceExecutor {
         await sendBarkNotification(
           `❌ ${service.name} Failed`,
           result.error || result.message,
-          `${service.name}-Failed`
+          `${service.name}-Failed`,
+          notifyKey
         );
       }
     }

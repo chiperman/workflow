@@ -1,8 +1,25 @@
 import { env } from './env';
 
-export async function sendBarkNotification(title: string, body: string, group?: string) {
-  if (!env.bark?.deviceKey) {
-    console.warn('BARK_DEVICE_KEY is not set, skipping notification');
+/**
+ * 发送 Bark 通知
+ * @param title 标题
+ * @param body 内容
+ * @param group 分组
+ * @param customKey 可选的自定义 Device Key (任务级别配置)
+ */
+export async function sendBarkNotification(
+  title: string,
+  body: string,
+  group?: string,
+  customKey?: string
+) {
+  // 优先级：任务级别 customKey > 全局环境变量 env.bark.deviceKey
+  const activeKey = customKey || env.bark?.deviceKey;
+
+  if (!activeKey) {
+    console.warn(
+      'Bark device key is not provided (neither custom nor global), skipping notification'
+    );
     return;
   }
 
@@ -10,7 +27,7 @@ export async function sendBarkNotification(title: string, body: string, group?: 
   const encodedBody = encodeURIComponent(body);
 
   // 构建 URL，可选的 group 参数
-  let url = `https://api.day.app/${env.bark.deviceKey}/${encodedTitle}/${encodedBody}`;
+  let url = `https://api.day.app/${activeKey}/${encodedTitle}/${encodedBody}`;
   if (group) {
     url += `?group=${encodeURIComponent(group)}`;
   }
