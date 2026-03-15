@@ -3,7 +3,7 @@ import { HeatmapLegend } from '@/components/heatmap/HeatmapLegend';
 import { HeatmapYearSelector } from '@/components/heatmap/HeatmapYearSelector';
 import { SWR_CONFIG } from '@/config/swr';
 import { generateYearDays, getMonthLabels, groupByWeeks, WEEKDAYS } from '@/lib/heatmap-calendar';
-import type { ApiResponse, HeatmapDay } from '@/types';
+import type { ApiResponse, HeatmapData, HeatmapDay } from '@/types';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import { useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
@@ -61,7 +61,7 @@ export function Heatmap() {
   const days = useMemo(() => generateYearDays(selectedYear), [selectedYear]);
   const dataMap = useMemo(() => {
     const map = new Map<string, HeatmapDay>();
-    data.forEach(d => map.set(d.date, d));
+    data.forEach((d: HeatmapDay) => map.set(d.date, d));
     return map;
   }, [data]);
 
