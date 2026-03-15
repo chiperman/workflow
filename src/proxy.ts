@@ -2,7 +2,7 @@ import { verifyAuth } from '@/lib/auth';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // 1. 统一鉴权

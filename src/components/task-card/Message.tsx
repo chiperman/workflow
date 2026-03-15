@@ -1,5 +1,6 @@
 import { AlertCircle, Check, X } from 'lucide-react';
 import { memo } from 'react';
+import { Button } from '@/components/ui/button';
 
 interface MessageProps {
   message: string;
@@ -23,13 +24,15 @@ export const Message = memo(function Message({ message, displayStatus, onDismiss
         {displayStatus === 'error' && <AlertCircle className="w-4 h-4" />}
       </span>
       <p className="leading-relaxed">{message}</p>
-      <button
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={onDismiss}
-        className="absolute top-0 right-0 p-0.5 hover:bg-black/5 rounded transition-colors"
+        className="absolute top-0 right-0 size-6 text-[#888888] hover:text-[#191919]"
         title="Dismiss message"
       >
-        <X className="w-3 h-3 opacity-50 hover:opacity-100" />
-      </button>
+        <X className="w-3 h-3" />
+      </Button>
     </div>
   );
 });

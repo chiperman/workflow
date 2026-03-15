@@ -5,6 +5,9 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowRight, ChevronLeft, Eye, EyeOff, Loader2, Workflow } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+
+const MotionButton = motion(Button);
 
 export default function LoginPage() {
   const [key, setKey] = useState('');
@@ -51,18 +54,20 @@ export default function LoginPage() {
         {!isExiting && (
           <>
             {/* Back Button */}
-            <motion.button
+            <MotionButton
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -10 }}
               transition={{ delay: 0.1, duration: 0.5 }}
+              variant="outline"
+              size="sm"
               onClick={() => router.push('/')}
-              className="absolute top-8 left-8 flex items-center gap-2 px-3 py-2 text-[10px] font-medium tracking-tight text-[#888888] border border-[#e5e5e0] rounded-lg hover:bg-white hover:text-[#191919] hover:border-[#d97757]/30 transition-colors duration-300 shadow-sm sm:shadow-none"
+              className="absolute top-8 left-8 text-[10px] font-medium tracking-tight text-[#888888] hover:text-[#191919] hover:border-[#d97757]/30 transition-colors duration-300 shadow-sm sm:shadow-none"
               title="Back to home"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
               <span>Back to home</span>
-            </motion.button>
+            </MotionButton>
 
             <motion.main
               initial={{ opacity: 0 }}
@@ -102,11 +107,13 @@ export default function LoginPage() {
                       disabled={loading}
                     />
                     <div className="absolute right-1.5 top-1.5 flex gap-1">
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
+                        size="icon"
                         onClick={() => setShowPassword(!showPassword)}
                         disabled={loading || !key}
-                        className="h-9 w-9 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-50 disabled:opacity-30 rounded-md transition-all duration-200 flex items-center justify-center outline-none focus:ring-2 focus:ring-[#d97757]/20"
+                        className="h-9 w-9 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-50"
                         title={showPassword ? 'Hide password' : 'Show password'}
                       >
                         {showPassword ? (
@@ -114,18 +121,20 @@ export default function LoginPage() {
                         ) : (
                           <Eye className="w-4 h-4" />
                         )}
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="submit"
+                        variant="brand"
+                        size="icon"
                         disabled={loading || !key}
-                        className="h-9 px-3 bg-[#191919] text-white hover:bg-[#333333] disabled:bg-zinc-100 disabled:text-zinc-400 rounded-md transition-all duration-300 flex items-center justify-center outline-none focus:ring-2 focus:ring-[#d97757]"
+                        className="h-9 w-9 shadow-sm shadow-[#d97757]/20"
                       >
                         {loading ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
                           <ArrowRight className="w-4 h-4" />
                         )}
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </div>

@@ -2,6 +2,7 @@
 
 import { AlertTriangle, Home, RefreshCw } from 'lucide-react';
 import { Component, ErrorInfo, ReactNode } from 'react';
+import { Button } from '@/components/ui/button';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -171,20 +172,19 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
             {/* 操作按钮 */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button
-                onClick={this.handleRetry}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-[#191919] text-[#fdfcf8] rounded-md font-medium hover:bg-[#333333] transition-colors"
-              >
+              <Button variant="brand" size="lg" onClick={this.handleRetry} className="gap-2 px-8">
                 <RefreshCw className="w-4 h-4" />
                 Retry
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
                 onClick={this.handleGoHome}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-white text-[#191919] border border-[#e5e5e0] rounded-md font-medium hover:bg-[#f5f5f0] transition-colors"
+                className="gap-2 px-8 text-[#191919]"
               >
                 <Home className="w-4 h-4" />
                 Go Home
-              </button>
+              </Button>
             </div>
           </div>
         </div>
