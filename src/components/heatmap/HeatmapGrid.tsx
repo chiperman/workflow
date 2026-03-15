@@ -9,7 +9,7 @@ interface MemoizedCellProps {
   dayData: HeatmapDay | undefined;
   globalIndex: number;
   isInitialLoad: boolean;
-  allServices?: string[];
+  allServices?: { service: string; created_at: string }[];
 }
 
 // 基础格子布局样式 (共享)
@@ -86,7 +86,7 @@ interface HeatmapGridProps {
   days: string[];
   dataMap: Map<string, HeatmapDay>;
   isInitialLoad: boolean;
-  allServices?: string[];
+  allServices?: { service: string; created_at: string }[];
 }
 
 export function HeatmapGrid({

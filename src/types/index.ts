@@ -124,6 +124,7 @@ export interface ServiceConfig {
   auto_count: number;
   failure_count: number;
   timestamp: string;
+  created_at: string;
   last_run_at?: string;
 }
 
@@ -177,7 +178,7 @@ export interface HeatmapDay {
  */
 export interface HeatmapData {
   heatmap: HeatmapDay[];
-  services: string[];
+  services: { service: string; created_at: string }[];
 }
 
 /**
