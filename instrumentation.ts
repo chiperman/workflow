@@ -16,7 +16,6 @@ export async function register() {
     console.log('📋 Loaded services:', {
       supabase: !!env.supabase.url,
 
-      glados: !!env.glados.cookie,
       bark: !!env.bark?.deviceKey,
       cron: !!env.cron?.secret,
     });

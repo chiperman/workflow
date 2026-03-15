@@ -1,10 +1,10 @@
-import { env } from '@/lib/env';
 import { logger } from '@/lib/logger';
-import { supabase } from '@/lib/supabase';
+import { supabase as defaultSupabase } from '@/lib/supabase';
 import { getBeijingTime } from '@/lib/utils';
 import { ServiceExecutor } from '@/lib/ServiceExecutor';
 import type { KeepAliveResult, ServiceConfig, ValidationRules } from '@/types';
 import { BaseService } from './BaseService';
+import { createClient } from '@supabase/supabase-js';
 
 export class DynamicService extends BaseService {
   public readonly fullConfig: ServiceConfig;
@@ -13,6 +13,7 @@ export class DynamicService extends BaseService {
     super(config.service);
     this.fullConfig = config;
     this.notificationLevel = config.notification_level;
+    this.notificationKey = config.config?.notification_key;
   }
 
   public get type(): string {
@@ -50,26 +51,57 @@ export class DynamicService extends BaseService {
 
   /**
    * 执行 Supabase 内部保活（仅更新统计信息）
+   * 如果配置了远程项目的 url 和 key，则对远程项目执行查询
    */
   private async executeSupabaseInternal(trigger: 'auto' | 'manual'): Promise<KeepAliveResult> {
-    logger.info(`[${this.serviceName}] Executing internal keep-alive...`);
-    const updateResult = await this.updateServiceStats(true, trigger);
-    if (!updateResult.ok) {
-      throw new Error(updateResult.error);
-    }
-    const { action, data: stats } = updateResult.data;
-    const beijingTime = getBeijingTime();
-    const message = `${this.fullConfig.name} 成功: ${
-      action === 'created' ? '创建记录' : '更新记录'
-    } 于 ${beijingTime} (${trigger})`;
+    const { config } = this.fullConfig;
+    const isRemote = !!(config.supabase_url && config.supabase_key);
+    const targetUrl = config.supabase_url || 'Current Project';
 
-    return {
-      success: true,
-      action,
-      message,
-      duration: 0,
-      data: stats,
-    };
+    logger.info(`[${this.serviceName}] Executing Supabase keep-alive on: ${targetUrl}...`);
+
+    try {
+      // 如果是远程项目，创建一个临时的客户端进行一次简单的查询
+      if (isRemote) {
+        const remoteClient = createClient(config.supabase_url!, config.supabase_key!);
+        const targetTable = config.table_name || 'keep_alive';
+
+        // 执行一个简单的查询来触发活跃状态
+        const { error } = await remoteClient
+          .from(targetTable)
+          .select('count', { count: 'exact', head: true })
+          .limit(1);
+
+        if (error) {
+          throw new Error(`Remote Supabase check failed: ${error.message}`);
+        }
+        logger.info(`[${this.serviceName}] Remote Supabase check successful.`);
+      }
+
+      // 无论远程还是本地，都更新当前系统中的统计信息
+      const updateResult = await this.updateServiceStats(true, trigger);
+      if (!updateResult.ok) {
+        throw new Error(updateResult.error);
+      }
+
+      const { action, data: stats } = updateResult.data;
+      const beijingTime = getBeijingTime();
+      const message = `${this.fullConfig.name} 成功: ${
+        isRemote ? '已触发远程保活' : action === 'created' ? '创建记录' : '更新记录'
+      } 于 ${beijingTime} (${trigger})`;
+
+      return {
+        success: true,
+        action,
+        message,
+        duration: 0,
+        data: stats,
+      };
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'Unknown Supabase error';
+      logger.error(`[${this.serviceName}] executeSupabaseInternal error:`, msg);
+      return { success: false, message: msg, duration: 0, error: msg };
+    }
   }
 
   /**
@@ -94,13 +126,9 @@ export class DynamicService extends BaseService {
 
         const headers: Record<string, string> = { ...config.headers };
 
-        // 特殊处理 GLaDOS Cookie 注入 (保持向后兼容)
-        if (
-          this.serviceName.toLowerCase() === 'glados' &&
-          !headers['Cookie'] &&
-          env.glados.cookie
-        ) {
-          headers['Cookie'] = env.glados.cookie;
+        // 注入专用 Cookie 字段 (如果配置了直接输入)
+        if (config.cookie) {
+          headers['Cookie'] = config.cookie;
         }
 
         const response = await fetch(url, {
@@ -170,7 +198,7 @@ export class DynamicService extends BaseService {
       duration: 0,
       data: stats,
       // 如果不需要增加计数，通常意味着是“重复签到”之类的场景，我们可以选择跳过日志
-      skipLog: !shouldIncrement && this.serviceName.toLowerCase() === 'glados',
+      skipLog: !shouldIncrement,
     };
   }
 
@@ -269,7 +297,7 @@ export class DynamicService extends BaseService {
 
     // 运行结束后更新最后运行时间 (异步执行，不等待)
     if (result.success) {
-      supabase
+      defaultSupabase
         .from('keep_alive')
         .update({ last_run_at: new Date().toISOString() })
         .eq('service', this.serviceName.toLowerCase())

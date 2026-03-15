@@ -41,7 +41,7 @@ export interface ServiceHealth {
   type?: string;
   description?: string;
   category?: string;
-  config?: HttpConfig;
+  config?: TaskConfigData;
   rules?: {
     success?: ValidationRules;
     increment?: ValidationRules;
@@ -83,15 +83,25 @@ export interface ValidationRules {
 }
 
 /**
- * HTTP 配置
+ * 通用的任务配置数据 (HTTP 或 Supabase 内部项目)
  */
-export interface HttpConfig {
+export interface TaskConfigData {
+  // HTTP 专用
   url?: string;
   urls?: string[]; // 支持多个 URL 轮询
   method?: string;
   headers?: Record<string, string>;
+  cookie?: string;
   body?: string;
   timeout?: number;
+
+  // Supabase 专用
+  supabase_url?: string;
+  supabase_key?: string;
+  table_name?: string;
+
+  // 通知专用
+  notification_key?: string;
 }
 
 /**
@@ -103,7 +113,7 @@ export interface ServiceConfig {
   description?: string;
   category?: string;
   type: 'http' | 'supabase_internal';
-  config: HttpConfig;
+  config: TaskConfigData;
   rules: {
     success?: ValidationRules;
     increment?: ValidationRules;

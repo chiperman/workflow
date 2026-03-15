@@ -10,6 +10,7 @@ jest.mock('lucide-react', () => ({
   Play: () => <span data-testid="play-icon" />,
   X: () => <span data-testid="close-icon" />,
   Settings: () => <span data-testid="settings-icon" />,
+  Trash2: () => <span data-testid="trash-icon" />,
   ExternalLink: () => <span data-testid="link-icon" />,
 }));
 
@@ -18,11 +19,39 @@ jest.mock('../../RollingNumber', () => ({
   RollingNumber: ({ value }: { value: number }) => <span>{value}</span>,
 }));
 
-// Mock Tooltip
+// Mock Tooltip components from shadcn/ui
 jest.mock('@/components/ui/tooltip', () => ({
-  Tooltip: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  TooltipTrigger: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  TooltipContent: () => null,
+  Tooltip: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="tooltip">{children}</div>
+  ),
+  TooltipTrigger: ({
+    children,
+    render,
+  }: {
+    children: React.ReactNode;
+    render?: React.ReactNode;
+  }) => <div data-testid="tooltip-trigger">{render || children}</div>,
+  TooltipContent: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="tooltip-content">{children}</div>
+  ),
+  TooltipProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+// Mock Button to avoid import issues in tests
+jest.mock('@/components/ui/button', () => ({
+  Button: ({
+    children,
+    onClick,
+    className,
+  }: {
+    children?: React.ReactNode;
+    onClick?: () => void;
+    className?: string;
+  }) => (
+    <button onClick={onClick} className={className}>
+      {children}
+    </button>
+  ),
 }));
 
 // Mock Switch to avoid JSDOM PointerEvent issues

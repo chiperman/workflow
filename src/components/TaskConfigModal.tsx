@@ -19,7 +19,7 @@ const DEFAULT_CONFIG: Partial<ServiceConfig> = {
   type: 'http',
   enabled: true,
   notification_level: 'failure-only',
-  config: { urls: [''], method: 'POST', headers: {}, body: '' },
+  config: { urls: [''], method: 'POST', headers: {}, cookie: '', body: '' },
   rules: { success: { status: 200 } },
 };
 
@@ -238,22 +238,43 @@ export function TaskConfigModal({
                   className="w-full px-3 py-2 bg-[#f9f9f9] border border-[#e5e5e0] rounded-lg text-sm focus:outline-none focus:border-[#d97757]/50"
                 />
               </div>
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-medium text-[#555555]">Notification Level</label>
-                <select
-                  value={config.notification_level}
-                  onChange={e =>
-                    setConfig({
-                      ...config,
-                      notification_level: e.target.value as 'always' | 'failure-only' | 'none',
-                    })
-                  }
-                  className="w-full px-3 py-2 bg-[#f9f9f9] border border-[#e5e5e0] rounded-lg text-sm focus:outline-none focus:border-[#d97757]/50"
-                >
-                  <option value="always">Always Notify</option>
-                  <option value="failure-only">On Failure Only</option>
-                  <option value="none">Disabled</option>
-                </select>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-medium text-[#555555]">
+                    Notification Level
+                  </label>
+                  <select
+                    value={config.notification_level}
+                    onChange={e =>
+                      setConfig({
+                        ...config,
+                        notification_level: e.target.value as 'always' | 'failure-only' | 'none',
+                      })
+                    }
+                    className="w-full px-3 py-2 bg-[#f9f9f9] border border-[#e5e5e0] rounded-lg text-sm focus:outline-none focus:border-[#d97757]/50"
+                  >
+                    <option value="always">Always Notify</option>
+                    <option value="failure-only">On Failure Only</option>
+                    <option value="none">Disabled</option>
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-medium text-[#555555]">
+                    Bark Key (Optional)
+                  </label>
+                  <input
+                    type="password"
+                    value={config.config?.notification_key || ''}
+                    onChange={e =>
+                      setConfig({
+                        ...config,
+                        config: { ...config.config!, notification_key: e.target.value },
+                      })
+                    }
+                    placeholder="individual device key"
+                    className="w-full px-3 py-2 bg-[#f9f9f9] border border-[#e5e5e0] rounded-lg text-sm focus:outline-none focus:border-[#d97757]/50"
+                  />
+                </div>
               </div>
             </div>
             <div className="space-y-1.5">
@@ -333,21 +354,95 @@ export function TaskConfigModal({
                   </select>
                 </div>
                 <div className="col-span-2 space-y-1.5">
-                  <label className="text-[11px] font-medium text-[#555555]">Headers (JSON)</label>
+                  <label className="text-[11px] font-medium text-[#555555]">
+                    Cookie (Direct Input)
+                  </label>
                   <input
-                    value={headersStr}
-                    onChange={e => {
-                      setHeadersStr(e.target.value);
-                      try {
-                        const h = JSON.parse(e.target.value);
-                        setConfig({ ...config, config: { ...config.config!, headers: h } });
-                      } catch (_err) {
-                        // Silently handle invalid JSON while typing
-                      }
-                    }}
+                    value={config.config?.cookie || ''}
+                    onChange={e =>
+                      setConfig({
+                        ...config,
+                        config: { ...config.config!, cookie: e.target.value },
+                      })
+                    }
+                    placeholder="paste your cookie string here"
                     className="w-full px-3 py-2 bg-[#f9f9f9] border border-[#e5e5e0] rounded-lg text-sm font-mono"
                   />
                 </div>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-medium text-[#555555]">Headers (JSON)</label>
+                <input
+                  value={headersStr}
+                  onChange={e => {
+                    setHeadersStr(e.target.value);
+                    try {
+                      const h = JSON.parse(e.target.value);
+                      setConfig({ ...config, config: { ...config.config!, headers: h } });
+                    } catch (_err) {
+                      // Silently handle invalid JSON while typing
+                    }
+                  }}
+                  className="w-full px-3 py-2 bg-[#f9f9f9] border border-[#e5e5e0] rounded-lg text-sm font-mono"
+                />
+              </div>
+            </section>
+          )}
+
+          {config.type === 'supabase_internal' && (
+            <section className="space-y-4 pt-4 border-t border-[#f0f0ed]">
+              <h3 className="text-xs font-semibold text-[#888888] uppercase tracking-wider flex items-center gap-2">
+                <Globe className="w-3.5 h-3.5" /> Remote Supabase Settings
+              </h3>
+              <p className="text-[11px] text-[#888888]">
+                Leave blank to use the current project credentials.
+              </p>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-medium text-[#555555]">Supabase URL</label>
+                <input
+                  value={config.config?.supabase_url || ''}
+                  onChange={e =>
+                    setConfig({
+                      ...config,
+                      config: { ...config.config!, supabase_url: e.target.value },
+                    })
+                  }
+                  placeholder="https://your-project.supabase.co"
+                  className="w-full px-3 py-2 bg-[#f9f9f9] border border-[#e5e5e0] rounded-lg text-sm focus:outline-none focus:border-[#d97757]/50"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-medium text-[#555555]">
+                  Service Role Key (Private)
+                </label>
+                <input
+                  type="password"
+                  value={config.config?.supabase_key || ''}
+                  onChange={e =>
+                    setConfig({
+                      ...config,
+                      config: { ...config.config!, supabase_key: e.target.value },
+                    })
+                  }
+                  placeholder="your-service-role-key"
+                  className="w-full px-3 py-2 bg-[#f9f9f9] border border-[#e5e5e0] rounded-lg text-sm focus:outline-none focus:border-[#d97757]/50"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-medium text-[#555555]">
+                  Target Table (for keep-alive query)
+                </label>
+                <input
+                  value={config.config?.table_name || ''}
+                  onChange={e =>
+                    setConfig({
+                      ...config,
+                      config: { ...config.config!, table_name: e.target.value },
+                    })
+                  }
+                  placeholder="keep_alive (default)"
+                  className="w-full px-3 py-2 bg-[#f9f9f9] border border-[#e5e5e0] rounded-lg text-sm focus:outline-none focus:border-[#d97757]/50"
+                />
               </div>
             </section>
           )}

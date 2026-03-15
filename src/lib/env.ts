@@ -10,10 +10,6 @@ interface EnvConfig {
     url: string;
     serviceRoleKey: string;
   };
-  glados: {
-    cookie: string;
-    apiUrl?: string;
-  };
   bark?: {
     deviceKey: string;
   };
@@ -34,8 +30,6 @@ function validateEnv(): EnvConfig {
   // 读取环境变量
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const gladosCookie = process.env.GLADOS_COOKIE;
-  const gladosApiUrl = process.env.GLADOS_API_URL;
   const barkDeviceKey = process.env.BARK_DEVICE_KEY;
   const cronSecret = process.env.CRON_SECRET;
   const appKey = process.env.APP_KEY;
@@ -44,7 +38,6 @@ function validateEnv(): EnvConfig {
   if (isServer) {
     if (!supabaseUrl) missing.push('NEXT_PUBLIC_SUPABASE_URL');
     if (!supabaseServiceRoleKey) missing.push('SUPABASE_SERVICE_ROLE_KEY');
-    if (!gladosCookie) missing.push('GLADOS_COOKIE');
 
     if (missing.length > 0) {
       const errorMessage = [
@@ -83,10 +76,6 @@ function validateEnv(): EnvConfig {
     supabase: {
       url: supabaseUrl || '',
       serviceRoleKey: supabaseServiceRoleKey || '',
-    },
-    glados: {
-      cookie: gladosCookie || '',
-      apiUrl: gladosApiUrl,
     },
     ...(barkDeviceKey && { bark: { deviceKey: barkDeviceKey } }),
     ...(cronSecret && { cron: { secret: cronSecret } }),
