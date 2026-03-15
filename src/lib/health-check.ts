@@ -72,6 +72,7 @@ export async function checkServiceHealth(serviceId: string): Promise<ServiceHeal
     tableExists,
     stats,
     enabled,
+    notification_level: service.notifyLevel,
     todayCheckedIn,
     name: service.displayName,
     type: service.type,

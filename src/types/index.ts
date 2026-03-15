@@ -32,6 +32,8 @@ export interface ServiceHealth {
   stats: ServiceStats;
   message?: string;
   enabled?: boolean;
+  /** 通知级别 */
+  notification_level?: NotificationLevel;
   /** 今日是否已有签到记录 */
   todayCheckedIn?: boolean;
   /** 任务元数据 */
@@ -76,6 +78,8 @@ export interface RuleEntry {
 export interface ValidationRules {
   status?: number;
   json?: RuleEntry[];
+  /** 智能匹配模式：自动扫描返回内容中的成功关键词 */
+  smart_matching?: boolean;
 }
 
 /**

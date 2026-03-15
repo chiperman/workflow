@@ -75,7 +75,7 @@ export class DynamicService extends BaseService {
   /**
    * 执行通用 HTTP 请求
    */
-  private async executeHttpRequest(trigger: 'auto' | 'manual'): Promise<KeepAliveResult> {
+  protected async executeHttpRequest(trigger: 'auto' | 'manual'): Promise<KeepAliveResult> {
     const { config, rules } = this.fullConfig;
     const urls = config.urls || (config.url ? [config.url] : []);
 
@@ -180,12 +180,32 @@ export class DynamicService extends BaseService {
   private validateRules(status: number, data: unknown, rules?: ValidationRules): boolean {
     if (!rules) return true;
 
-    // 1. 状态码校验
+    // 1. 智能匹配模式 (Smart Matching)
+    // 自动扫描返回内容中的常见成功标志
+    if (rules.smart_matching) {
+      // 只要状态码是 2xx 且内容中没有明显的错误词，或者包含明显的成功词
+      const isStatusOk = status >= 200 && status < 300;
+      const contentStr = JSON.stringify(data).toLowerCase();
+
+      const successWords = ['success', 'ok', 'true', '0', '成功', '完成'];
+      const failureWords = ['error', 'fail', 'invalid', 'expired', '失败', '错误'];
+
+      const hasSuccess = successWords.some(w => contentStr.includes(w));
+      const hasFailure = failureWords.some(w => contentStr.includes(w));
+
+      // 判定逻辑：状态码OK 且 (有成功词 或 没有失败词)
+      if (isStatusOk && (hasSuccess || !hasFailure)) {
+        return true;
+      }
+      // 如果没通过智能判断，则继续走下方的常规校验
+    }
+
+    // 2. 状态码校验 (显式配置优先级最高)
     if (rules.status !== undefined && status !== rules.status) {
       return false;
     }
 
-    // 2. JSON/数据 校验
+    // 3. JSON/数据 校验
     if (rules.json && rules.json.length > 0) {
       for (const entry of rules.json) {
         const actualValue = this.getValueByPath(data, entry.path);
