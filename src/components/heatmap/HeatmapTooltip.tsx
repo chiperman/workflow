@@ -32,6 +32,10 @@ export function HeatmapTooltip({ day, children, allServices }: HeatmapTooltipPro
     .filter(([, status]) => status === 'failure')
     .map(([service]) => service.charAt(0).toUpperCase() + service.slice(1));
 
+  const successServices = Object.entries(day.services)
+    .filter(([, status]) => status === 'success')
+    .map(([service]) => service.charAt(0).toUpperCase() + service.slice(1));
+
   // 核心改进：根据创建时间动态计算该日期“已存在”的服务
   // 只有在任务创建之后的日期格子里，才会显示为 Unexecuted
   const unexecutedServices = (allServices || [])
@@ -58,6 +62,9 @@ export function HeatmapTooltip({ day, children, allServices }: HeatmapTooltipPro
           side="top"
         >
           <div className="font-medium">{message}</div>
+          {successServices.length > 0 && (
+            <div className="mt-1 text-emerald-300">Success: {successServices.join(', ')}</div>
+          )}
           {failedServices.length > 0 && (
             <div className="mt-1 text-red-300">Failed: {failedServices.join(', ')}</div>
           )}
