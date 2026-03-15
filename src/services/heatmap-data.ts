@@ -24,18 +24,23 @@ export async function getHeatmapData(year: number): Promise<HeatmapData> {
       throw logError;
     }
 
-    // 2. 获取当前配置的所有服务列表 (用于动态计算未执行项)
+    // 2. 获取当前配置的所有服务列表及其创建时间 (用于动态计算生命周期)
     const { data: serviceConfigs, error: serviceError } = await supabase
       .from('keep_alive')
-      .select('service')
+      .select('service, created_at')
       .eq('enabled', true);
 
     if (serviceError) {
       logger.error('[Heatmap Service] Failed to fetch services:', serviceError.message);
-      // 如果获取服务列表失败，回退为空列表，但不中断热力图渲染
     }
 
-    const services = serviceConfigs?.map(s => s.service) || [];
+    // 格式化服务列表，包含创建时间
+    const services =
+      serviceConfigs?.map(s => ({
+        service: s.service,
+        created_at: s.created_at,
+      })) || [];
+
     const heatmap = aggregateByDay(rawLogs || []);
 
     return {
