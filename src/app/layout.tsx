@@ -9,11 +9,7 @@ export const metadata: Metadata = {
 };
 
 import { PageBackground } from '@/components/PageBackground';
-import { Inter } from 'next/font/google';
-import { cn } from '@/lib/utils';
 import { TooltipProvider } from '@/components/ui/tooltip';
-
-const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
 export default function RootLayout({
   children,
@@ -21,7 +17,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={cn('font-sans', inter.variable)}>
+    <html lang="en">
       <body className="antialiased">
         <TooltipProvider>
           <PageBackground />

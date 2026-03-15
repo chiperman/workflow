@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { AlertTriangle, X } from 'lucide-react';
 import { useCallback, useEffect, useRef } from 'react';
+import { Button } from '@/components/ui/button';
 
 interface ConfirmDialogProps {
   isOpen: boolean;
@@ -26,13 +27,10 @@ export function ConfirmDialog({
   onCancel,
 }: ConfirmDialogProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
-  const confirmButtonRef = useRef<HTMLButtonElement>(null);
 
   // Focus trap, keyboard handling, and scroll lock with scrollbar compensation
   useEffect(() => {
     if (isOpen) {
-      confirmButtonRef.current?.focus();
-
       // Calculate scrollbar width and compensate to prevent layout shift
       const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
       document.body.style.overflow = 'hidden';
@@ -67,17 +65,14 @@ export function ConfirmDialog({
     danger: {
       icon: 'text-[#d97757]',
       iconBg: 'bg-[#d97757]/10',
-      confirmButton: 'bg-[#d97757] text-white hover:bg-[#c56a4a] active:bg-[#b35d3d]',
     },
     warning: {
       icon: 'text-amber-600',
       iconBg: 'bg-amber-50',
-      confirmButton: 'bg-amber-600 text-white hover:bg-amber-700 active:bg-amber-800',
     },
     default: {
       icon: 'text-[#555555]',
       iconBg: 'bg-[#f5f5f0]',
-      confirmButton: 'bg-[#191919] text-white hover:bg-[#333333] active:bg-[#444444]',
     },
   };
 
@@ -109,15 +104,17 @@ export function ConfirmDialog({
             aria-modal="true"
             aria-labelledby="dialog-title"
           >
-            <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl shadow-black/10 border border-[#e5e5e0]/50 overflow-hidden">
+            <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl shadow-black/10 border border-[#e5e5e0]/50 overflow-hidden relative">
               {/* Close button */}
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={onCancel}
-                className="absolute top-4 right-4 p-1.5 text-[#888888] hover:text-[#191919] hover:bg-[#f5f5f0] rounded-lg transition-all duration-200"
+                className="absolute top-4 right-4 text-[#888888] hover:text-[#191919]"
                 aria-label="Close dialog"
               >
                 <X className="w-4 h-4" />
-              </button>
+              </Button>
 
               {/* Content */}
               <div className="p-6 pt-8">
@@ -142,19 +139,16 @@ export function ConfirmDialog({
 
               {/* Actions */}
               <div className="flex gap-3 px-6 pb-6">
-                <button
-                  onClick={onCancel}
-                  className="flex-1 px-4 py-2.5 text-sm font-medium text-[#555555] bg-[#f5f5f0] hover:bg-[#e8e8e3] active:bg-[#dcdcd7] rounded-xl transition-all duration-200"
-                >
+                <Button variant="secondary" onClick={onCancel} className="flex-1 h-11">
                   {cancelText}
-                </button>
-                <button
-                  ref={confirmButtonRef}
+                </Button>
+                <Button
+                  variant={variant === 'danger' ? 'brand' : 'default'}
                   onClick={onConfirm}
-                  className={`flex-1 px-4 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 ${styles.confirmButton}`}
+                  className="flex-1 h-11 shadow-sm"
                 >
                   {confirmText}
-                </button>
+                </Button>
               </div>
             </div>
           </motion.div>

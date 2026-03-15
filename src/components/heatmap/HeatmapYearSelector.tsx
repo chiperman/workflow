@@ -2,6 +2,7 @@ import { HEATMAP_COLORS, MOTION_CONFIG } from '@/config/constants';
 import { motion } from 'framer-motion';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Button } from '@/components/ui/button';
 
 interface HeatmapYearSelectorProps {
   years: number[];
@@ -123,11 +124,13 @@ export function HeatmapYearSelector({
         className="flex flex-nowrap md:flex-col overflow-x-auto md:overflow-y-auto justify-start px-6 md:px-0 gap-4 md:gap-2 pb-2 md:pb-0 flex-1 scrollbar-hide"
       >
         {years.map((year, index) => (
-          <button
+          <Button
             key={year}
             ref={year === selectedYear ? selectedButtonRef : null}
+            variant="ghost"
+            size="sm"
             onClick={() => onSelectYear(year)}
-            className={`year-fade-in heatmap-year-btn px-1 py-1 md:px-3 md:py-1 text-sm md:text-right transition-colors font-serif border-none rounded-none whitespace-nowrap cursor-pointer shrink-0 ${
+            className={`year-fade-in heatmap-year-btn px-1 py-1 md:px-3 md:py-1 text-sm md:text-right transition-colors font-serif border-none rounded-none whitespace-nowrap shrink-0 h-auto ${
               year === selectedYear ? 'font-medium' : 'text-[#9ca3af] hover:text-[#191919]'
             }`}
             disabled={loading}
@@ -138,7 +141,7 @@ export function HeatmapYearSelector({
             }}
           >
             {year}
-          </button>
+          </Button>
         ))}
       </div>
 

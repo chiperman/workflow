@@ -15,6 +15,9 @@ import type { ServiceConfig } from '@/types';
 import { Workflow, RefreshCw, Plus, LogIn, LogOut, Check, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+
+const MotionButton = motion(Button);
 
 /**
  * Workflow Dashboard - 核心控制面板 (已恢复原始布局)
@@ -125,7 +128,7 @@ export default function Home() {
                             Preview Mode
                           </div>
                         )}
-                        <motion.button
+                        <MotionButton
                           initial={{ opacity: 0, y: MOTION.yOffset }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{
@@ -133,18 +136,20 @@ export default function Home() {
                             duration: MOTION.duration,
                             ease: MOTION.ease,
                           }}
+                          variant="outline"
+                          size="icon"
                           onClick={handleRefreshClick}
                           disabled={refreshUIStatus !== 'idle' || isGuest}
                           className={`
-                      flex items-center justify-center p-2 rounded-lg border transition-colors duration-300 group
+                      transition-colors duration-300 group
                       ${
                         refreshUIStatus === 'error'
-                          ? 'border-red-200 bg-red-50 text-red-600'
+                          ? 'border-red-200 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700'
                           : refreshUIStatus === 'success'
-                            ? 'border-emerald-200 bg-emerald-50 text-emerald-600'
+                            ? 'border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:text-emerald-700'
                             : isGuest
                               ? 'border-[#f0f0f0] text-[#cccccc] cursor-not-allowed bg-gray-50'
-                              : 'border-[#e5e5e0] text-[#888888] hover:bg-white hover:text-[#191919] hover:border-[#d97757]/30'
+                              : 'text-[#888888] hover:text-[#191919] hover:border-[#d97757]/30'
                       }
                     `}
                           title={isGuest ? 'Sign in to refresh' : 'Refresh data'}
@@ -187,9 +192,9 @@ export default function Home() {
                               )}
                             </AnimatePresence>
                           )}
-                        </motion.button>
+                        </MotionButton>
                         {!isGuest && (
-                          <motion.button
+                          <MotionButton
                             initial={{ opacity: 0, y: MOTION.yOffset }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{
@@ -197,15 +202,17 @@ export default function Home() {
                               duration: MOTION.duration,
                               ease: MOTION.ease,
                             }}
+                            variant="outline"
+                            size="icon"
                             onClick={openCreateModal}
-                            className="flex items-center justify-center p-2 rounded-lg border border-[#e5e5e0] text-[#888888] hover:bg-white hover:text-[#191919] hover:border-[#d97757]/30 transition-colors duration-300"
+                            className="text-[#888888] hover:text-[#191919] hover:border-[#d97757]/30 transition-colors duration-300"
                             title="Add new task"
                           >
                             <Plus className="w-3.5 h-3.5" />
-                          </motion.button>
+                          </MotionButton>
                         )}
                         {isGuest ? (
-                          <motion.button
+                          <MotionButton
                             initial={{ opacity: 0, y: MOTION.yOffset }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{
@@ -213,15 +220,16 @@ export default function Home() {
                               duration: MOTION.duration,
                               ease: MOTION.ease,
                             }}
+                            variant="outline"
                             onClick={() => router.push('/login')}
-                            className="flex items-center justify-center sm:justify-start gap-2 p-2 sm:px-3 sm:py-2 text-[10px] font-medium tracking-tight text-[#191919] bg-white border border-[#e5e5e0] rounded-lg hover:border-[#d97757]/30 transition-colors duration-300 whitespace-nowrap shadow-sm"
+                            className="sm:justify-start gap-2 h-9 sm:px-3 text-[10px] font-medium tracking-tight text-[#191919] hover:border-[#d97757]/30 transition-colors duration-300 whitespace-nowrap shadow-sm"
                             title="Sign in"
                           >
                             <LogIn className="w-3.5 h-3.5" />
                             <span className="hidden sm:inline">Sign in</span>
-                          </motion.button>
+                          </MotionButton>
                         ) : (
-                          <motion.button
+                          <MotionButton
                             initial={{ opacity: 0, y: MOTION.yOffset }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{
@@ -229,13 +237,14 @@ export default function Home() {
                               duration: MOTION.duration,
                               ease: MOTION.ease,
                             }}
+                            variant="outline"
                             onClick={() => setShowLogoutConfirm(true)}
-                            className="flex items-center justify-center sm:justify-start gap-2 p-2 sm:px-3 sm:py-2 text-[10px] font-medium tracking-tight text-[#888888] border border-[#e5e5e0] rounded-lg hover:bg-white hover:text-[#191919] hover:border-[#d97757]/30 transition-colors duration-300 whitespace-nowrap shadow-sm"
+                            className="sm:justify-start gap-2 h-9 sm:px-3 text-[10px] font-medium tracking-tight text-[#888888] hover:text-[#191919] hover:border-[#d97757]/30 transition-colors duration-300 whitespace-nowrap shadow-sm"
                             title="Sign out"
                           >
                             <LogOut className="w-3.5 h-3.5" />
                             <span className="hidden sm:inline">Sign out</span>
-                          </motion.button>
+                          </MotionButton>
                         )}
                       </>
                     )}
