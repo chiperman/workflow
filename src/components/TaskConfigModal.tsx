@@ -96,7 +96,6 @@ export function TaskConfigModal({
           if (data.code === 0 || data.code === 200) {
             suggestedRules = {
               ...suggestedRules,
-              // @ts-expect-error JSON rule types
               json: [{ path: 'code', operator: 'eq', value: data.code }],
             };
             setShowAdvancedRules(true);
