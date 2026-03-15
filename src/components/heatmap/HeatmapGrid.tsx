@@ -2,20 +2,27 @@ import { HeatmapTooltip } from '@/components/heatmap/HeatmapTooltip';
 import { HEATMAP_CONFIG } from '@/config/constants';
 import { getColorClass } from '@/lib/heatmap-utils';
 import type { HeatmapDay } from '@/types';
-import { memo, useEffect, useMemo, useState } from 'react';
+import { memo, useEffect, useState, useMemo } from 'react';
 
 interface MemoizedCellProps {
   date: string;
   dayData: HeatmapDay | undefined;
   globalIndex: number;
   isInitialLoad: boolean;
+  allServices?: string[];
 }
 
 // 基础格子布局样式 (共享)
 const CELL_BASE_CLASS = 'w-full aspect-square rounded-[2px]';
 
 const MemoizedCell = memo(
-  function MemoizedCell({ date, dayData, globalIndex, isInitialLoad }: MemoizedCellProps) {
+  function MemoizedCell({
+    date,
+    dayData,
+    globalIndex,
+    isInitialLoad,
+    allServices,
+  }: MemoizedCellProps) {
     const [hasAnimated, setHasAnimated] = useState(!isInitialLoad);
 
     useEffect(() => {
@@ -43,7 +50,7 @@ const MemoizedCell = memo(
     const colorClass = getColorClass(date, dayData);
 
     return (
-      <HeatmapTooltip day={tooltipData}>
+      <HeatmapTooltip day={tooltipData} allServices={allServices}>
         <div
           className={`${CELL_BASE_CLASS} cursor-pointer transition-[transform,background-color] duration-75 ease-out ${colorClass} ${
             shouldAnimate ? 'animate-fade-in' : ''
@@ -61,8 +68,12 @@ const MemoizedCell = memo(
   (prevProps, nextProps) => {
     const prevDay = prevProps.dayData;
     const nextDay = nextProps.dayData;
-    if (!prevDay && !nextDay) return true;
-    if (!prevDay || !nextDay) return false;
+    const prevServices = prevProps.allServices;
+    const nextServices = nextProps.allServices;
+
+    if (!prevDay && !nextDay && prevServices === nextServices) return true;
+    if (!prevDay || !nextDay || prevServices !== nextServices) return false;
+
     return (
       prevDay.success_count === nextDay.success_count &&
       prevDay.failure_count === nextDay.failure_count
@@ -75,9 +86,16 @@ interface HeatmapGridProps {
   days: string[];
   dataMap: Map<string, HeatmapDay>;
   isInitialLoad: boolean;
+  allServices?: string[];
 }
 
-export function HeatmapGrid({ weeks, days, dataMap, isInitialLoad }: HeatmapGridProps) {
+export function HeatmapGrid({
+  weeks,
+  days,
+  dataMap,
+  isInitialLoad,
+  allServices,
+}: HeatmapGridProps) {
   const dayIndexMap = useMemo(() => {
     const map = new Map<string, number>();
     days.forEach((d, i) => map.set(d, i));
@@ -113,6 +131,7 @@ export function HeatmapGrid({ weeks, days, dataMap, isInitialLoad }: HeatmapGrid
                 dayData={dayData}
                 globalIndex={globalIndex}
                 isInitialLoad={isInitialLoad}
+                allServices={allServices}
               />
             );
           })}

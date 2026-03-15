@@ -31,13 +31,22 @@ export function Heatmap() {
     data: heatmapResponse,
     isLoading: loading,
     error: fetchError,
-  } = useSWR<ApiResponse<HeatmapDay[]>>(`/api/stats/heatmap?year=${selectedYear}`, fetcher, {
+  } = useSWR<ApiResponse<HeatmapData>>(`/api/stats/heatmap?year=${selectedYear}`, fetcher, {
     ...SWR_CONFIG,
     keepPreviousData: true,
   });
 
   const data = useMemo(
-    () => (heatmapResponse?.success && heatmapResponse.data ? heatmapResponse.data : []),
+    () =>
+      heatmapResponse?.success && heatmapResponse.data?.heatmap ? heatmapResponse.data.heatmap : [],
+    [heatmapResponse]
+  );
+
+  const services = useMemo(
+    () =>
+      heatmapResponse?.success && heatmapResponse.data?.services
+        ? heatmapResponse.data.services
+        : [],
     [heatmapResponse]
   );
 
@@ -112,6 +121,7 @@ export function Heatmap() {
                   days={days}
                   dataMap={dataMap}
                   isInitialLoad={isInitialLoad}
+                  allServices={services}
                 />
               </div>
 

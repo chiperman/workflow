@@ -176,10 +176,8 @@ export interface HeatmapDay {
  * 热力图 - API 响应数据
  */
 export interface HeatmapData {
-  success: boolean;
-  data?: HeatmapDay[];
-  year?: number;
-  error?: string;
+  heatmap: HeatmapDay[];
+  services: string[];
 }
 
 /**

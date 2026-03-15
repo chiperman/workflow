@@ -43,12 +43,6 @@ export const HEATMAP_CONFIG = {
 } as const;
 
 /**
- * 校验逻辑需要的服务列表
- * TODO: 未来应从数据库动态获取，目前用于兜底校验
- */
-export const VALID_SERVICES = ['supabase', 'glados'] as const;
-
-/**
  * 允许公开访问的路径列表 (无需显式登录)
  */
 export const PUBLIC_PATHS = ['/', '/login', '/api/health', '/api/auth', '/favicon.ico'] as const;
