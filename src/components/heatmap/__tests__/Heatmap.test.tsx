@@ -45,14 +45,17 @@ describe('Heatmap', () => {
         json: () =>
           Promise.resolve({
             success: true,
-            data: [
-              {
-                date: '2026-01-01',
-                success_count: 3,
-                failure_count: 0,
-                services: { supabase: 'success', glados: 'success' },
-              },
-            ],
+            data: {
+              heatmap: [
+                {
+                  date: '2026-01-01',
+                  success_count: 3,
+                  failure_count: 0,
+                  services: { supabase: 'success', glados: 'success' },
+                },
+              ],
+              services: ['supabase', 'glados'],
+            },
           }),
       });
     });
@@ -67,7 +70,7 @@ describe('Heatmap', () => {
   it('应渲染图例', async () => {
     (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve({ success: true, data: [] }),
+      json: () => Promise.resolve({ success: true, data: { heatmap: [], services: [] } }),
     });
 
     render(<Heatmap />, { wrapper: TestWrapper });
@@ -89,7 +92,7 @@ describe('Heatmap', () => {
       }
       return Promise.resolve({
         ok: true,
-        json: () => Promise.resolve({ success: true, data: [] }),
+        json: () => Promise.resolve({ success: true, data: { heatmap: [], services: [] } }),
       });
     });
 
@@ -125,7 +128,7 @@ describe('Heatmap', () => {
   it('应渲染星期标签', async () => {
     (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve({ success: true, data: [] }),
+      json: () => Promise.resolve({ success: true, data: { heatmap: [], services: [] } }),
     });
 
     render(<Heatmap />, { wrapper: TestWrapper });
@@ -148,7 +151,7 @@ describe('Heatmap', () => {
       }
       return Promise.resolve({
         ok: true,
-        json: () => Promise.resolve({ success: true, data: [] }),
+        json: () => Promise.resolve({ success: true, data: { heatmap: [], services: [] } }),
       });
     });
 

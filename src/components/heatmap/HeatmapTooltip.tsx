@@ -1,4 +1,3 @@
-import { VALID_SERVICES } from '@/config/constants';
 import { formatDateForTooltip } from '@/lib/heatmap-calendar';
 import type { HeatmapDay } from '@/types';
 import * as Tooltip from '@radix-ui/react-tooltip';
@@ -7,9 +6,10 @@ import { ReactNode } from 'react';
 interface HeatmapTooltipProps {
   day: HeatmapDay;
   children: ReactNode;
+  allServices?: string[];
 }
 
-export function HeatmapTooltip({ day, children }: HeatmapTooltipProps) {
+export function HeatmapTooltip({ day, children, allServices }: HeatmapTooltipProps) {
   const { success_count, failure_count, date } = day;
   const total = success_count + failure_count;
   const dateText = formatDateForTooltip(date);
@@ -31,11 +31,12 @@ export function HeatmapTooltip({ day, children }: HeatmapTooltipProps) {
     .filter(([, status]) => status === 'failure')
     .map(([service]) => service.charAt(0).toUpperCase() + service.slice(1));
 
-  // Find unexecuted services (exist in config but not in day's records)
-  // 未执行的服务 (推断)
-  const unexecutedServices = (VALID_SERVICES as readonly string[])
+  // Find unexecuted services (exist in current config but not in day's records)
+  // 使用动态传入的所有服务列表，如果没有则回退为空数组
+  const unexecutedServices = (allServices || [])
     .filter(service => !day.services[service])
     .map(service => service.charAt(0).toUpperCase() + service.slice(1));
+
   return (
     <Tooltip.Root delayDuration={0}>
       <Tooltip.Trigger asChild>{children}</Tooltip.Trigger>

@@ -22,7 +22,10 @@ describe('Heatmap API Route', () => {
   });
 
   it('GET handler returns aggregated data on success', async () => {
-    const mockAggregated = [{ date: '2023-01-01', success_count: 1 }];
+    const mockAggregated = {
+      heatmap: [{ date: '2023-01-01', success_count: 1, failure_count: 0, services: {} }],
+      services: ['test-service'],
+    };
     (getHeatmapData as jest.Mock).mockResolvedValue(mockAggregated);
 
     const response = await GET(mockRequest);
@@ -35,7 +38,7 @@ describe('Heatmap API Route', () => {
 
   it('GET handler defaults to current year if not provided', async () => {
     const req = new NextRequest('http://localhost/api/stats/heatmap');
-    (getHeatmapData as jest.Mock).mockResolvedValue([]);
+    (getHeatmapData as jest.Mock).mockResolvedValue({ heatmap: [], services: [] });
 
     const currentYear = new Date().getFullYear();
     await GET(req);
