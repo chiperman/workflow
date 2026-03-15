@@ -3,7 +3,18 @@
 import { useState, useEffect } from 'react';
 import type { ServiceConfig } from '@/types';
 import { toast } from 'sonner';
-import { X, Save, Plus, Trash2, Globe, Settings, CheckCircle, RefreshCw } from 'lucide-react';
+import {
+  X,
+  Save,
+  Plus,
+  Trash2,
+  Globe,
+  Settings,
+  CheckCircle,
+  RefreshCw,
+  Eye,
+  EyeOff,
+} from 'lucide-react';
 
 interface TaskConfigModalProps {
   isOpen: boolean;
@@ -33,6 +44,8 @@ export function TaskConfigModal({
   const [isSaving, setIsSaving] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [showAdvancedRules, setShowAdvancedRules] = useState(false);
+  const [showSupabaseKey, setShowSupabaseKey] = useState(false);
+  const [showBarkKey, setShowBarkKey] = useState(false);
 
   const [config, setConfig] = useState<Partial<ServiceConfig>>(DEFAULT_CONFIG);
   // 局部状态处理 JSON 字符串，避免直接绑定 JSON.stringify 导致的编辑卡顿
@@ -262,18 +275,27 @@ export function TaskConfigModal({
                   <label className="text-[11px] font-medium text-[#555555]">
                     Bark Key (Optional)
                   </label>
-                  <input
-                    type="password"
-                    value={config.config?.notification_key || ''}
-                    onChange={e =>
-                      setConfig({
-                        ...config,
-                        config: { ...config.config!, notification_key: e.target.value },
-                      })
-                    }
-                    placeholder="individual device key"
-                    className="w-full px-3 py-2 bg-[#f9f9f9] border border-[#e5e5e0] rounded-lg text-sm focus:outline-none focus:border-[#d97757]/50"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showBarkKey ? 'text' : 'password'}
+                      value={config.config?.notification_key || ''}
+                      onChange={e =>
+                        setConfig({
+                          ...config,
+                          config: { ...config.config!, notification_key: e.target.value },
+                        })
+                      }
+                      placeholder="individual device key"
+                      className="w-full pl-3 pr-10 py-2 bg-[#f9f9f9] border border-[#e5e5e0] rounded-lg text-sm focus:outline-none focus:border-[#d97757]/50"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowBarkKey(!showBarkKey)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#888888] hover:text-[#191919] transition-colors"
+                    >
+                      {showBarkKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -415,18 +437,27 @@ export function TaskConfigModal({
                 <label className="text-[11px] font-medium text-[#555555]">
                   Service Role Key (Private)
                 </label>
-                <input
-                  type="password"
-                  value={config.config?.supabase_key || ''}
-                  onChange={e =>
-                    setConfig({
-                      ...config,
-                      config: { ...config.config!, supabase_key: e.target.value },
-                    })
-                  }
-                  placeholder="your-service-role-key"
-                  className="w-full px-3 py-2 bg-[#f9f9f9] border border-[#e5e5e0] rounded-lg text-sm focus:outline-none focus:border-[#d97757]/50"
-                />
+                <div className="relative">
+                  <input
+                    type={showSupabaseKey ? 'text' : 'password'}
+                    value={config.config?.supabase_key || ''}
+                    onChange={e =>
+                      setConfig({
+                        ...config,
+                        config: { ...config.config!, supabase_key: e.target.value },
+                      })
+                    }
+                    placeholder="your-service-role-key"
+                    className="w-full pl-3 pr-10 py-2 bg-[#f9f9f9] border border-[#e5e5e0] rounded-lg text-sm focus:outline-none focus:border-[#d97757]/50"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowSupabaseKey(!showSupabaseKey)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#888888] hover:text-[#191919] transition-colors"
+                  >
+                    {showSupabaseKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
               <div className="space-y-1.5">
                 <label className="text-[11px] font-medium text-[#555555]">
