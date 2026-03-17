@@ -1,15 +1,4 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-echo "🚀 Running pre-push checks..."
-
-# Run full TypeScript type checking before allowing push to remote
-npm run type-check || {
-  echo "❌ TypeScript check failed. Please fix the type errors before pushing."
-  exit 1
-}
-
-# (Optional) You can uncomment the line below to run tests before push as well
-# npm run test || { echo "❌ Tests failed."; exit 1; }
-
-echo "✅ Pre-push checks passed."
+npm run type-check && npm run test

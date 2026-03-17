@@ -28,20 +28,15 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
 
-  // Focus trap, keyboard handling, and scroll lock with scrollbar compensation
+  // Focus trap, keyboard handling, and scroll lock
   useEffect(() => {
     if (isOpen) {
-      // Calculate scrollbar width and compensate to prevent layout shift
-      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
       document.body.style.overflow = 'hidden';
-      document.body.style.paddingRight = `${scrollbarWidth}px`;
     } else {
       document.body.style.overflow = '';
-      document.body.style.paddingRight = '';
     }
     return () => {
       document.body.style.overflow = '';
-      document.body.style.paddingRight = '';
     };
   }, [isOpen]);
 
@@ -88,7 +83,7 @@ export function ConfirmDialog({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50"
+            className="fixed -inset-20 bg-black/20 backdrop-blur-sm z-50"
             onClick={onCancel}
           />
 

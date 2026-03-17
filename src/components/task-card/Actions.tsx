@@ -13,7 +13,7 @@ export const Actions = memo(function Actions({ displayStatus, onRun, isGuest }: 
     <div className="mt-auto pt-6 border-t border-[#f0f0ed]">
       <div className="flex items-center gap-4">
         <Button
-          variant="brand"
+          variant="default"
           onClick={onRun}
           disabled={displayStatus === 'loading' || isGuest}
           className="px-6 h-11 gap-2"
