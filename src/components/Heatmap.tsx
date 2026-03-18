@@ -82,55 +82,9 @@ export function Heatmap() {
 
   return (
     <Tooltip.Provider disableHoverableContent>
-      <div className="relative">
-        <div className="relative">
-          {/* Main Heatmap Area */}
-          <div className="w-full p-6 bg-white rounded-lg border border-border-custom overflow-x-auto">
-            <div className="w-full min-w-[600px]">
-              {/* Months Row */}
-              <div
-                className="grid pl-[36px] w-full box-border mb-2"
-                style={{
-                  gridTemplateColumns: `repeat(${weeks.length}, 1fr)`,
-                }}
-              >
-                {monthLabels.map((label, i) => (
-                  <span
-                    key={i}
-                    className="text-[13px] text-[#666] whitespace-nowrap"
-                    style={{ gridColumnStart: label.weekIndex + 1 }}
-                  >
-                    {label.name}
-                  </span>
-                ))}
-              </div>
-
-              <div className="flex gap-2 w-full">
-                {/* Weekdays Column */}
-                <div className="flex flex-col justify-between pr-1 shrink-0 w-[28px] pb-1.5">
-                  {WEEKDAYS.map((day, i) => (
-                    <div key={day} className="text-[11px] text-[#666] leading-none text-right">
-                      {i % 2 === 1 ? day : ''}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Grid */}
-                <HeatmapGrid
-                  weeks={weeks}
-                  days={days}
-                  dataMap={dataMap}
-                  isInitialLoad={isInitialLoad}
-                  allServices={services}
-                />
-              </div>
-
-              {/* Legend & Error */}
-              <HeatmapLegend error={error} />
-            </div>
-          </div>
-
-          {/* Year Selector */}
+      <div className="relative w-full">
+        {/* Year Selector Header */}
+        <div className="flex justify-end mb-3">
           <HeatmapYearSelector
             years={availableYears}
             selectedYear={selectedYear}
@@ -138,6 +92,52 @@ export function Heatmap() {
             onSelectYear={setSelectedYear}
             yearsLoaded={!yearsLoading}
           />
+        </div>
+
+        {/* Main Heatmap Area */}
+        <div className="w-full p-6 bg-white rounded-lg border border-border-custom overflow-x-auto">
+          <div className="w-full min-w-[600px]">
+            {/* Months Row */}
+            <div
+              className="grid pl-[36px] w-full box-border mb-2"
+              style={{
+                gridTemplateColumns: `repeat(${weeks.length}, 1fr)`,
+              }}
+            >
+              {monthLabels.map((label, i) => (
+                <span
+                  key={i}
+                  className="text-[13px] text-[#666] whitespace-nowrap"
+                  style={{ gridColumnStart: label.weekIndex + 1 }}
+                >
+                  {label.name}
+                </span>
+              ))}
+            </div>
+
+            <div className="flex gap-2 w-full">
+              {/* Weekdays Column */}
+              <div className="flex flex-col justify-between pr-1 shrink-0 w-[28px] pb-1.5">
+                {WEEKDAYS.map((day, i) => (
+                  <div key={day} className="text-[11px] text-[#666] leading-none text-right">
+                    {i % 2 === 1 ? day : ''}
+                  </div>
+                ))}
+              </div>
+
+              {/* Grid */}
+              <HeatmapGrid
+                weeks={weeks}
+                days={days}
+                dataMap={dataMap}
+                isInitialLoad={isInitialLoad}
+                allServices={services}
+              />
+            </div>
+
+            {/* Legend & Error */}
+            <HeatmapLegend error={error} />
+          </div>
         </div>
       </div>
     </Tooltip.Provider>
