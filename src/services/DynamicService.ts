@@ -152,7 +152,11 @@ export class DynamicService extends BaseService {
           lastError = null;
           break;
         } else {
-          throw new Error(`Validation failed. Status: ${responseStatus}`);
+          const responseSnippet =
+            typeof responseData === 'object'
+              ? JSON.stringify(responseData).substring(0, 100)
+              : String(responseData).substring(0, 100);
+          throw new Error(`Validation failed. Status: ${responseStatus}. Data: ${responseSnippet}`);
         }
       } catch (error) {
         lastError = error instanceof Error ? error : new Error('Unknown error');

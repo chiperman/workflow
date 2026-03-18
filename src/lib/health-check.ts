@@ -16,6 +16,7 @@ async function checkTodayCheckin(service: string): Promise<boolean> {
       .from('keep_alive_logs')
       .select('*', { count: 'exact', head: true })
       .eq('service', service.toLowerCase())
+      .eq('status', 'success')
       .gte('timestamp', todayStart);
 
     if (error) {

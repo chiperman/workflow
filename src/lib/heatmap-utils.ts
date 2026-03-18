@@ -4,7 +4,7 @@ import { getBeijingDateString } from './utils';
 
 export interface LogEntry {
   service: string;
-  status: boolean;
+  status: string;
   timestamp: string;
 }
 
@@ -29,7 +29,7 @@ export function aggregateByDay(logs: LogEntry[]): HeatmapDay[] {
 
     if (currentStatus === 'success') continue;
 
-    if (log.status === true) {
+    if (log.status === 'success') {
       dayServices[log.service] = 'success';
     } else if (!currentStatus) {
       dayServices[log.service] = 'failure';
