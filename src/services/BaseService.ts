@@ -121,7 +121,7 @@ export abstract class BaseService {
           .from('keep_alive_logs')
           .select('*', { count: 'exact', head: true })
           .eq('service', serviceKey)
-          .eq('status', true)
+          .eq('status', 'success')
           .gte('timestamp', todayStart);
 
         if (count && count > 0) {
@@ -132,7 +132,9 @@ export abstract class BaseService {
 
       const { error } = await supabase.from('keep_alive_logs').insert({
         service: serviceKey,
-        status: result.success,
+        status: result.success ? 'success' : 'failure',
+        message: result.message,
+        duration: result.duration,
       });
 
       if (error) {
