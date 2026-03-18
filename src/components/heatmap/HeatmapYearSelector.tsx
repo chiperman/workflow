@@ -1,4 +1,3 @@
-import { HEATMAP_COLORS } from '@/config/constants';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -46,10 +45,7 @@ export function HeatmapYearSelector({
         <ChevronLeft className="w-3.5 h-3.5 stroke-[2]" />
       </Button>
 
-      <span
-        className="text-base font-serif font-medium tracking-tight min-w-[3rem] text-center"
-        style={{ color: HEATMAP_COLORS.ACTIVE_YEAR }}
-      >
+      <span className="text-base font-serif font-medium tracking-tight min-w-[3rem] text-center text-[#191919]">
         {selectedYear}
       </span>
 
