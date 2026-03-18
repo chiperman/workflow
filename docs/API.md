@@ -182,6 +182,13 @@ POST /api/tasks/[id]
 
 ## 变更日志
 
+### v0.9.0 (2026-03-18)
+
+- ✅ **增强**: `keep_alive_logs` 表结构升级，新增 `message` (反馈详情) 和 `duration` (执行耗时) 字段。
+- ✅ **重构**: 日志 `status` 字段由 `boolean` 切换为 `TEXT` (`'success'` / `'failure'`)，对齐 `setup.sql` 规范。
+- ✅ **优化**: `DynamicService` 验证失败时自动记录返回内容片段（前 100 字符），极大提升排错效率。
+- ✅ **修复**: 修正了 GLaDOS 签到由于 Cookie 缺失导致验证失败的问题。
+
 ### v0.8.8 (2026-01-20)
 
 - ✅ **新增**: 热力图年份选择器增强 API (`/api/stats/heatmap/years` 返回值逻辑优化说明)。
@@ -244,4 +251,4 @@ POST /api/tasks/[id]
 
 ---
 
-**最后更新**: 2026-01-20 (v0.8.8)
+**最后更新**: 2026-03-18
