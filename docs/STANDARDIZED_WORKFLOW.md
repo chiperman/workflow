@@ -57,9 +57,25 @@ npx standard-version --release-as minor
 
 手动修改容易导致 Git Tag、`package.json` 和文档之间的不一致，破坏自动化工具的幂等性。
 
+### 4. 自动化运维 (CI/CD)
+
+本页面已集成 GitHub Actions 自动化发布流程。
+
+- **触发条件**：任何向 `main` 分支的提交（`push`）或合并（`merge`）。
+- **流程详情**：
+  1. **安全校验**：自动运行 Lint 和 Jest 测试。
+  2. **自动版本化**：如果检测到 `feat` 或 `fix`，机器人会自动提升版本。
+  3. **自动记录**：自动更新 `CHANGELOG.md` 并提交。
+  4. **自动发布**：自动创建 GitHub Release 页面。
+
+**注意事项**：
+
+- 建议通过 Pull Request 合并代码，合并后的瞬间会自动触发发布。
+- 本地开发时，你只需要按照规范提交，**无需**再手动运行 `npm run release`。
+
 ---
 
-## 4. 历史清理记录 (History Cleanup)
+## 5. 历史清理记录 (History Cleanup)
 
 > [!NOTE]
 > 2026-03-18：本项目执行了历史清理，撤销了冗余的 `v0.8.11` 过渡版本，统一合并为标准的 `v0.9.0` 发布。
