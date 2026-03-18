@@ -114,5 +114,5 @@ export function formatDateForTooltip(dateStr: string): string {
   else if (day % 10 === 2 && day !== 12) suffix = 'nd';
   else if (day % 10 === 3 && day !== 13) suffix = 'rd';
 
-  return `${month} ${day}${suffix}`;
+  return `${month} ${day}${suffix}, ${date.getFullYear()}`;
 }

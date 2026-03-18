@@ -95,22 +95,22 @@ describe('heatmap-calendar', () => {
 
   describe('formatDateForTooltip', () => {
     it('应正确格式化日期', () => {
-      expect(formatDateForTooltip('2026-01-01')).toBe('Jan 1st');
-      expect(formatDateForTooltip('2026-01-02')).toBe('Jan 2nd');
-      expect(formatDateForTooltip('2026-01-03')).toBe('Jan 3rd');
-      expect(formatDateForTooltip('2026-01-04')).toBe('Jan 4th');
+      expect(formatDateForTooltip('2026-01-01')).toBe('Jan 1st, 2026');
+      expect(formatDateForTooltip('2026-01-02')).toBe('Jan 2nd, 2026');
+      expect(formatDateForTooltip('2026-01-03')).toBe('Jan 3rd, 2026');
+      expect(formatDateForTooltip('2026-01-04')).toBe('Jan 4th, 2026');
     });
 
     it('应正确处理特殊后缀 (11th, 12th, 13th)', () => {
-      expect(formatDateForTooltip('2026-01-11')).toBe('Jan 11th');
-      expect(formatDateForTooltip('2026-01-12')).toBe('Jan 12th');
-      expect(formatDateForTooltip('2026-01-13')).toBe('Jan 13th');
+      expect(formatDateForTooltip('2026-01-11')).toBe('Jan 11th, 2026');
+      expect(formatDateForTooltip('2026-01-12')).toBe('Jan 12th, 2026');
+      expect(formatDateForTooltip('2026-01-13')).toBe('Jan 13th, 2026');
     });
 
     it('应正确处理 21st, 22nd, 23rd', () => {
-      expect(formatDateForTooltip('2026-01-21')).toBe('Jan 21st');
-      expect(formatDateForTooltip('2026-01-22')).toBe('Jan 22nd');
-      expect(formatDateForTooltip('2026-01-23')).toBe('Jan 23rd');
+      expect(formatDateForTooltip('2026-01-21')).toBe('Jan 21st, 2026');
+      expect(formatDateForTooltip('2026-01-22')).toBe('Jan 22nd, 2026');
+      expect(formatDateForTooltip('2026-01-23')).toBe('Jan 23rd, 2026');
     });
   });
 });
