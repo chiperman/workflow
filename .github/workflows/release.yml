@@ -1,0 +1,67 @@
+name: 🚀 Automated Release
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    steps:
+      - name: ⬇️ Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🔍 Lint check
+        run: npm run lint:check
+
+      - name: 🧪 Run tests
+        run: npm test
+
+      - name: 🏗️ Build check
+        run: npm run build
+
+      - name: 🏷️ Standard Version Release
+        id: release
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          
+          # 运行 standard-version。如果没有任何可以 bump 的变更，它会静默退出或不产生新提交。
+          # 我们添加 [skip ci] 到 commit 模板中以防止死循环。
+          npx standard-version --releaseCommitMessageFormat "chore(release): {{currentTag}} [skip ci]"
+          
+          echo "tag=$(git describe --tags --abbrev=0)" >> $GITHUB_OUTPUT
+
+      - name: 📤 Push changes
+        run: |
+          git push --follow-tags origin main
+
+      - name: 🎁 Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.release.outputs.tag }}
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
