@@ -2,6 +2,41 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.9.0](https://github.com/chiperman/workflow/compare/v0.8.10...v0.9.0) (2026-03-18)
+
+### Features
+
+- **auth:** 开放首页访客查看权限并收紧操作安全控制 ([b4236c2](https://github.com/chiperman/workflow/commit/b4236c269af2e288ad7f7980225184eddee403dc))
+- **core:** 实现多项目保活架构与动态通知系统 ([5981a27](https://github.com/chiperman/workflow/commit/5981a275b9ebbf962a5ea851757e239ff1f3efa2))
+- **heatmap:** 在悬浮提示中补全成功签到的服务列表 ([7839b2d](https://github.com/chiperman/workflow/commit/7839b2d8a9b77f3c5464795fc8e9bcf6f4550d0f))
+- **heatmap:** 实现基于创建日期的任务生命周期追踪 ([f0b281d](https://github.com/chiperman/workflow/commit/f0b281d8de1fcc861ee34d29991c4b8fc06ec8c6))
+- **heatmap:** 实现热力图服务列表动态化并移除硬编码常量 ([d9b8846](https://github.com/chiperman/workflow/commit/d9b8846aba2cbb4de768f35edf60574f0dc6678e))
+- **ui:** 优化任务卡片交互反馈与按钮布局 ([2cf49d3](https://github.com/chiperman/workflow/commit/2cf49d3b1795580323c77e870be6faa1a34dfa8f))
+- **ui:** 增加敏感信息输入框的密码可见性切换功能 ([96b32c7](https://github.com/chiperman/workflow/commit/96b32c7ef924cff683dcefe5a5ee317115f7d386))
+- **ui:** 引入任务分类分组渲染并清理冗余变量 ([df98db3](https://github.com/chiperman/workflow/commit/df98db3af79f7bb1b91ba3fb5690eca9f83d43fa))
+- **ui:** 统一并优化任务配置交互面板与卡片样式 ([ddc68ec](https://github.com/chiperman/workflow/commit/ddc68ecec8d986b013e5fee514c8bdef128f98fd))
+- 为任务卡片添加删除功能及二次确认弹窗 ([e30ce31](https://github.com/chiperman/workflow/commit/e30ce31b5a5b118561afe73b46870b32e644e5a8))
+- 引入智能成功判定与一键探测功能，重构任务配置流程并修复保存失败问题 ([1f9e6f5](https://github.com/chiperman/workflow/commit/1f9e6f56704a72da2017aa985e371cd1689bd124))
+
+### Bug Fixes
+
+- **heatmap:** 修复 TypeScript 类型错误以支持生产环境构建 ([c85f140](https://github.com/chiperman/workflow/commit/c85f14003379462a33c929b447a5a39af8d90b4d))
+- **heatmap:** 修复热力图网格中的 React Key 冲突警告 ([eb2dd1b](https://github.com/chiperman/workflow/commit/eb2dd1b396d028be0b0abe52ae9d858923810a7b))
+- **layout:** 移除垂直居中对齐，修复内容加载后头部被挤出视野的问题 ([04118e3](https://github.com/chiperman/workflow/commit/04118e3c40f0862cdab2c4a8bb59cea780b2be42))
+- **service:** 修复 GLaDOS 签到失败并优化日志记录系统 ([897a8ca](https://github.com/chiperman/workflow/commit/897a8cae4847de01126ea01f7fcce3bc5a5e4566))
+- **ui:** 修复任务配置弹窗状态污染，优化 JSON 编辑体验并修复 ESLint 警告 ([5db78ce](https://github.com/chiperman/workflow/commit/5db78cea1f8290f7fdb6042b4c8ec1662f177ca6))
+- **ui:** 修复开关组件状态不生效及列表刷新时卡片乱跳的问题 ([faa55a6](https://github.com/chiperman/workflow/commit/faa55a6db371d2df85174f63e361ee2f23bbbd13))
+- **ui:** 修复页面加载状态闪烁及任务卡片本地状态未重置的问题 ([2e57bbd](https://github.com/chiperman/workflow/commit/2e57bbd13e4b5538e97cb4011ee5cd41f7c3a226))
+- **ui:** 完善骨架屏，补齐鉴权按钮占位块并优化响应式尺寸 ([2574e12](https://github.com/chiperman/workflow/commit/2574e12cdcd22b063bc7d2bdbfecaa3ae14f6761))
+- **ui:** 将任务列表加载状态升级为精致的任务卡片骨架屏 ([ace5d21](https://github.com/chiperman/workflow/commit/ace5d21999d963fcb25908d4086dc7fe645ba1bd))
+- **ui:** 移除任务配置弹窗中冗余的通知级别字段 ([2581c3b](https://github.com/chiperman/workflow/commit/2581c3baee90c2da5dee5cc2c354f82262f5db15))
+- 修复 JSX 语法错误及编译期类型报错，完善配置数据流 ([00ade6f](https://github.com/chiperman/workflow/commit/00ade6f2a5ec5e12ad2820bbd8bd30938eae70c6))
+- 修复代码审查中发现的各类问题，优化系统稳定性与代码质量 ([d6acb8f](https://github.com/chiperman/workflow/commit/d6acb8fc6377d301c5bed465a7ec2208a2fbf007))
+- 修复重构后的数据解析与环境隔离问题，恢复页面卡片与热力图显示 ([75f79c9](https://github.com/chiperman/workflow/commit/75f79c9cd187da0b6dbc235d3983c5a7ece5b12b))
+- 彻底修复状态同步报错与 500 错误，并满足严格类型检查 ([cd415ff](https://github.com/chiperman/workflow/commit/cd415ff2b5cd8e8e147f95807214ec2049a0ae2b))
+- 移除 TaskConfigModal 中多余的类型忽略指令，修复 build 错误 ([aff7fcd](https://github.com/chiperman/workflow/commit/aff7fcdc111e1b8020c7623e73c9d6ffa10942ae))
+- 落实代码审查优化，增强系统鲁棒性、安全性与性能 ([94dc83e](https://github.com/chiperman/workflow/commit/94dc83e3d9af2c0dafcbe89b8d31c3672d937782))
+
 ### [0.8.10](https://github.com/chiperman/workflow/compare/v0.8.8...v0.8.10) (2026-01-27)
 
 ### Bug Fixes
