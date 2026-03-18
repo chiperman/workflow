@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.9.1](https://github.com/chiperman/workflow/compare/v0.9.0...v0.9.1) (2026-03-18)
+
+### Features
+
+- **ci:** 引入 GitHub Actions 自动化发布流水线 ([eca7197](https://github.com/chiperman/workflow/commit/eca7197d74d76a7e5248f581ff66cfe4e7b17230))
+
 ## [0.9.0](https://github.com/chiperman/workflow/compare/v0.8.10...v0.9.0) (2026-03-18)
 
 ### Features
