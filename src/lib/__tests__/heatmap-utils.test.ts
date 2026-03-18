@@ -9,7 +9,7 @@ describe('aggregateByDay', () => {
 
   test('should handle a single success', () => {
     const logs: LogEntry[] = [
-      { service: 'service_a', status: true, timestamp: '2024-01-01T10:00:00+08:00' },
+      { service: 'service_a', status: 'success', timestamp: '2024-01-01T10:00:00+08:00' },
     ];
     const result = aggregateByDay(logs);
     expect(result).toHaveLength(1);
@@ -23,7 +23,7 @@ describe('aggregateByDay', () => {
 
   test('should handle a single failure', () => {
     const logs: LogEntry[] = [
-      { service: 'service_a', status: false, timestamp: '2024-01-01T10:00:00+08:00' },
+      { service: 'service_a', status: 'failure', timestamp: '2024-01-01T10:00:00+08:00' },
     ];
     const result = aggregateByDay(logs);
     expect(result).toHaveLength(1);
@@ -38,9 +38,9 @@ describe('aggregateByDay', () => {
   test('Scenario: Recovered Day (Mixed Failure then Success)', () => {
     // Service A fails twice, then succeeds.
     const logs: LogEntry[] = [
-      { service: 'service_a', status: false, timestamp: '2024-01-02T08:00:00+08:00' },
-      { service: 'service_a', status: false, timestamp: '2024-01-02T09:00:00+08:00' },
-      { service: 'service_a', status: true, timestamp: '2024-01-02T10:00:00+08:00' },
+      { service: 'service_a', status: 'failure', timestamp: '2024-01-02T08:00:00+08:00' },
+      { service: 'service_a', status: 'failure', timestamp: '2024-01-02T09:00:00+08:00' },
+      { service: 'service_a', status: 'success', timestamp: '2024-01-02T10:00:00+08:00' },
     ];
     const result = aggregateByDay(logs);
 
@@ -54,9 +54,9 @@ describe('aggregateByDay', () => {
 
   test('Scenario: Mixed Services (One Success, One Failure)', () => {
     const logs: LogEntry[] = [
-      { service: 'service_a', status: true, timestamp: '2024-01-03T10:00:00+08:00' },
-      { service: 'service_b', status: false, timestamp: '2024-01-03T10:00:00+08:00' },
-      { service: 'service_b', status: false, timestamp: '2024-01-03T11:00:00+08:00' }, // Service B never succeeds
+      { service: 'service_a', status: 'success', timestamp: '2024-01-03T10:00:00+08:00' },
+      { service: 'service_b', status: 'failure', timestamp: '2024-01-03T10:00:00+08:00' },
+      { service: 'service_b', status: 'failure', timestamp: '2024-01-03T11:00:00+08:00' }, // Service B never succeeds
     ];
     const result = aggregateByDay(logs);
 
@@ -71,8 +71,8 @@ describe('aggregateByDay', () => {
 
   test('Scenario: Multiple Days', () => {
     const logs: LogEntry[] = [
-      { service: 'service_a', status: true, timestamp: '2024-01-01T10:00:00+08:00' },
-      { service: 'service_a', status: false, timestamp: '2024-01-02T10:00:00+08:00' },
+      { service: 'service_a', status: 'success', timestamp: '2024-01-01T10:00:00+08:00' },
+      { service: 'service_a', status: 'failure', timestamp: '2024-01-02T10:00:00+08:00' },
     ];
     const result = aggregateByDay(logs);
 
@@ -87,7 +87,7 @@ describe('aggregateByDay', () => {
   test('Scenario: Timezone Handling (UTC vs Beijing)', () => {
     // 2024-01-01 23:00 UTC is 2024-01-02 07:00 Beijing
     const logs: LogEntry[] = [
-      { service: 'service_utc', status: true, timestamp: '2024-01-01T23:00:00Z' },
+      { service: 'service_utc', status: 'success', timestamp: '2024-01-01T23:00:00Z' },
     ];
     const result = aggregateByDay(logs);
 
