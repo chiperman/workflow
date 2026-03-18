@@ -82,7 +82,7 @@ describe('Heatmap', () => {
     });
   });
 
-  it('应渲染年份按钮', async () => {
+  it('应渲染当前年份和导航按钮', async () => {
     (global.fetch as jest.Mock).mockImplementation((url: string) => {
       if (url.includes('/years')) {
         return Promise.resolve({
@@ -99,8 +99,9 @@ describe('Heatmap', () => {
     render(<Heatmap />, { wrapper: TestWrapper });
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: '2026' })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: '2025' })).toBeInTheDocument();
+      expect(screen.getByText('2026')).toBeInTheDocument();
+      expect(screen.getByLabelText('Previous Year')).toBeInTheDocument();
+      expect(screen.getByLabelText('Next Year')).toBeInTheDocument();
     });
   });
 
@@ -141,7 +142,7 @@ describe('Heatmap', () => {
     });
   });
 
-  it('点击年份按钮应切换年份', async () => {
+  it('点击切换按钮应切换年份', async () => {
     (global.fetch as jest.Mock).mockImplementation((url: string) => {
       if (url.includes('/years')) {
         return Promise.resolve({
@@ -158,14 +159,14 @@ describe('Heatmap', () => {
     render(<Heatmap />, { wrapper: TestWrapper });
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: '2025' })).toBeInTheDocument();
+      expect(screen.getByText('2026')).toBeInTheDocument();
     });
 
     // 清除之前的调用记录
     (global.fetch as jest.Mock).mockClear();
 
-    // 点击 2025 年按钮
-    fireEvent.click(screen.getByRole('button', { name: '2025' }));
+    // 点击“前一年”按钮
+    fireEvent.click(screen.getByLabelText('Previous Year'));
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('year=2025'));
