@@ -165,13 +165,11 @@ export function Heatmap() {
         {/* Persistent Smooth Tooltip - Rendered outside of the overflow container */}
         <div
           className={cn(
-            'absolute z-50 pointer-events-none transition-all duration-200 ease-out hidden md:block',
-            hoveredDay ? 'opacity-100' : 'opacity-0 scale-95 pointer-events-none'
+            'absolute z-50 pointer-events-none transition-all duration-100 ease-out hidden md:block',
+            hoveredDay ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
           )}
           style={{
-            left: tooltipPos?.x ?? 0,
-            top: tooltipPos?.y ?? 0,
-            transform: `translate(-50%, calc(-100% - 8px))`,
+            transform: `translate3d(${tooltipPos?.x ?? 0}px, ${tooltipPos?.y ?? 0}px, 0) translate(-50%, calc(-100% - 8px))`,
           }}
         >
           {hoveredDay && (
