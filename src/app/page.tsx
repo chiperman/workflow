@@ -60,7 +60,9 @@ export default function Home() {
       toast.success('System data refreshed', { id: loadingToast });
       setTimeout(() => setRefreshUIStatus('idle'), 2000);
     } catch (err) {
-      console.error('Refresh failed:', err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Refresh failed:', err);
+      }
       setRefreshUIStatus('error');
       toast.error('Refresh failed', {
         id: loadingToast,

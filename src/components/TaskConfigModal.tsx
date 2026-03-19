@@ -154,10 +154,14 @@ export function TaskConfigModal({
         // 优先显示详细错误信息 (resData.error)，否则退而求其次显示 resData.message
         const errorMessage = resData.error || resData.message || 'Failed to save configuration';
         toast.error(errorMessage);
-        console.error('Save error details:', resData);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Save error details:', resData);
+        }
       }
     } catch (error) {
-      console.error('Save failed:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Save failed:', error);
+      }
       toast.error('Network error. Failed to save.');
     } finally {
       setIsSaving(false);
