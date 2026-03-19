@@ -62,6 +62,8 @@
   --color-accent-primary: #d97757;
   --color-accent-secondary: #3f6212;
   --color-border-custom: #e5e5e0;
+  --color-text-secondary: #888888;
+  --color-text-tertiary: #555555;
 
   /* Heatmap Colors */
   --color-heatmap-level-0: #ebedf0;

@@ -6,7 +6,7 @@ interface FooterProps {
 
 export function Footer({ version }: FooterProps) {
   return (
-    <footer className="mt-8 pt-6 border-t border-[#e5e5e0] flex flex-col md:flex-row items-center justify-between text-xs text-[#888888] tracking-widest uppercase gap-4 md:gap-6">
+    <footer className="mt-8 pt-6 border-t border-border-custom flex flex-col md:flex-row items-center justify-between text-xs text-text-secondary tracking-widest uppercase gap-4 md:gap-6">
       <p>Workflow {version} • Antigravity</p>
 
       <div className="flex flex-col items-center md:items-end gap-3">

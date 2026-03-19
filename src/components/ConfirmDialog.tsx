@@ -105,7 +105,7 @@ export function ConfirmDialog({
                 variant="ghost"
                 size="icon"
                 onClick={onCancel}
-                className="absolute top-4 right-4 text-[#888888] hover:text-[#191919]"
+                className="absolute top-4 right-4 text-text-secondary hover:text-foreground"
                 aria-label="Close dialog"
               >
                 <X className="w-4 h-4" />
@@ -123,13 +123,13 @@ export function ConfirmDialog({
                 {/* Title */}
                 <h2
                   id="dialog-title"
-                  className="text-lg font-medium text-[#191919] text-center mb-2"
+                  className="text-lg font-medium text-foreground text-center mb-2"
                 >
                   {title}
                 </h2>
 
                 {/* Message */}
-                <p className="text-sm text-[#555555] text-center leading-relaxed">{message}</p>
+                <p className="text-sm text-text-tertiary text-center leading-relaxed">{message}</p>
               </div>
 
               {/* Actions */}

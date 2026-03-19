@@ -104,10 +104,10 @@ export default function Home() {
                       duration: MOTION.duration,
                       ease: MOTION.ease,
                     }}
-                    className="text-3xl sm:text-4xl font-medium text-[#191919] font-serif tracking-tight leading-tight flex items-center gap-3"
+                    className="text-3xl sm:text-4xl font-medium text-foreground font-serif tracking-tight leading-tight flex items-center gap-3"
                   >
                     <Workflow
-                      className="w-8 h-8 sm:w-10 sm:h-10 text-[#d97757]"
+                      className="w-8 h-8 sm:w-10 sm:h-10 text-accent-primary"
                       strokeWidth={1.5}
                     />
                     <span>System Operations</span>
@@ -115,10 +115,10 @@ export default function Home() {
                   <div className="flex items-center gap-3">
                     {isLoading ? (
                       <div className="flex items-center gap-2 opacity-60">
-                        <div className="w-8 h-8 rounded-lg bg-[#e5e5e0] animate-pulse" />
-                        <div className="w-8 h-8 rounded-lg bg-[#e5e5e0] animate-pulse" />
-                        <div className="w-16 h-8 rounded-lg bg-[#e5e5e0] animate-pulse hidden sm:block" />
-                        <div className="w-8 h-8 rounded-lg bg-[#e5e5e0] animate-pulse sm:hidden" />
+                        <div className="w-8 h-8 rounded-lg bg-muted animate-pulse" />
+                        <div className="w-8 h-8 rounded-lg bg-muted animate-pulse" />
+                        <div className="w-16 h-8 rounded-lg bg-muted animate-pulse hidden sm:block" />
+                        <div className="w-8 h-8 rounded-lg bg-muted animate-pulse sm:hidden" />
                       </div>
                     ) : (
                       <>
@@ -148,7 +148,7 @@ export default function Home() {
                             ? 'border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:text-emerald-700'
                             : isGuest
                               ? 'border-[#f0f0f0] text-[#cccccc] cursor-not-allowed bg-gray-50'
-                              : 'text-[#888888] hover:text-[#191919] hover:border-[#d97757]/30'
+                              : 'text-text-secondary hover:text-foreground hover:border-accent-primary/30'
                       }
                     `}
                           title={isGuest ? 'Sign in to refresh' : 'Refresh data'}
@@ -204,7 +204,7 @@ export default function Home() {
                             variant="outline"
                             size="icon"
                             onClick={openCreateModal}
-                            className="text-[#888888] hover:text-[#191919] hover:border-[#d97757]/30 transition-colors duration-300"
+                            className="text-text-secondary hover:text-foreground hover:border-accent-primary/30 transition-colors duration-300"
                             title="Add new task"
                           >
                             <Plus className="w-3.5 h-3.5" />
@@ -221,7 +221,7 @@ export default function Home() {
                             }}
                             variant="outline"
                             onClick={() => router.push('/login')}
-                            className="sm:justify-start gap-2 h-9 sm:px-3 text-[10px] font-medium tracking-tight text-[#191919] hover:border-[#d97757]/30 transition-colors duration-300 whitespace-nowrap shadow-sm"
+                            className="sm:justify-start gap-2 h-9 sm:px-3 text-[10px] font-medium tracking-tight text-foreground hover:border-accent-primary/30 transition-colors duration-300 whitespace-nowrap shadow-sm"
                             title="Sign in"
                           >
                             <LogIn className="w-3.5 h-3.5" />
@@ -238,7 +238,7 @@ export default function Home() {
                             }}
                             variant="outline"
                             onClick={() => setShowLogoutConfirm(true)}
-                            className="sm:justify-start gap-2 h-9 sm:px-3 text-[10px] font-medium tracking-tight text-[#888888] hover:text-[#191919] hover:border-[#d97757]/30 transition-colors duration-300 whitespace-nowrap shadow-sm"
+                            className="sm:justify-start gap-2 h-9 sm:px-3 text-[10px] font-medium tracking-tight text-text-secondary hover:text-foreground hover:border-accent-primary/30 transition-colors duration-300 whitespace-nowrap shadow-sm"
                             title="Sign out"
                           >
                             <LogOut className="w-3.5 h-3.5" />
@@ -257,7 +257,7 @@ export default function Home() {
                     duration: MOTION.duration,
                     ease: MOTION.ease,
                   }}
-                  className="text-sm text-[#555555] max-w-xl leading-relaxed font-light text-left"
+                  className="text-sm text-text-tertiary max-w-xl leading-relaxed font-light text-left"
                 >
                   Control center for automated maintenance protocols and cross-service data
                   synchronization.
@@ -323,10 +323,10 @@ export default function Home() {
                           }}
                           className="flex items-center gap-3"
                         >
-                          <h2 className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#888888] pl-1">
+                          <h2 className="text-[10px] font-bold uppercase tracking-[0.15em] text-text-secondary pl-1">
                             {category}
                           </h2>
-                          <div className="h-[1px] flex-1 bg-gradient-to-r from-[#e5e5e0] to-transparent" />
+                          <div className="h-[1px] flex-1 bg-gradient-to-r from-border-custom to-transparent" />
                         </motion.div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">

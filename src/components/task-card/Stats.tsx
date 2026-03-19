@@ -10,7 +10,7 @@ interface StatsProps {
 export const Stats = memo(function Stats({ stats, displayStatus }: StatsProps) {
   return (
     <div
-      className="flex mt-4 text-xs font-mono text-[#888888] uppercase tracking-wider"
+      className="flex mt-4 text-xs font-mono text-text-secondary uppercase tracking-wider"
       aria-label="Task statistics"
     >
       <div className="flex items-center gap-1.5 w-24 shrink-0">

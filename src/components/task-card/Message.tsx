@@ -28,7 +28,7 @@ export const Message = memo(function Message({ message, displayStatus, onDismiss
         variant="ghost"
         size="icon"
         onClick={onDismiss}
-        className="absolute top-0 right-0 size-6 text-[#888888] hover:text-[#191919]"
+        className="absolute top-0 right-0 size-6 text-text-secondary hover:text-foreground"
         title="Dismiss message"
       >
         <X className="w-3 h-3" />

@@ -220,10 +220,10 @@ export function TaskConfigModal({
             {/* Header */}
             <div className="px-6 py-4 border-b border-[#f0f0ed] flex justify-between items-center bg-[#fdfcf8]/50">
               <div>
-                <h2 className="text-lg font-semibold text-[#191919] font-serif">
+                <h2 className="text-lg font-semibold text-foreground font-serif">
                   {serviceId ? 'Edit Protocol Task' : 'New Maintenance Protocol'}
                 </h2>
-                <p className="text-xs text-[#888888] mt-0.5">
+                <p className="text-xs text-text-secondary mt-0.5">
                   {' '}
                   Configure execution and validation rules{' '}
                 </p>
@@ -232,7 +232,7 @@ export function TaskConfigModal({
                 variant="ghost"
                 size="icon"
                 onClick={onClose}
-                className="text-[#888888] hover:text-[#191919]"
+                className="text-text-secondary hover:text-foreground"
                 aria-label="Close modal"
               >
                 <X className="w-6 h-6" aria-hidden="true" />
@@ -243,12 +243,15 @@ export function TaskConfigModal({
             <div className="overflow-y-auto p-6 space-y-6 scrollbar-thin">
               {/* Basic Info */}
               <section className="space-y-4">
-                <h3 className="text-xs font-semibold text-[#888888] uppercase tracking-wider flex items-center gap-2">
-                  <Settings className="w-3.5 h-3.5" /> Basic Configuration
+                <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wider flex items-center gap-2">
+                  <Settings className="w-3.5 h-3.5" aria-hidden="true" /> Basic Configuration
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label htmlFor="service-id" className="text-[11px] font-medium text-[#555555]">
+                    <label
+                      htmlFor="service-id"
+                      className="text-[11px] font-medium text-text-tertiary"
+                    >
                       Service ID (unique)
                     </label>
                     <input
@@ -265,7 +268,7 @@ export function TaskConfigModal({
                   <div className="space-y-1.5">
                     <label
                       htmlFor="display-name"
-                      className="text-[11px] font-medium text-[#555555]"
+                      className="text-[11px] font-medium text-text-tertiary"
                     >
                       Display Name
                     </label>
@@ -280,7 +283,10 @@ export function TaskConfigModal({
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label htmlFor="category" className="text-[11px] font-medium text-[#555555]">
+                    <label
+                      htmlFor="category"
+                      className="text-[11px] font-medium text-text-tertiary"
+                    >
                       Category
                     </label>
                     <input
@@ -295,7 +301,7 @@ export function TaskConfigModal({
                     <div className="space-y-1.5">
                       <label
                         htmlFor="notification-level"
-                        className="text-[11px] font-medium text-[#555555]"
+                        className="text-[11px] font-medium text-text-tertiary"
                       >
                         Notification Level
                       </label>
@@ -319,7 +325,10 @@ export function TaskConfigModal({
                       </select>
                     </div>
                     <div className="space-y-1.5">
-                      <label htmlFor="bark-key" className="text-[11px] font-medium text-[#555555]">
+                      <label
+                        htmlFor="bark-key"
+                        className="text-[11px] font-medium text-text-tertiary"
+                      >
                         Bark Key (Optional)
                       </label>
                       <div className="relative">
@@ -341,7 +350,7 @@ export function TaskConfigModal({
                           variant="ghost"
                           size="icon"
                           onClick={() => setShowBarkKey(!showBarkKey)}
-                          className="absolute right-1 top-1/2 -translate-y-1/2 text-[#888888] hover:text-[#191919]"
+                          className="absolute right-1 top-1/2 -translate-y-1/2 text-text-secondary hover:text-foreground"
                           aria-label={showBarkKey ? 'Hide bark key' : 'Show bark key'}
                         >
                           {showBarkKey ? (
@@ -355,7 +364,10 @@ export function TaskConfigModal({
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <label htmlFor="description" className="text-[11px] font-medium text-[#555555]">
+                  <label
+                    htmlFor="description"
+                    className="text-[11px] font-medium text-text-tertiary"
+                  >
                     Description
                   </label>
                   <textarea
@@ -368,7 +380,7 @@ export function TaskConfigModal({
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label htmlFor="task-type" className="text-[11px] font-medium text-[#555555]">
+                  <label htmlFor="task-type" className="text-[11px] font-medium text-text-tertiary">
                     Task Type
                   </label>
                   <select
@@ -387,11 +399,13 @@ export function TaskConfigModal({
 
               {config.type === 'http' && (
                 <section className="space-y-4 pt-4 border-t border-[#f0f0ed]">
-                  <h3 className="text-xs font-semibold text-[#888888] uppercase tracking-wider flex items-center gap-2">
+                  <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wider flex items-center gap-2">
                     <Globe className="w-3.5 h-3.5" aria-hidden="true" /> HTTP Settings
                   </h3>
                   <div className="space-y-3">
-                    <label className="text-[11px] font-medium text-[#555555]">Target URL(s)</label>
+                    <label className="text-[11px] font-medium text-text-tertiary">
+                      Target URL(s)
+                    </label>
                     {(config.config?.urls || ['']).map((url, index) => (
                       <div key={index} className="flex gap-2">
                         <input
@@ -425,7 +439,7 @@ export function TaskConfigModal({
                     <div className="space-y-1.5">
                       <label
                         htmlFor="http-method"
-                        className="text-[11px] font-medium text-[#555555]"
+                        className="text-[11px] font-medium text-text-tertiary"
                       >
                         Method
                       </label>
@@ -449,7 +463,10 @@ export function TaskConfigModal({
                       </select>
                     </div>
                     <div className="col-span-2 space-y-1.5">
-                      <label htmlFor="cookie" className="text-[11px] font-medium text-[#555555]">
+                      <label
+                        htmlFor="cookie"
+                        className="text-[11px] font-medium text-text-tertiary"
+                      >
                         Cookie (Direct Input)
                       </label>
                       <input
@@ -467,7 +484,7 @@ export function TaskConfigModal({
                     </div>
                   </div>
                   <div className="space-y-1.5">
-                    <label htmlFor="headers" className="text-[11px] font-medium text-[#555555]">
+                    <label htmlFor="headers" className="text-[11px] font-medium text-text-tertiary">
                       Headers (JSON)
                     </label>
                     <input
@@ -490,16 +507,16 @@ export function TaskConfigModal({
 
               {config.type === 'supabase_internal' && (
                 <section className="space-y-4 pt-4 border-t border-[#f0f0ed]">
-                  <h3 className="text-xs font-semibold text-[#888888] uppercase tracking-wider flex items-center gap-2">
+                  <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wider flex items-center gap-2">
                     <Globe className="w-3.5 h-3.5" aria-hidden="true" /> Remote Supabase Settings
                   </h3>
-                  <p className="text-[11px] text-[#888888]">
+                  <p className="text-[11px] text-text-secondary">
                     Leave blank to use the current project credentials.
                   </p>
                   <div className="space-y-1.5">
                     <label
                       htmlFor="supabase-url"
-                      className="text-[11px] font-medium text-[#555555]"
+                      className="text-[11px] font-medium text-text-tertiary"
                     >
                       Supabase URL
                     </label>
@@ -519,7 +536,7 @@ export function TaskConfigModal({
                   <div className="space-y-1.5">
                     <label
                       htmlFor="supabase-key"
-                      className="text-[11px] font-medium text-[#555555]"
+                      className="text-[11px] font-medium text-text-tertiary"
                     >
                       Service Role Key (Private)
                     </label>
@@ -542,7 +559,7 @@ export function TaskConfigModal({
                         variant="ghost"
                         size="icon"
                         onClick={() => setShowSupabaseKey(!showSupabaseKey)}
-                        className="absolute right-1 top-1/2 -translate-y-1/2 text-[#888888] hover:text-[#191919]"
+                        className="absolute right-1 top-1/2 -translate-y-1/2 text-text-secondary hover:text-foreground"
                         aria-label={showSupabaseKey ? 'Hide supabase key' : 'Show supabase key'}
                       >
                         {showSupabaseKey ? (
@@ -554,7 +571,10 @@ export function TaskConfigModal({
                     </div>
                   </div>
                   <div className="space-y-1.5">
-                    <label htmlFor="table-name" className="text-[11px] font-medium text-[#555555]">
+                    <label
+                      htmlFor="table-name"
+                      className="text-[11px] font-medium text-text-tertiary"
+                    >
                       Target Table (for keep-alive query)
                     </label>
                     <input
@@ -576,7 +596,7 @@ export function TaskConfigModal({
               {/* Rules Section */}
               <section className="space-y-4 pt-4 border-t border-[#f0f0ed]">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-xs font-semibold text-[#888888] uppercase tracking-wider flex items-center gap-2">
+                  <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wider flex items-center gap-2">
                     <CheckCircle className="w-3.5 h-3.5" aria-hidden="true" /> Validation Rules
                   </h3>
                   <Button
@@ -601,11 +621,11 @@ export function TaskConfigModal({
                     <div className="space-y-0.5">
                       <label
                         htmlFor="smart-detection"
-                        className="text-sm font-medium text-[#191919]"
+                        className="text-sm font-medium text-foreground"
                       >
                         Smart Detection
                       </label>
-                      <p className="text-[11px] text-[#888888]">
+                      <p className="text-[11px] text-text-secondary">
                         Automatically detect success keywords (Success, OK, 0)
                       </p>
                     </div>
@@ -630,7 +650,7 @@ export function TaskConfigModal({
                       variant="link"
                       size="sm"
                       onClick={() => setShowAdvancedRules(!showAdvancedRules)}
-                      className="px-0 h-auto text-[10px] text-[#888888] hover:text-[#191919] underline underline-offset-4"
+                      className="px-0 h-auto text-[10px] text-text-secondary hover:text-foreground underline underline-offset-4"
                       aria-expanded={showAdvancedRules}
                     >
                       {showAdvancedRules ? 'Hide Precise Rules' : 'Show Precise Rules (JSON)'}
@@ -641,7 +661,7 @@ export function TaskConfigModal({
                     <div className="space-y-3 pt-2 animate-in fade-in slide-in-from-top-1 duration-200">
                       <label
                         htmlFor="json-rules"
-                        className="text-[11px] font-medium text-[#555555]"
+                        className="text-[11px] font-medium text-text-tertiary"
                       >
                         JSON Rule Definition
                       </label>
@@ -672,7 +692,7 @@ export function TaskConfigModal({
                 <Button
                   variant="ghost"
                   onClick={onClose}
-                  className="text-[#666666] hover:text-[#191919]"
+                  className="text-muted-foreground hover:text-foreground"
                 >
                   Cancel
                 </Button>

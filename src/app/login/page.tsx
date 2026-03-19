@@ -49,7 +49,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-transparent text-[#191919] p-6 overflow-hidden relative">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-transparent text-foreground p-6 overflow-hidden relative">
       <AnimatePresence>
         {!isExiting && (
           <>
@@ -62,7 +62,7 @@ export default function LoginPage() {
               variant="outline"
               size="sm"
               onClick={() => router.push('/')}
-              className="absolute top-8 left-8 text-[10px] font-medium tracking-tight text-[#888888] hover:text-[#191919] hover:border-[#d97757]/30 transition-colors duration-300 shadow-sm sm:shadow-none"
+              className="absolute top-8 left-8 text-[10px] font-medium tracking-tight text-text-secondary hover:text-foreground hover:border-accent-primary/30 transition-colors duration-300 shadow-sm sm:shadow-none"
               title="Back to home"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
@@ -81,14 +81,14 @@ export default function LoginPage() {
                   initial={{ scale: 0.8 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.2, duration: 0.6, ease: MOTION_CONFIG.ease }}
-                  className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-white border border-[#e5e5e0] mb-6 shadow-sm"
+                  className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-white border border-border-custom mb-6 shadow-sm"
                 >
-                  <Workflow className="w-5 h-5 text-[#d97757]" strokeWidth={1.5} />
+                  <Workflow className="w-5 h-5 text-accent-primary" strokeWidth={1.5} />
                 </motion.div>
                 <h1 className="text-4xl font-medium font-serif tracking-tight mb-3">
                   Operations Lock
                 </h1>
-                <p className="text-sm text-[#555555] font-light leading-relaxed">
+                <p className="text-sm text-text-tertiary font-light leading-relaxed">
                   Please enter your administrative access key to manage the maintenance protocols.
                 </p>
               </div>
@@ -105,7 +105,7 @@ export default function LoginPage() {
                       value={key}
                       onChange={e => setKey(e.target.value)}
                       placeholder="Access Key"
-                      className="w-full h-12 bg-white border border-[#e5e5e0] rounded-lg pl-4 pr-24 outline-none focus:border-[#d97757] focus:ring-4 focus:ring-[#d97757]/5 transition-all duration-300 placeholder:text-zinc-300 text-sm disabled:opacity-50"
+                      className="w-full h-12 bg-white border border-border-custom rounded-lg pl-4 pr-24 outline-none focus:border-accent-primary focus:ring-4 focus:ring-accent-primary/5 transition-all duration-300 placeholder:text-zinc-300 text-sm disabled:opacity-50"
                       autoFocus
                       required
                       disabled={loading}
@@ -160,7 +160,7 @@ export default function LoginPage() {
               </form>
 
               <footer className="mt-20 text-center">
-                <p className="text-[#888888] text-[10px] uppercase tracking-widest font-medium">
+                <p className="text-text-secondary text-[10px] uppercase tracking-widest font-medium">
                   Secured Infrastructure &copy; 2026
                 </p>
               </footer>
