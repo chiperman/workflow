@@ -75,7 +75,7 @@ function TaskCardComponent({
     if (localStatus === 'loading') return;
 
     setLocalStatus('loading');
-    const loadingToast = toast.loading(`${title} running...`);
+    const loadingToast = toast.loading(`${title}...`);
 
     try {
       const url = `${endpoint}${endpoint.includes('?') ? '&' : '?'}trigger=manual`;
@@ -86,7 +86,7 @@ function TaskCardComponent({
 
       if (response.ok && data.success) {
         setLocalStatus('success');
-        toast.success(data.message || `${title} executed successfully`, { id: loadingToast });
+        toast.success(`${title} success`, { id: loadingToast });
 
         if (data.data) {
           onStatsUpdate({
@@ -98,15 +98,11 @@ function TaskCardComponent({
         }
       } else {
         setLocalStatus('error');
-        toast.error(data.message || data.error || `${title} execution failed`, {
-          id: loadingToast,
-        });
+        toast.error(`${title} failed`, { id: loadingToast });
       }
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       setLocalStatus('error');
-      toast.error(error instanceof Error ? error.message : 'Network failure', {
-        id: loadingToast,
-      });
+      toast.error(`${title} failed`, { id: loadingToast });
     }
   }, [endpoint, method, localStatus, title, onStatsUpdate]);
 
@@ -128,10 +124,10 @@ function TaskCardComponent({
         onStatsUpdate({ ...serviceHealth, enabled: newEnabled });
         success = true;
       } else {
-        toast.error(data.message || 'Failed to toggle service');
+        toast.error('Toggle failed');
       }
-    } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'Network failure');
+    } catch (_error: unknown) {
+      toast.error('Toggle failed');
     } finally {
       setIsToggling(false);
       if (success) {
@@ -149,15 +145,15 @@ function TaskCardComponent({
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        toast.success(data.message || 'Task deleted');
+        toast.success('Task deleted');
         onStatsUpdate(undefined); // Trigger refresh
       } else {
         setLocalStatus('error');
-        toast.error(data.message || 'Failed to delete task');
+        toast.error('Delete failed');
       }
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       setLocalStatus('error');
-      toast.error(error instanceof Error ? error.message : 'Network failure');
+      toast.error('Delete failed');
     }
   }, [serviceName, onStatsUpdate]);
 
