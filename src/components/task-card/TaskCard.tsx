@@ -4,7 +4,6 @@ import type { ServiceHealth } from '@/types';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { Actions } from './Actions';
 import { Header } from './Header';
-import { Message } from './Message';
 import { Stats } from './Stats';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { toast } from 'sonner';
@@ -40,10 +39,8 @@ function TaskCardComponent({
   const [localStatus, setLocalStatus] = useState<
     'idle' | 'loading' | 'success' | 'error' | 'deleting'
   >('idle');
-  const [localMessage, setLocalMessage] = useState('');
   const [isToggling, setIsToggling] = useState(false);
   const [localEnabled, setLocalEnabled] = useState(serviceHealth.enabled ?? true);
-  const [isDismissed, setIsDismissed] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // 同步 props 变化到 local state
@@ -60,7 +57,6 @@ function TaskCardComponent({
     if (localStatus === 'success' || localStatus === 'error') {
       const timer = setTimeout(() => {
         setLocalStatus('idle');
-        setLocalMessage('');
       }, 3000);
       return () => clearTimeout(timer);
     }
@@ -75,28 +71,10 @@ function TaskCardComponent({
     return 'idle';
   }, [localStatus, serviceHealth.status]);
 
-  // 计算原始消息
-  const rawMessage = useMemo(() => {
-    if (localMessage) return localMessage;
-    if (serviceHealth.message) return serviceHealth.message;
-    if (serviceHealth.status === 'misconfigured') return 'Configuration error detected.';
-    if (serviceHealth.status === 'outage') return 'Service is currently unavailable.';
-    return '';
-  }, [localMessage, serviceHealth.message, serviceHealth.status]);
-
-  // 当原始消息变化时，重置关闭状态
-  useEffect(() => {
-    setIsDismissed(false);
-  }, [rawMessage]);
-
-  const displayMessage = isDismissed ? '' : rawMessage;
-
   const handleRun = useCallback(async () => {
     if (localStatus === 'loading') return;
 
     setLocalStatus('loading');
-    setLocalMessage('');
-    setIsDismissed(false);
 
     try {
       const url = `${endpoint}${endpoint.includes('?') ? '&' : '?'}trigger=manual`;
@@ -107,7 +85,7 @@ function TaskCardComponent({
 
       if (response.ok && data.success) {
         setLocalStatus('success');
-        setLocalMessage(data.message || 'Task completed successfully');
+        toast.success(data.message || `${title} executed successfully`);
 
         if (data.data) {
           onStatsUpdate({
@@ -119,13 +97,13 @@ function TaskCardComponent({
         }
       } else {
         setLocalStatus('error');
-        setLocalMessage(data.message || data.error || 'Execution failed');
+        toast.error(data.message || data.error || `${title} execution failed`);
       }
     } catch (error: unknown) {
       setLocalStatus('error');
-      setLocalMessage(error instanceof Error ? error.message : 'Network failure');
+      toast.error(error instanceof Error ? error.message : 'Network failure');
     }
-  }, [endpoint, method, localStatus, onStatsUpdate]);
+  }, [endpoint, method, localStatus, title, onStatsUpdate]);
 
   const handleToggle = useCallback(async () => {
     if (isToggling) return;
@@ -170,14 +148,11 @@ function TaskCardComponent({
         onStatsUpdate(undefined); // Trigger refresh
       } else {
         setLocalStatus('error');
-        setLocalMessage(data.message || 'Failed to delete task');
         toast.error(data.message || 'Failed to delete task');
       }
     } catch (error: unknown) {
       setLocalStatus('error');
-      const msg = error instanceof Error ? error.message : 'Network failure';
-      setLocalMessage(msg);
-      toast.error(msg);
+      toast.error(error instanceof Error ? error.message : 'Network failure');
     }
   }, [serviceName, onStatsUpdate]);
 
@@ -204,12 +179,6 @@ function TaskCardComponent({
         displayStatus={displayStatus === 'deleting' ? 'loading' : displayStatus}
         onRun={handleRun}
         isGuest={isGuest}
-      />
-
-      <Message
-        message={displayMessage}
-        displayStatus={displayStatus === 'deleting' ? 'error' : displayStatus}
-        onDismiss={() => setIsDismissed(true)}
       />
 
       <ConfirmDialog
