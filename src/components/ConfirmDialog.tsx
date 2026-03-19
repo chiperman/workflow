@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { AlertTriangle, X } from 'lucide-react';
 import { useCallback, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
 
 interface ConfirmDialogProps {
@@ -73,7 +74,7 @@ export function ConfirmDialog({
 
   const styles = variantStyles[variant];
 
-  return (
+  const dialogContent = (
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -83,7 +84,7 @@ export function ConfirmDialog({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed -inset-20 bg-black/20 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm"
             onClick={onCancel}
           />
 
@@ -149,4 +150,8 @@ export function ConfirmDialog({
       )}
     </AnimatePresence>
   );
+
+  // Use portal to render dialog at body level, avoiding parent transform issues
+  if (typeof window === 'undefined') return null;
+  return createPortal(dialogContent, document.body);
 }
