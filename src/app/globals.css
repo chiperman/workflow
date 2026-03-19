@@ -62,6 +62,7 @@
   --color-accent-primary: #d97757;
   --color-accent-secondary: #3f6212;
   --color-border-custom: #e5e5e0;
+  --color-border-hover: #d0d0cb;
   --color-text-secondary: #888888;
   --color-text-tertiary: #555555;
 
@@ -292,4 +293,37 @@ h6 {
     background: color-mix(in oklch, var(--muted-foreground) 45%, transparent);
     background-clip: content-box;
   }
+}
+
+/* Respect user motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Shimmer animation for skeleton loading */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--muted) 25%,
+    var(--muted-foreground) 50%,
+    var(--muted) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
 }

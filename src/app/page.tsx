@@ -281,31 +281,52 @@ export default function Home() {
               {/* Task Cards List - 响应式多列布局 */}
               <div className="flex flex-col gap-12 mb-12 relative min-h-[200px]">
                 {isLoading ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 w-full opacity-60">
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 w-full">
                     {[1, 2, 3].map(i => (
                       <div
                         key={i}
-                        className="flex flex-col h-full bg-white border border-[#e5e5e0] p-6 rounded-lg animate-pulse"
+                        className="flex flex-col h-full bg-white border border-border-custom p-6 rounded-lg"
                       >
                         <div className="flex justify-between items-start mb-4">
                           <div className="flex flex-col gap-2">
-                            <div className="w-16 h-3 bg-[#e5e5e0] rounded" />
-                            <div className="w-48 h-6 bg-[#e5e5e0] rounded" />
+                            <div className="w-16 h-3 bg-muted rounded animate-shimmer" />
+                            <div
+                              className="w-48 h-6 bg-muted rounded animate-shimmer"
+                              style={{ animationDelay: '0.1s' }}
+                            />
                           </div>
-                          <div className="w-10 h-5 bg-[#e5e5e0] rounded-full" />
+                          <div
+                            className="w-10 h-5 bg-muted rounded-full animate-shimmer"
+                            style={{ animationDelay: '0.2s' }}
+                          />
                         </div>
                         <div className="flex gap-12 mb-6">
                           <div className="flex flex-col gap-2">
-                            <div className="w-20 h-3 bg-[#e5e5e0] rounded" />
-                            <div className="w-12 h-5 bg-[#e5e5e0] rounded" />
+                            <div
+                              className="w-20 h-3 bg-muted rounded animate-shimmer"
+                              style={{ animationDelay: '0.3s' }}
+                            />
+                            <div
+                              className="w-12 h-5 bg-muted rounded animate-shimmer"
+                              style={{ animationDelay: '0.4s' }}
+                            />
                           </div>
                           <div className="flex flex-col gap-2">
-                            <div className="w-20 h-3 bg-[#e5e5e0] rounded" />
-                            <div className="w-12 h-5 bg-[#e5e5e0] rounded" />
+                            <div
+                              className="w-20 h-3 bg-muted rounded animate-shimmer"
+                              style={{ animationDelay: '0.5s' }}
+                            />
+                            <div
+                              className="w-12 h-5 bg-muted rounded animate-shimmer"
+                              style={{ animationDelay: '0.6s' }}
+                            />
                           </div>
                         </div>
                         <div className="mt-auto pt-4 border-t border-gray-50">
-                          <div className="w-24 h-4 bg-[#e5e5e0] rounded" />
+                          <div
+                            className="w-24 h-4 bg-muted rounded animate-shimmer"
+                            style={{ animationDelay: '0.7s' }}
+                          />
                         </div>
                       </div>
                     ))}

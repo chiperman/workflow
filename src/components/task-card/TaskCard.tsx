@@ -182,7 +182,7 @@ function TaskCardComponent({
   }, [serviceName, onStatsUpdate]);
 
   return (
-    <div className="group relative flex flex-col h-full bg-white border border-[#e5e5e0] p-6 rounded-lg transition-all hover:shadow-sm">
+    <div className="group relative flex flex-col h-full bg-white border border-border-custom p-6 rounded-lg transition-all duration-200 ease-out hover:shadow-lg hover:shadow-black/5 hover:-translate-y-0.5 hover:border-border-hover">
       <Header
         title={title}
         description={description}
