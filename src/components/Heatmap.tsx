@@ -165,7 +165,7 @@ export function Heatmap() {
         {/* Persistent Smooth Tooltip - Rendered outside of the overflow container */}
         <div
           className={cn(
-            'absolute z-50 pointer-events-none transition-all duration-100 ease-out hidden md:block',
+            'absolute top-0 left-0 z-50 pointer-events-none transition-all duration-100 ease-out hidden md:block',
             hoveredDay ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
           )}
           style={{
