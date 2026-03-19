@@ -179,6 +179,33 @@ export default function Home() {
                                 >
                                   <Check className="w-3.5 h-3.5" />
                                 </motion.div>
+                              ) : Object.keys(groupedTasks).length === 0 ? (
+                                <motion.div
+                                  initial={{ opacity: 0, y: 20 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  className="flex flex-col items-center justify-center py-16 px-6"
+                                >
+                                  <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                                    <Plus className="w-6 h-6 text-text-tertiary" />
+                                  </div>
+                                  <h3 className="text-lg font-medium text-foreground mb-2">
+                                    No tasks yet
+                                  </h3>
+                                  <p className="text-sm text-text-secondary text-center max-w-sm mb-6">
+                                    Get started by creating your first maintenance task. Tasks will
+                                    automatically run on schedule to keep your services active.
+                                  </p>
+                                  {!isGuest && (
+                                    <Button
+                                      variant="brand"
+                                      onClick={openCreateModal}
+                                      className="gap-2"
+                                    >
+                                      <Plus className="w-4 h-4" />
+                                      Create First Task
+                                    </Button>
+                                  )}
+                                </motion.div>
                               ) : (
                                 <motion.div
                                   key="error"
