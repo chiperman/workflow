@@ -2,7 +2,7 @@ import { HEATMAP_CONFIG } from '@/config/constants';
 import { getColorClass } from '@/lib/heatmap-utils';
 import { cn } from '@/lib/utils';
 import type { HeatmapDay } from '@/types';
-import { memo, useEffect, useState, useMemo, useRef } from 'react';
+import { memo, useEffect, useState, useMemo, useRef, useCallback } from 'react';
 
 interface MemoizedCellProps {
   date: string;
@@ -47,17 +47,41 @@ const MemoizedCell = memo(
 
     const colorClass = getColorClass(date, dayData);
 
-    return (
-      <div
-        ref={cellRef}
-        onMouseEnter={() => {
+    const handleMouseEnter = useCallback(() => {
+      if (cellRef.current) {
+        onHover(tooltipData, cellRef.current.getBoundingClientRect());
+      }
+    }, [onHover, tooltipData]);
+
+    const handleKeyDown = useCallback(
+      (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
           if (cellRef.current) {
             onHover(tooltipData, cellRef.current.getBoundingClientRect());
           }
-        }}
+        }
+      },
+      [onHover, tooltipData]
+    );
+
+    const ariaLabel = useMemo(() => {
+      const successCount = dayData?.success_count ?? 0;
+      const failureCount = dayData?.failure_count ?? 0;
+      return `${date}: ${successCount} successes, ${failureCount} failures`;
+    }, [date, dayData]);
+
+    return (
+      <div
+        ref={cellRef}
+        role="gridcell"
+        tabIndex={0}
+        aria-label={ariaLabel}
+        onMouseEnter={handleMouseEnter}
+        onKeyDown={handleKeyDown}
         className={cn(
           CELL_BASE_CLASS,
-          'cursor-pointer heatmap-cell',
+          'cursor-pointer heatmap-cell focus:outline-none focus:ring-2 focus:ring-[#d97757] focus:ring-offset-1',
           !hasCompletedReveal ? 'is-revealing' : 'is-ready',
           colorClass
         )}
@@ -103,16 +127,22 @@ export function HeatmapGrid({ weeks, days, dataMap, onHover, onMouseLeave }: Hea
   }, [days]);
 
   return (
-    <div className="relative group/grid w-full flex-1" onMouseLeave={onMouseLeave}>
+    <div
+      className="relative group/grid w-full flex-1"
+      onMouseLeave={onMouseLeave}
+      role="grid"
+      aria-label="Activity heatmap"
+    >
       <div
         key={gridKey}
         className="grid gap-[3px] w-full"
         style={{
           gridTemplateColumns: `repeat(${weeks.length}, 1fr)`,
         }}
+        role="rowgroup"
       >
         {weeks.map((week, weekIndex) => (
-          <div key={weekIndex} className="flex flex-col gap-[3px]">
+          <div key={weekIndex} className="flex flex-col gap-[3px]" role="row">
             {week.map((date, dayIndex) => {
               const dayData = dataMap.get(date);
               const globalIndex = dayIndexMap.get(date) ?? 0;
@@ -122,6 +152,8 @@ export function HeatmapGrid({ weeks, days, dataMap, onHover, onMouseLeave }: Hea
                   <div
                     key={`pad-${weekIndex}-${dayIndex}`}
                     className={`${CELL_BASE_CLASS} bg-transparent`}
+                    role="gridcell"
+                    aria-hidden="true"
                   />
                 );
               }

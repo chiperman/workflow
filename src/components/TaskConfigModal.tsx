@@ -233,8 +233,9 @@ export function TaskConfigModal({
                 size="icon"
                 onClick={onClose}
                 className="text-[#888888] hover:text-[#191919]"
+                aria-label="Close modal"
               >
-                <X className="w-6 h-6" />
+                <X className="w-6 h-6" aria-hidden="true" />
               </Button>
             </div>
 
@@ -247,10 +248,11 @@ export function TaskConfigModal({
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-medium text-[#555555]">
+                    <label htmlFor="service-id" className="text-[11px] font-medium text-[#555555]">
                       Service ID (unique)
                     </label>
                     <input
+                      id="service-id"
                       disabled={!!serviceId}
                       value={config.service || ''}
                       onChange={e =>
@@ -261,8 +263,14 @@ export function TaskConfigModal({
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-medium text-[#555555]">Display Name</label>
+                    <label
+                      htmlFor="display-name"
+                      className="text-[11px] font-medium text-[#555555]"
+                    >
+                      Display Name
+                    </label>
                     <input
+                      id="display-name"
                       value={config.name || ''}
                       onChange={e => setConfig({ ...config, name: e.target.value })}
                       placeholder="e.g. GLaDOS Checkin"
@@ -272,8 +280,11 @@ export function TaskConfigModal({
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-medium text-[#555555]">Category</label>
+                    <label htmlFor="category" className="text-[11px] font-medium text-[#555555]">
+                      Category
+                    </label>
                     <input
+                      id="category"
                       value={config.category || ''}
                       onChange={e => setConfig({ ...config, category: e.target.value })}
                       placeholder="e.g. Access Protocol"
@@ -282,10 +293,14 @@ export function TaskConfigModal({
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-[11px] font-medium text-[#555555]">
+                      <label
+                        htmlFor="notification-level"
+                        className="text-[11px] font-medium text-[#555555]"
+                      >
                         Notification Level
                       </label>
                       <select
+                        id="notification-level"
                         value={config.notification_level}
                         onChange={e =>
                           setConfig({
@@ -304,11 +319,12 @@ export function TaskConfigModal({
                       </select>
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[11px] font-medium text-[#555555]">
+                      <label htmlFor="bark-key" className="text-[11px] font-medium text-[#555555]">
                         Bark Key (Optional)
                       </label>
                       <div className="relative">
                         <input
+                          id="bark-key"
                           type={showBarkKey ? 'text' : 'password'}
                           value={config.config?.notification_key || ''}
                           onChange={e =>
@@ -326,11 +342,12 @@ export function TaskConfigModal({
                           size="icon"
                           onClick={() => setShowBarkKey(!showBarkKey)}
                           className="absolute right-1 top-1/2 -translate-y-1/2 text-[#888888] hover:text-[#191919]"
+                          aria-label={showBarkKey ? 'Hide bark key' : 'Show bark key'}
                         >
                           {showBarkKey ? (
-                            <EyeOff className="w-4 h-4" />
+                            <EyeOff className="w-4 h-4" aria-hidden="true" />
                           ) : (
-                            <Eye className="w-4 h-4" />
+                            <Eye className="w-4 h-4" aria-hidden="true" />
                           )}
                         </Button>
                       </div>
@@ -338,8 +355,11 @@ export function TaskConfigModal({
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-medium text-[#555555]">Description</label>
+                  <label htmlFor="description" className="text-[11px] font-medium text-[#555555]">
+                    Description
+                  </label>
                   <textarea
+                    id="description"
                     rows={2}
                     value={config.description || ''}
                     onChange={e => setConfig({ ...config, description: e.target.value })}
@@ -348,8 +368,11 @@ export function TaskConfigModal({
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-medium text-[#555555]">Task Type</label>
+                  <label htmlFor="task-type" className="text-[11px] font-medium text-[#555555]">
+                    Task Type
+                  </label>
                   <select
+                    id="task-type"
                     value={config.type}
                     onChange={e =>
                       setConfig({ ...config, type: e.target.value as 'http' | 'supabase_internal' })
@@ -365,7 +388,7 @@ export function TaskConfigModal({
               {config.type === 'http' && (
                 <section className="space-y-4 pt-4 border-t border-[#f0f0ed]">
                   <h3 className="text-xs font-semibold text-[#888888] uppercase tracking-wider flex items-center gap-2">
-                    <Globe className="w-3.5 h-3.5" /> HTTP Settings
+                    <Globe className="w-3.5 h-3.5" aria-hidden="true" /> HTTP Settings
                   </h3>
                   <div className="space-y-3">
                     <label className="text-[11px] font-medium text-[#555555]">Target URL(s)</label>
@@ -375,6 +398,7 @@ export function TaskConfigModal({
                           value={url}
                           onChange={e => updateUrl(index, e.target.value)}
                           placeholder="https://api.example.com/checkin"
+                          aria-label={`Target URL ${index + 1}`}
                           className="flex-1 px-3 py-2 bg-[#f9f9f9] border border-[#e5e5e0] rounded-lg text-sm focus:outline-none focus:border-[#d97757]/50"
                         />
                         <Button
@@ -382,8 +406,9 @@ export function TaskConfigModal({
                           size="icon"
                           onClick={() => removeUrl(index)}
                           className="text-gray-400 hover:text-red-500 hover:bg-red-50"
+                          aria-label={`Remove URL ${index + 1}`}
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-4 h-4" aria-hidden="true" />
                         </Button>
                       </div>
                     ))}
@@ -393,13 +418,19 @@ export function TaskConfigModal({
                       onClick={addUrl}
                       className="px-0 h-auto text-[#d97757] hover:text-[#d97757]/80"
                     >
-                      <Plus className="w-3.5 h-3.5" /> Add another node
+                      <Plus className="w-3.5 h-3.5" aria-hidden="true" /> Add another node
                     </Button>
                   </div>
                   <div className="grid grid-cols-3 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-[11px] font-medium text-[#555555]">Method</label>
+                      <label
+                        htmlFor="http-method"
+                        className="text-[11px] font-medium text-[#555555]"
+                      >
+                        Method
+                      </label>
                       <select
+                        id="http-method"
                         value={config.config?.method}
                         onChange={e =>
                           setConfig({
@@ -418,10 +449,11 @@ export function TaskConfigModal({
                       </select>
                     </div>
                     <div className="col-span-2 space-y-1.5">
-                      <label className="text-[11px] font-medium text-[#555555]">
+                      <label htmlFor="cookie" className="text-[11px] font-medium text-[#555555]">
                         Cookie (Direct Input)
                       </label>
                       <input
+                        id="cookie"
                         value={config.config?.cookie || ''}
                         onChange={e =>
                           setConfig({
@@ -435,8 +467,11 @@ export function TaskConfigModal({
                     </div>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-medium text-[#555555]">Headers (JSON)</label>
+                    <label htmlFor="headers" className="text-[11px] font-medium text-[#555555]">
+                      Headers (JSON)
+                    </label>
                     <input
+                      id="headers"
                       value={headersStr}
                       onChange={e => {
                         setHeadersStr(e.target.value);
@@ -456,14 +491,20 @@ export function TaskConfigModal({
               {config.type === 'supabase_internal' && (
                 <section className="space-y-4 pt-4 border-t border-[#f0f0ed]">
                   <h3 className="text-xs font-semibold text-[#888888] uppercase tracking-wider flex items-center gap-2">
-                    <Globe className="w-3.5 h-3.5" /> Remote Supabase Settings
+                    <Globe className="w-3.5 h-3.5" aria-hidden="true" /> Remote Supabase Settings
                   </h3>
                   <p className="text-[11px] text-[#888888]">
                     Leave blank to use the current project credentials.
                   </p>
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-medium text-[#555555]">Supabase URL</label>
+                    <label
+                      htmlFor="supabase-url"
+                      className="text-[11px] font-medium text-[#555555]"
+                    >
+                      Supabase URL
+                    </label>
                     <input
+                      id="supabase-url"
                       value={config.config?.supabase_url || ''}
                       onChange={e =>
                         setConfig({
@@ -476,11 +517,15 @@ export function TaskConfigModal({
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-medium text-[#555555]">
+                    <label
+                      htmlFor="supabase-key"
+                      className="text-[11px] font-medium text-[#555555]"
+                    >
                       Service Role Key (Private)
                     </label>
                     <div className="relative">
                       <input
+                        id="supabase-key"
                         type={showSupabaseKey ? 'text' : 'password'}
                         value={config.config?.supabase_key || ''}
                         onChange={e =>
@@ -498,20 +543,22 @@ export function TaskConfigModal({
                         size="icon"
                         onClick={() => setShowSupabaseKey(!showSupabaseKey)}
                         className="absolute right-1 top-1/2 -translate-y-1/2 text-[#888888] hover:text-[#191919]"
+                        aria-label={showSupabaseKey ? 'Hide supabase key' : 'Show supabase key'}
                       >
                         {showSupabaseKey ? (
-                          <EyeOff className="w-4 h-4" />
+                          <EyeOff className="w-4 h-4" aria-hidden="true" />
                         ) : (
-                          <Eye className="w-4 h-4" />
+                          <Eye className="w-4 h-4" aria-hidden="true" />
                         )}
                       </Button>
                     </div>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-medium text-[#555555]">
+                    <label htmlFor="table-name" className="text-[11px] font-medium text-[#555555]">
                       Target Table (for keep-alive query)
                     </label>
                     <input
+                      id="table-name"
                       value={config.config?.table_name || ''}
                       onChange={e =>
                         setConfig({
@@ -530,7 +577,7 @@ export function TaskConfigModal({
               <section className="space-y-4 pt-4 border-t border-[#f0f0ed]">
                 <div className="flex justify-between items-center">
                   <h3 className="text-xs font-semibold text-[#888888] uppercase tracking-wider flex items-center gap-2">
-                    <CheckCircle className="w-3.5 h-3.5" /> Validation Rules
+                    <CheckCircle className="w-3.5 h-3.5" aria-hidden="true" /> Validation Rules
                   </h3>
                   <Button
                     variant="outline"
@@ -538,11 +585,12 @@ export function TaskConfigModal({
                     disabled={isTesting}
                     onClick={handleTestAndDetect}
                     className="text-[10px] h-8 bg-[#fdfcf8] text-[#d97757] hover:text-[#d97757] border-[#e5e5e0] hover:border-[#d97757]/30"
+                    aria-label="Test and detect rules"
                   >
                     {isTesting ? (
-                      <RefreshCw className="w-3 h-3 animate-spin" />
+                      <RefreshCw className="w-3 h-3 animate-spin" aria-hidden="true" />
                     ) : (
-                      <Globe className="w-3 h-3" />
+                      <Globe className="w-3 h-3" aria-hidden="true" />
                     )}
                     Test & Detect Rules
                   </Button>
@@ -551,12 +599,18 @@ export function TaskConfigModal({
                 <div className="bg-[#f9f9f9] border border-[#f0f0ed] p-4 rounded-xl space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <label className="text-sm font-medium text-[#191919]">Smart Detection</label>
+                      <label
+                        htmlFor="smart-detection"
+                        className="text-sm font-medium text-[#191919]"
+                      >
+                        Smart Detection
+                      </label>
                       <p className="text-[11px] text-[#888888]">
                         Automatically detect success keywords (Success, OK, 0)
                       </p>
                     </div>
                     <input
+                      id="smart-detection"
                       type="checkbox"
                       checked={config.rules?.success?.smart_matching ?? true}
                       onChange={e => {
@@ -577,6 +631,7 @@ export function TaskConfigModal({
                       size="sm"
                       onClick={() => setShowAdvancedRules(!showAdvancedRules)}
                       className="px-0 h-auto text-[10px] text-[#888888] hover:text-[#191919] underline underline-offset-4"
+                      aria-expanded={showAdvancedRules}
                     >
                       {showAdvancedRules ? 'Hide Precise Rules' : 'Show Precise Rules (JSON)'}
                     </Button>
@@ -584,10 +639,14 @@ export function TaskConfigModal({
 
                   {showAdvancedRules && (
                     <div className="space-y-3 pt-2 animate-in fade-in slide-in-from-top-1 duration-200">
-                      <label className="text-[11px] font-medium text-[#555555]">
+                      <label
+                        htmlFor="json-rules"
+                        className="text-[11px] font-medium text-[#555555]"
+                      >
                         JSON Rule Definition
                       </label>
                       <textarea
+                        id="json-rules"
                         rows={10}
                         value={rulesStr}
                         onChange={e => {
@@ -622,12 +681,13 @@ export function TaskConfigModal({
                   disabled={isSaving}
                   onClick={handleSave}
                   className="px-6 h-11"
+                  aria-label={isSaving ? 'Saving configuration' : 'Save configuration'}
                 >
                   {isSaving ? (
-                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    <RefreshCw className="w-4 h-4 animate-spin" aria-hidden="true" />
                   ) : (
                     <>
-                      <Save className="w-4 h-4" /> Save Configuration
+                      <Save className="w-4 h-4" aria-hidden="true" /> Save Configuration
                     </>
                   )}
                 </Button>

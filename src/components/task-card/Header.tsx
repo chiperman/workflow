@@ -109,10 +109,11 @@ export const Header = memo(function Header({
                           size="icon"
                           onClick={() => onDelete(serviceName)}
                           className="h-8 w-8 text-[#888888] hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all duration-200"
+                          aria-label="Delete task"
                         />
                       }
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                     </TooltipTrigger>
                     <TooltipContent side="top">
                       <p className="text-xs">Delete Task</p>
@@ -128,10 +129,11 @@ export const Header = memo(function Header({
                           size="icon"
                           onClick={() => onEdit(serviceName)}
                           className="h-8 w-8 text-[#888888] hover:text-[#d97757] hover:bg-[#f9f9f9] opacity-0 group-hover:opacity-100 transition-all duration-200"
+                          aria-label="Edit configuration"
                         />
                       }
                     >
-                      <Settings className="w-3.5 h-3.5" />
+                      <Settings className="w-3.5 h-3.5" aria-hidden="true" />
                     </TooltipTrigger>
                     <TooltipContent side="top">
                       <p className="text-xs">Edit Configuration</p>
@@ -146,6 +148,7 @@ export const Header = memo(function Header({
                   checked={localEnabled}
                   onCheckedChange={onToggle}
                   disabled={isToggling || isGuest}
+                  aria-label={localEnabled ? 'Disable auto cron' : 'Enable auto cron'}
                 />
               </TooltipTrigger>
               <TooltipContent side="top">

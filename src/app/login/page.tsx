@@ -96,7 +96,11 @@ export default function LoginPage() {
               <form onSubmit={handleLogin} className="space-y-6">
                 <div className="space-y-2">
                   <div className="relative group">
+                    <label htmlFor="access-key" className="sr-only">
+                      Access Key
+                    </label>
                     <input
+                      id="access-key"
                       type={showPassword ? 'text' : 'password'}
                       value={key}
                       onChange={e => setKey(e.target.value)}
@@ -105,6 +109,8 @@ export default function LoginPage() {
                       autoFocus
                       required
                       disabled={loading}
+                      aria-describedby={error ? 'login-error' : undefined}
+                      aria-invalid={error ? 'true' : undefined}
                     />
                     <div className="absolute right-1.5 top-1.5 flex gap-1">
                       <Button
@@ -114,12 +120,12 @@ export default function LoginPage() {
                         onClick={() => setShowPassword(!showPassword)}
                         disabled={loading || !key}
                         className="h-9 w-9 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-50"
-                        title={showPassword ? 'Hide password' : 'Show password'}
+                        aria-label={showPassword ? 'Hide password' : 'Show password'}
                       >
                         {showPassword ? (
-                          <EyeOff className="w-4 h-4" />
+                          <EyeOff className="w-4 h-4" aria-hidden="true" />
                         ) : (
-                          <Eye className="w-4 h-4" />
+                          <Eye className="w-4 h-4" aria-hidden="true" />
                         )}
                       </Button>
                       <Button
@@ -128,11 +134,12 @@ export default function LoginPage() {
                         size="icon"
                         disabled={loading || !key}
                         className="h-9 w-9 shadow-sm shadow-[#d97757]/20"
+                        aria-label="Submit login"
                       >
                         {loading ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
                         ) : (
-                          <ArrowRight className="w-4 h-4" />
+                          <ArrowRight className="w-4 h-4" aria-hidden="true" />
                         )}
                       </Button>
                     </div>
@@ -141,6 +148,8 @@ export default function LoginPage() {
 
                 {error && (
                   <motion.div
+                    id="login-error"
+                    role="alert"
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     className="bg-red-50 border border-red-100 text-red-600 text-[11px] font-medium py-2 px-3 rounded-md text-center"
