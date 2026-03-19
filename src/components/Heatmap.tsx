@@ -1,11 +1,13 @@
 import { HeatmapGrid } from '@/components/heatmap/HeatmapGrid';
 import { HeatmapLegend } from '@/components/heatmap/HeatmapLegend';
+import { HeatmapTooltipContent } from '@/components/heatmap/HeatmapTooltip';
 import { HeatmapYearSelector } from '@/components/heatmap/HeatmapYearSelector';
 import { SWR_CONFIG } from '@/config/swr';
 import { generateYearDays, getMonthLabels, groupByWeeks, WEEKDAYS } from '@/lib/heatmap-calendar';
+import { cn } from '@/lib/utils';
 import type { ApiResponse, HeatmapData, HeatmapDay } from '@/types';
 import * as Tooltip from '@radix-ui/react-tooltip';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import useSWR from 'swr';
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
@@ -15,6 +17,9 @@ const fetcher = (url: string) => fetch(url).then(res => res.json());
  */
 export function Heatmap() {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [hoveredDay, setHoveredDay] = useState<HeatmapDay | null>(null);
+  const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
 
   const { data: yearsResponse, isLoading: yearsLoading } = useSWR<ApiResponse<{ years: number[] }>>(
     '/api/stats/heatmap/years',
@@ -80,9 +85,24 @@ export function Heatmap() {
   const weeks = groupByWeeks(days);
   const monthLabels = getMonthLabels(weeks);
 
+  const handleCellHover = useCallback((day: HeatmapDay, rect: DOMRect) => {
+    if (containerRef.current) {
+      const containerRect = containerRef.current.getBoundingClientRect();
+      setHoveredDay(day);
+      setTooltipPos({
+        x: rect.left - containerRect.left + rect.width / 2,
+        y: rect.top - containerRect.top,
+      });
+    }
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    setHoveredDay(null);
+  }, []);
+
   return (
-    <Tooltip.Provider disableHoverableContent>
-      <div className="relative w-full">
+    <Tooltip.Provider>
+      <div className="relative w-full" ref={containerRef}>
         {/* Year Selector Header */}
         <div className="flex justify-end mb-3">
           <HeatmapYearSelector
@@ -132,12 +152,40 @@ export function Heatmap() {
                 dataMap={dataMap}
                 isInitialLoad={isInitialLoad}
                 allServices={services}
+                onHover={handleCellHover}
+                onMouseLeave={handleMouseLeave}
               />
             </div>
 
             {/* Legend & Error */}
             <HeatmapLegend error={error} />
           </div>
+        </div>
+
+        {/* Persistent Smooth Tooltip - Rendered outside of the overflow container */}
+        <div
+          className={cn(
+            'absolute z-50 pointer-events-none transition-all duration-200 ease-out hidden md:block',
+            hoveredDay ? 'opacity-100' : 'opacity-0 scale-95 pointer-events-none'
+          )}
+          style={{
+            left: tooltipPos?.x ?? 0,
+            top: tooltipPos?.y ?? 0,
+            transform: `translate(-50%, calc(-100% - 8px))`,
+          }}
+        >
+          {hoveredDay && (
+            <div className="px-3 py-2 text-xs text-white bg-gray-900 rounded-[4px] shadow-xl border border-white/10 backdrop-blur-sm">
+              <HeatmapTooltipContent day={hoveredDay} allServices={services} />
+              {/* Tooltip Arrow */}
+              <div
+                className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 
+                border-l-[5px] border-l-transparent 
+                border-r-[5px] border-r-transparent 
+                border-t-[5px] border-t-gray-900"
+              />
+            </div>
+          )}
         </div>
       </div>
     </Tooltip.Provider>
