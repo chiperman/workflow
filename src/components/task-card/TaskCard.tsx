@@ -75,6 +75,7 @@ function TaskCardComponent({
     if (localStatus === 'loading') return;
 
     setLocalStatus('loading');
+    const loadingToast = toast.loading(`${title} running...`);
 
     try {
       const url = `${endpoint}${endpoint.includes('?') ? '&' : '?'}trigger=manual`;
@@ -85,7 +86,7 @@ function TaskCardComponent({
 
       if (response.ok && data.success) {
         setLocalStatus('success');
-        toast.success(data.message || `${title} executed successfully`);
+        toast.success(data.message || `${title} executed successfully`, { id: loadingToast });
 
         if (data.data) {
           onStatsUpdate({
@@ -97,11 +98,15 @@ function TaskCardComponent({
         }
       } else {
         setLocalStatus('error');
-        toast.error(data.message || data.error || `${title} execution failed`);
+        toast.error(data.message || data.error || `${title} execution failed`, {
+          id: loadingToast,
+        });
       }
     } catch (error: unknown) {
       setLocalStatus('error');
-      toast.error(error instanceof Error ? error.message : 'Network failure');
+      toast.error(error instanceof Error ? error.message : 'Network failure', {
+        id: loadingToast,
+      });
     }
   }, [endpoint, method, localStatus, title, onStatsUpdate]);
 
@@ -162,7 +167,6 @@ function TaskCardComponent({
         title={title}
         description={description}
         category={category}
-        displayStatus={displayStatus}
         localEnabled={localEnabled}
         isToggling={isToggling}
         todayCheckedIn={serviceHealth.todayCheckedIn}

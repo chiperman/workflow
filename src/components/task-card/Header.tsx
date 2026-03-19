@@ -9,7 +9,6 @@ interface HeaderProps {
   title: string;
   description: string;
   category: string;
-  displayStatus: 'idle' | 'loading' | 'success' | 'error' | 'deleting';
   localEnabled: boolean;
   isToggling: boolean;
   todayCheckedIn?: boolean;
@@ -24,7 +23,6 @@ export const Header = memo(function Header({
   title,
   description,
   category,
-  displayStatus,
   localEnabled,
   isToggling,
   todayCheckedIn,
@@ -69,34 +67,6 @@ export const Header = memo(function Header({
           </AnimatePresence>
         </div>
         <div className="flex items-center gap-3">
-          <AnimatePresence mode="wait">
-            {displayStatus !== 'idle' && (
-              <motion.span
-                key={displayStatus}
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 4 }}
-                transition={{ duration: 0.15 }}
-                className={`text-[10px] uppercase font-bold tracking-wider ${
-                  displayStatus === 'error'
-                    ? 'text-red-500'
-                    : displayStatus === 'success'
-                      ? 'text-emerald-600'
-                      : displayStatus === 'deleting'
-                        ? 'text-amber-600'
-                        : 'text-amber-500'
-                }`}
-              >
-                {displayStatus === 'loading'
-                  ? 'Running...'
-                  : displayStatus === 'deleting'
-                    ? 'Deleting...'
-                    : displayStatus === 'error'
-                      ? 'Failed'
-                      : 'Success'}
-              </motion.span>
-            )}
-          </AnimatePresence>
           <div className="flex items-center gap-1">
             {!isGuest && (
               <>
