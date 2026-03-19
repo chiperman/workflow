@@ -1,22 +1,22 @@
-import { HeatmapTooltip } from '@/components/heatmap/HeatmapTooltip';
 import { HEATMAP_CONFIG } from '@/config/constants';
 import { getColorClass } from '@/lib/heatmap-utils';
 import { cn } from '@/lib/utils';
 import type { HeatmapDay } from '@/types';
-import { memo, useEffect, useState, useMemo } from 'react';
+import { memo, useEffect, useState, useMemo, useRef } from 'react';
 
 interface MemoizedCellProps {
   date: string;
   dayData: HeatmapDay | undefined;
   globalIndex: number;
-  allServices?: { service: string; created_at: string }[];
+  onHover: (day: HeatmapDay, rect: DOMRect) => void;
 }
 
 // 基础格子布局样式 (共享)
 const CELL_BASE_CLASS = 'w-full aspect-square rounded-[2px]';
 const MemoizedCell = memo(
-  function MemoizedCell({ date, dayData, globalIndex, allServices }: MemoizedCellProps) {
+  function MemoizedCell({ date, dayData, globalIndex, onHover }: MemoizedCellProps) {
     const [hasCompletedReveal, setHasCompletedReveal] = useState(false);
+    const cellRef = useRef<HTMLDivElement>(null);
 
     // Timing constants
     const revealDuration = 600; // Match globals.css gridReveal duration
@@ -34,39 +34,45 @@ const MemoizedCell = memo(
       return () => clearTimeout(timer);
     }, [delay]);
 
-    const tooltipData = dayData || {
-      date,
-      success_count: 0,
-      failure_count: 0,
-      services: {},
-    };
+    const tooltipData = useMemo(
+      () =>
+        dayData || {
+          date,
+          success_count: 0,
+          failure_count: 0,
+          services: {},
+        },
+      [dayData, date]
+    );
 
     const colorClass = getColorClass(date, dayData);
 
     return (
-      <HeatmapTooltip day={tooltipData} allServices={allServices}>
-        <div
-          className={cn(
-            CELL_BASE_CLASS,
-            'cursor-pointer heatmap-cell',
-            !hasCompletedReveal ? 'is-revealing' : 'is-ready',
-            colorClass
-          )}
-          style={{
-            animationDelay: !hasCompletedReveal ? `${delay}ms` : undefined,
-          }}
-        />
-      </HeatmapTooltip>
+      <div
+        ref={cellRef}
+        onMouseEnter={() => {
+          if (cellRef.current) {
+            onHover(tooltipData, cellRef.current.getBoundingClientRect());
+          }
+        }}
+        className={cn(
+          CELL_BASE_CLASS,
+          'cursor-pointer heatmap-cell',
+          !hasCompletedReveal ? 'is-revealing' : 'is-ready',
+          colorClass
+        )}
+        style={{
+          animationDelay: !hasCompletedReveal ? `${delay}ms` : undefined,
+        }}
+      />
     );
   },
   (prevProps, nextProps) => {
     const prevDay = prevProps.dayData;
     const nextDay = nextProps.dayData;
-    const prevServices = prevProps.allServices;
-    const nextServices = nextProps.allServices;
 
-    if (!prevDay && !nextDay && prevServices === nextServices) return true;
-    if (!prevDay || !nextDay || prevServices !== nextServices) return false;
+    if (!prevDay && !nextDay) return true;
+    if (!prevDay || !nextDay) return false;
 
     return (
       prevDay.success_count === nextDay.success_count &&
@@ -79,58 +85,60 @@ interface HeatmapGridProps {
   weeks: string[][];
   days: string[];
   dataMap: Map<string, HeatmapDay>;
-  isInitialLoad: boolean; // Keeping for interface, but using internal trigger now
+  isInitialLoad: boolean;
   allServices?: { service: string; created_at: string }[];
+  onHover: (day: HeatmapDay, rect: DOMRect) => void;
+  onMouseLeave: () => void;
 }
 
-export function HeatmapGrid({ weeks, days, dataMap, allServices }: HeatmapGridProps) {
+export function HeatmapGrid({ weeks, days, dataMap, onHover, onMouseLeave }: HeatmapGridProps) {
   const dayIndexMap = useMemo(() => {
     const map = new Map<string, number>();
     days.forEach((d, i) => map.set(d, i));
     return map;
   }, [days]);
 
-  // Use the cumulative data as a key trigger to re-run animations if desired
-  // However, usually we want animation on mount/year-change.
   const gridKey = useMemo(() => {
     return days[0] || 'default';
   }, [days]);
 
   return (
-    <div
-      key={gridKey}
-      className="grid gap-[3px] flex-1 w-full"
-      style={{
-        gridTemplateColumns: `repeat(${weeks.length}, 1fr)`,
-      }}
-    >
-      {weeks.map((week, weekIndex) => (
-        <div key={weekIndex} className="flex flex-col gap-[3px]">
-          {week.map((date, dayIndex) => {
-            const dayData = dataMap.get(date);
-            const globalIndex = dayIndexMap.get(date) ?? 0;
+    <div className="relative group/grid w-full flex-1" onMouseLeave={onMouseLeave}>
+      <div
+        key={gridKey}
+        className="grid gap-[3px] w-full"
+        style={{
+          gridTemplateColumns: `repeat(${weeks.length}, 1fr)`,
+        }}
+      >
+        {weeks.map((week, weekIndex) => (
+          <div key={weekIndex} className="flex flex-col gap-[3px]">
+            {week.map((date, dayIndex) => {
+              const dayData = dataMap.get(date);
+              const globalIndex = dayIndexMap.get(date) ?? 0;
 
-            if (!date) {
+              if (!date) {
+                return (
+                  <div
+                    key={`pad-${weekIndex}-${dayIndex}`}
+                    className={`${CELL_BASE_CLASS} bg-transparent`}
+                  />
+                );
+              }
+
               return (
-                <div
-                  key={`pad-${weekIndex}-${dayIndex}`}
-                  className={`${CELL_BASE_CLASS} bg-transparent`}
+                <MemoizedCell
+                  key={date}
+                  date={date}
+                  dayData={dayData}
+                  globalIndex={globalIndex}
+                  onHover={onHover}
                 />
               );
-            }
-
-            return (
-              <MemoizedCell
-                key={date}
-                date={date}
-                dayData={dayData}
-                globalIndex={globalIndex}
-                allServices={allServices}
-              />
-            );
-          })}
-        </div>
-      ))}
+            })}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
