@@ -26,8 +26,7 @@ export default function Home() {
   const router = useRouter();
 
   // 使用重构后的业务 Hook，但保持 UI 结构不变
-  const { groupedTasks, services, refreshAll, authType, isLoading, systemStatus, failingServices } =
-    useTasks();
+  const { groupedTasks, services, refreshAll, authType, isLoading } = useTasks();
 
   const isGuest = authType === 'public' || authType === 'none';
 
@@ -91,9 +90,9 @@ export default function Home() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, filter: 'blur(8px)' }}
             transition={{ duration: MOTION.duration, ease: MOTION.ease }}
-            className="pt-16 pb-20 px-6 sm:px-12 flex flex-col min-h-screen"
+            className="pt-16 pb-20 px-4 sm:px-8 lg:px-12 xl:px-16 flex flex-col min-h-screen"
           >
-            <div className="w-full max-w-3xl mx-auto">
+            <div className="w-full max-w-3xl lg:max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto">
               {/* Header Section */}
               <header className="mb-8 relative">
                 <div className="flex justify-between items-center mb-4">
@@ -279,10 +278,10 @@ export default function Home() {
                 <Heatmap />
               </motion.div>
 
-              {/* Task Cards List - 恢复为单列垂直布局 */}
+              {/* Task Cards List - 响应式多列布局 */}
               <div className="flex flex-col gap-12 mb-12 relative min-h-[200px]">
                 {isLoading ? (
-                  <div className="flex flex-col gap-6 w-full opacity-60">
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 w-full opacity-60">
                     {[1, 2, 3].map(i => (
                       <div
                         key={i}
@@ -330,7 +329,7 @@ export default function Home() {
                           <div className="h-[1px] flex-1 bg-gradient-to-r from-[#e5e5e0] to-transparent" />
                         </motion.div>
 
-                        <div className="grid grid-cols-1 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                           {tasks.map((task, index) => (
                             <motion.div
                               key={task.id}
@@ -359,14 +358,7 @@ export default function Home() {
                 )}
               </div>
 
-              <Footer
-                version={APP_VERSION}
-                systemStatus={systemStatus}
-                failingServices={failingServices}
-                serviceStatuses={Object.fromEntries(
-                  Object.entries(services).map(([k, v]) => [k, v.status])
-                )}
-              />
+              <Footer version={APP_VERSION} />
             </div>
           </motion.main>
         )}
