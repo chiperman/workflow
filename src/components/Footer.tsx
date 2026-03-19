@@ -10,7 +10,7 @@ export function Footer({ version }: FooterProps) {
       <p>Workflow {version} • Antigravity</p>
 
       <div className="flex flex-col items-center md:items-end gap-3">
-        <span className="text-[10px] text-[#a0a09a]">Powered By</span>
+        <span className="text-[10px] text-text-tertiary/70">Powered By</span>
         <div className="flex items-center gap-6">
           <a
             href="https://nextjs.org"

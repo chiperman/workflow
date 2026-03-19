@@ -14,7 +14,7 @@ export const Message = memo(function Message({ message, displayStatus, onDismiss
   return (
     <div
       className={`mt-4 flex items-start gap-2 text-sm font-mono relative pr-6 ${
-        displayStatus === 'error' ? 'text-[#9f3e3e]' : 'text-[#3f6212]'
+        displayStatus === 'error' ? 'text-red-600' : 'text-emerald-700'
       }`}
     >
       <span className="mt-[2px] shrink-0">

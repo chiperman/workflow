@@ -38,7 +38,7 @@ export const Header = memo(function Header({
     <div className="mb-4">
       <div className="flex justify-between items-center mb-1.5">
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-medium tracking-wider uppercase text-[#6b6b6b] block">
+          <span className="text-[10px] font-medium tracking-wider uppercase text-text-secondary block">
             {category}
           </span>
           <AnimatePresence mode="popLayout">
@@ -166,7 +166,7 @@ export const Header = memo(function Header({
         </div>
       </div>
       <h2 className="text-xl font-medium text-foreground mb-2 font-serif">{title}</h2>
-      <p className="text-[#555555] leading-relaxed text-sm">{description}</p>
+      <p className="text-text-tertiary leading-relaxed text-sm">{description}</p>
     </div>
   );
 });

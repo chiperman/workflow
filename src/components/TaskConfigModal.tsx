@@ -430,7 +430,7 @@ export function TaskConfigModal({
                       variant="link"
                       size="sm"
                       onClick={addUrl}
-                      className="px-0 h-auto text-[#d97757] hover:text-[#d97757]/80"
+                      className="px-0 h-auto text-accent-primary hover:text-accent-primary/80"
                     >
                       <Plus className="w-3.5 h-3.5" aria-hidden="true" /> Add another node
                     </Button>
@@ -604,7 +604,7 @@ export function TaskConfigModal({
                     size="sm"
                     disabled={isTesting}
                     onClick={handleTestAndDetect}
-                    className="text-[10px] h-8 bg-[#fdfcf8] text-[#d97757] hover:text-[#d97757] border-[#e5e5e0] hover:border-[#d97757]/30"
+                    className="text-[10px] h-8 bg-background text-accent-primary hover:text-accent-primary border-border-custom hover:border-accent-primary/30"
                     aria-label="Test and detect rules"
                   >
                     {isTesting ? (
@@ -641,7 +641,7 @@ export function TaskConfigModal({
                         setConfig({ ...config, rules: { ...config.rules!, success: updated } });
                         setRulesStr(JSON.stringify(updated, null, 2));
                       }}
-                      className="w-4 h-4 rounded text-[#d97757] focus:ring-[#d97757]"
+                      className="w-4 h-4 rounded text-accent-primary focus:ring-accent-primary"
                     />
                   </div>
 

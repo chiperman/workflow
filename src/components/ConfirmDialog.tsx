@@ -58,15 +58,15 @@ export function ConfirmDialog({
 
   const variantStyles = {
     danger: {
-      icon: 'text-[#d97757]',
-      iconBg: 'bg-[#d97757]/10',
+      icon: 'text-accent-primary',
+      iconBg: 'bg-accent-primary/10',
     },
     warning: {
       icon: 'text-amber-600',
       iconBg: 'bg-amber-50',
     },
     default: {
-      icon: 'text-[#555555]',
+      icon: 'text-text-tertiary',
       iconBg: 'bg-[#f5f5f0]',
     },
   };

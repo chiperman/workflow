@@ -132,22 +132,22 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
       // 默认错误 UI
       return (
-        <div className="min-h-screen bg-[#fdfcf8] flex items-center justify-center px-6">
+        <div className="min-h-screen bg-background flex items-center justify-center px-6">
           <div className="max-w-2xl w-full">
             {/* 错误图标 */}
             <div className="flex justify-center mb-8">
               <div className="w-20 h-20 rounded-full bg-red-50 flex items-center justify-center">
-                <AlertTriangle className="w-10 h-10 text-[#9f3e3e]" />
+                <AlertTriangle className="w-10 h-10 text-red-500" />
               </div>
             </div>
 
             {/* 错误标题 */}
-            <h1 className="text-3xl sm:text-4xl font-medium text-[#191919] mb-4 font-serif text-center">
+            <h1 className="text-3xl sm:text-4xl font-medium text-foreground mb-4 font-serif text-center">
               Something Went Wrong
             </h1>
 
             {/* 错误描述 */}
-            <p className="text-base text-[#555555] mb-8 text-center leading-relaxed">
+            <p className="text-base text-text-tertiary mb-8 text-center leading-relaxed">
               We encountered an unexpected error. Don&apos;t worry, your data is safe.
               <br />
               Please try refreshing the page or return to the home page.
@@ -156,14 +156,14 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             {/* 错误详情（仅开发环境） */}
             {process.env.NODE_ENV === 'development' && this.state.error && (
               <div className="mb-8 p-6 bg-red-50 border border-red-200 rounded-lg">
-                <h2 className="text-sm font-medium text-[#9f3e3e] mb-2 uppercase tracking-wider">
+                <h2 className="text-sm font-medium text-red-500 mb-2 uppercase tracking-wider">
                   Error Details (Development Only)
                 </h2>
-                <p className="text-sm font-mono text-[#9f3e3e] mb-2 break-all">
+                <p className="text-sm font-mono text-red-500 mb-2 break-all">
                   {this.state.error.message}
                 </p>
                 {this.state.error.stack && (
-                  <pre className="text-xs font-mono text-[#9f3e3e] overflow-x-auto whitespace-pre-wrap">
+                  <pre className="text-xs font-mono text-red-500 overflow-x-auto whitespace-pre-wrap">
                     {this.state.error.stack}
                   </pre>
                 )}
@@ -180,7 +180,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                 variant="outline"
                 size="lg"
                 onClick={this.handleGoHome}
-                className="gap-2 px-8 text-[#191919]"
+                className="gap-2 px-8 text-foreground"
               >
                 <Home className="w-4 h-4" />
                 Go Home

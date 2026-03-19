@@ -127,7 +127,7 @@ export function Heatmap() {
               {monthLabels.map((label, i) => (
                 <span
                   key={i}
-                  className="text-[11px] sm:text-[13px] text-[#666] whitespace-nowrap"
+                  className="text-[11px] sm:text-[13px] text-text-secondary whitespace-nowrap"
                   style={{ gridColumnStart: label.weekIndex + 1 }}
                 >
                   {label.name}
@@ -141,7 +141,7 @@ export function Heatmap() {
                 {WEEKDAYS.map((day, i) => (
                   <div
                     key={day}
-                    className="text-[10px] sm:text-[11px] text-[#666] leading-none text-right"
+                    className="text-[10px] sm:text-[11px] text-text-secondary leading-none text-right"
                   >
                     {i % 2 === 1 ? day : ''}
                   </div>

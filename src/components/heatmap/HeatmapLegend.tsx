@@ -6,7 +6,7 @@ interface HeatmapLegendProps {
 
 export function HeatmapLegend({ error }: HeatmapLegendProps) {
   return (
-    <div className="mt-4 flex justify-between items-center text-[11px] text-[#888]">
+    <div className="mt-4 flex justify-between items-center text-[11px] text-text-tertiary">
       <div>{error && <span className="text-red-400">Offline: Data sync failed</span>}</div>
       <div className="flex items-center gap-4" role="list" aria-label="Heatmap legend">
         <div className="flex items-center gap-1.5" role="listitem">
