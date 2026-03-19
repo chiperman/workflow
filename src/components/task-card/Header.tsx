@@ -108,7 +108,7 @@ export const Header = memo(function Header({
                           variant="ghost"
                           size="icon"
                           onClick={() => onDelete(serviceName)}
-                          className="h-8 w-8 text-text-secondary hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all duration-200"
+                          className="h-11 w-11 text-text-secondary hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all duration-200"
                           aria-label="Delete task"
                         />
                       }
@@ -128,7 +128,7 @@ export const Header = memo(function Header({
                           variant="ghost"
                           size="icon"
                           onClick={() => onEdit(serviceName)}
-                          className="h-8 w-8 text-text-secondary hover:text-accent-primary hover:bg-[#f9f9f9] opacity-0 group-hover:opacity-100 transition-all duration-200"
+                          className="h-11 w-11 text-text-secondary hover:text-accent-primary hover:bg-[#f9f9f9] opacity-0 group-hover:opacity-100 transition-all duration-200"
                           aria-label="Edit configuration"
                         />
                       }

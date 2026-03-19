@@ -40,7 +40,7 @@ export function HeatmapYearSelector({
         onClick={handlePrev}
         disabled={loading || !hasPrev}
         aria-label="Previous Year"
-        className="h-8 w-8 text-text-secondary hover:text-foreground hover:bg-white hover:border-accent-primary/30 border border-transparent transition-all duration-300 disabled:opacity-30 p-0"
+        className="h-11 w-11 text-text-secondary hover:text-foreground hover:bg-white hover:border-accent-primary/30 border border-transparent transition-all duration-300 disabled:opacity-30 p-0"
       >
         <ChevronLeft className="w-3.5 h-3.5 stroke-[2]" />
       </Button>
@@ -55,7 +55,7 @@ export function HeatmapYearSelector({
         onClick={handleNext}
         disabled={loading || !hasNext}
         aria-label="Next Year"
-        className="h-8 w-8 text-text-secondary hover:text-foreground hover:bg-white hover:border-accent-primary/30 border border-transparent transition-all duration-300 disabled:opacity-30 p-0"
+        className="h-11 w-11 text-text-secondary hover:text-foreground hover:bg-white hover:border-accent-primary/30 border border-transparent transition-all duration-300 disabled:opacity-30 p-0"
       >
         <ChevronRight className="w-3.5 h-3.5 stroke-[2]" />
       </Button>
