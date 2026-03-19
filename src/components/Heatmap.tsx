@@ -115,8 +115,8 @@ export function Heatmap() {
         </div>
 
         {/* Main Heatmap Area */}
-        <div className="w-full p-6 bg-white rounded-lg border border-border-custom overflow-x-auto">
-          <div className="w-full min-w-[600px]">
+        <div className="w-full p-4 sm:p-6 bg-white rounded-lg border border-border-custom overflow-x-auto scrollbar-thin">
+          <div className="w-full min-w-[500px] sm:min-w-[600px]">
             {/* Months Row */}
             <div
               className="grid pl-[36px] w-full box-border mb-2"
@@ -127,7 +127,7 @@ export function Heatmap() {
               {monthLabels.map((label, i) => (
                 <span
                   key={i}
-                  className="text-[13px] text-[#666] whitespace-nowrap"
+                  className="text-[11px] sm:text-[13px] text-[#666] whitespace-nowrap"
                   style={{ gridColumnStart: label.weekIndex + 1 }}
                 >
                   {label.name}
@@ -139,7 +139,10 @@ export function Heatmap() {
               {/* Weekdays Column */}
               <div className="flex flex-col justify-between pr-1 shrink-0 w-[28px] pb-1.5">
                 {WEEKDAYS.map((day, i) => (
-                  <div key={day} className="text-[11px] text-[#666] leading-none text-right">
+                  <div
+                    key={day}
+                    className="text-[10px] sm:text-[11px] text-[#666] leading-none text-right"
+                  >
                     {i % 2 === 1 ? day : ''}
                   </div>
                 ))}
