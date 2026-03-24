@@ -78,13 +78,13 @@ export const Header = memo(function Header({
                           variant="ghost"
                           size="icon"
                           onClick={() => onDelete(serviceName)}
-                          className="h-11 w-11 text-text-secondary hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all duration-200"
+                          className="h-11 w-11 text-text-secondary hover:text-red-500 hover:bg-red-50"
                           aria-label="Delete task"
-                        />
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
                       }
-                    >
-                      <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
-                    </TooltipTrigger>
+                    />
                     <TooltipContent side="top">
                       <p className="text-xs">Delete Task</p>
                     </TooltipContent>
@@ -98,13 +98,13 @@ export const Header = memo(function Header({
                           variant="ghost"
                           size="icon"
                           onClick={() => onEdit(serviceName)}
-                          className="h-11 w-11 text-text-secondary hover:text-accent-primary hover:bg-[#f9f9f9] opacity-0 group-hover:opacity-100 transition-all duration-200"
+                          className="h-11 w-11 text-text-secondary hover:text-accent-primary hover:bg-[#f9f9f9]"
                           aria-label="Edit configuration"
-                        />
+                        >
+                          <Settings className="w-3.5 h-3.5" />
+                        </Button>
                       }
-                    >
-                      <Settings className="w-3.5 h-3.5" aria-hidden="true" />
-                    </TooltipTrigger>
+                    />
                     <TooltipContent side="top">
                       <p className="text-xs">Edit Configuration</p>
                     </TooltipContent>
@@ -113,14 +113,16 @@ export const Header = memo(function Header({
               </>
             )}
             <Tooltip>
-              <TooltipTrigger>
-                <Switch
-                  checked={localEnabled}
-                  onCheckedChange={onToggle}
-                  disabled={isToggling || isGuest}
-                  aria-label={localEnabled ? 'Disable auto cron' : 'Enable auto cron'}
-                />
-              </TooltipTrigger>
+              <TooltipTrigger
+                render={
+                  <Switch
+                    checked={localEnabled}
+                    onCheckedChange={onToggle}
+                    disabled={isToggling || isGuest}
+                    aria-label={localEnabled ? 'Disable auto cron' : 'Enable auto cron'}
+                  />
+                }
+              />
               <TooltipContent side="top">
                 {' '}
                 <p className="text-xs">

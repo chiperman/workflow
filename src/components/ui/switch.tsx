@@ -21,7 +21,7 @@ function Switch({ className, size = 'default', checked, ...props }: SwitchProps)
         isChecked
           ? 'bg-[#191919] shadow-[inset_0_1px_2px_rgba(0,0,0,0.1)]'
           : 'bg-[#e5e5e0] shadow-inner',
-        'disabled:opacity-40 disabled:cursor-not-allowed',
+        'cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed',
         isSmall ? 'h-5 w-9' : 'h-6 w-11',
         className
       )}

@@ -1,6 +1,16 @@
 import type { ServiceHealth } from '@/types';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { toast } from 'sonner';
 import { TaskCard } from '../TaskCard';
+
+// Mock sonner
+jest.mock('sonner', () => ({
+  toast: {
+    loading: jest.fn().mockReturnValue('loading-id'),
+    success: jest.fn(),
+    error: jest.fn(),
+  },
+}));
 
 // Mock lucide-react icons
 jest.mock('lucide-react', () => ({
@@ -158,7 +168,7 @@ describe('TaskCard', () => {
     fireEvent.click(screen.getByRole('button', { name: /run task/i }));
 
     await waitFor(() => {
-      expect(screen.getByText('Task completed successfully')).toBeInTheDocument();
+      expect(toast.success).toHaveBeenCalledWith('Task completed successfully', expect.any(Object));
     });
   });
 
@@ -176,7 +186,7 @@ describe('TaskCard', () => {
     fireEvent.click(screen.getByRole('button', { name: /run task/i }));
 
     await waitFor(() => {
-      expect(screen.getByText('Execution failed')).toBeInTheDocument();
+      expect(toast.error).toHaveBeenCalledWith('Execution failed', expect.any(Object));
     });
   });
 

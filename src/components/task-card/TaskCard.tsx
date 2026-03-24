@@ -86,7 +86,7 @@ function TaskCardComponent({
 
       if (response.ok && data.success) {
         setLocalStatus('success');
-        toast.success(`${title} success`, { id: loadingToast });
+        toast.success(data.message || `${title} success`, { id: loadingToast });
 
         if (data.data) {
           onStatsUpdate({
@@ -98,7 +98,7 @@ function TaskCardComponent({
         }
       } else {
         setLocalStatus('error');
-        toast.error(`${title} failed`, { id: loadingToast });
+        toast.error(data.message || `${title} failed`, { id: loadingToast });
       }
     } catch (_error: unknown) {
       setLocalStatus('error');
@@ -158,7 +158,7 @@ function TaskCardComponent({
   }, [serviceName, onStatsUpdate]);
 
   return (
-    <div className="group relative flex flex-col h-full bg-white border border-border-custom p-6 rounded-lg transition-all duration-200 ease-out hover:shadow-lg hover:shadow-black/5 hover:-translate-y-0.5 hover:border-border-hover">
+    <div className="group relative flex flex-col h-full bg-white border border-border-custom p-6 rounded-lg transition-all duration-200 ease-out hover:shadow-lg hover:shadow-black/5 hover:border-border-hover">
       <Header
         title={title}
         description={description}

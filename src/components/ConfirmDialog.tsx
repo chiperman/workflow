@@ -120,7 +120,7 @@ export function ConfirmDialog({
                 variant="ghost"
                 size="icon"
                 onClick={onCancel}
-                className="text-text-secondary hover:text-foreground h-8 w-8"
+                className="h-8 w-8 text-text-secondary hover:text-foreground"
                 aria-label="Close dialog"
               >
                 <X className="w-4 h-4" />

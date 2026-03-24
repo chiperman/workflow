@@ -269,6 +269,30 @@ h6 {
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Global Cursor Standards */
+  button,
+  a,
+  select,
+  summary,
+  [role='button'],
+  [role='switch'],
+  [role='checkbox'],
+  [role='menuitem'],
+  [role='tab'],
+  [type='button'],
+  [type='submit'],
+  [type='reset'],
+  [data-slot='switch'],
+  [data-state] {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [disabled],
+  .cursor-not-allowed {
+    cursor: not-allowed !important;
+  }
 }
 
 /* Custom Scrollbar Styling */
