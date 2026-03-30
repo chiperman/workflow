@@ -12,9 +12,7 @@ jest.mock('@/lib/supabase', () => ({
 jest.mock('@supabase/supabase-js', () => ({
   createClient: jest.fn().mockReturnValue({
     from: jest.fn().mockReturnValue({
-      select: jest.fn().mockReturnValue({
-        limit: jest.fn().mockResolvedValue({ data: [], error: null }),
-      }),
+      upsert: jest.fn().mockResolvedValue({ data: null, error: null }),
     }),
   }),
 }));
@@ -129,11 +127,9 @@ describe('DynamicService Robustness Tests', () => {
       const createClientSpy = jest.spyOn(supabaseJs, 'createClient');
       createClientSpy.mockReturnValueOnce({
         from: jest.fn().mockReturnValue({
-          select: jest.fn().mockReturnValue({
-            limit: jest
-              .fn()
-              .mockResolvedValue({ data: null, error: { message: 'Table not found' } }),
-          }),
+          upsert: jest
+            .fn()
+            .mockResolvedValue({ data: null, error: { message: 'Table not found' } }),
         }),
       } as unknown as ReturnType<typeof supabaseJs.createClient>);
 
@@ -141,7 +137,7 @@ describe('DynamicService Robustness Tests', () => {
       const result = await service.testExecution();
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain('Remote Supabase check failed');
+      expect(result.error).toContain('Remote Supabase heart-beat failed');
       createClientSpy.mockRestore();
     });
   });

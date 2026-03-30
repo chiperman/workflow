@@ -101,15 +101,20 @@ export class DynamicService extends BaseService {
         const remoteClient = createClient(config.supabase_url!, config.supabase_key!);
         const targetTable = config.table_name || 'keep_alive';
 
-        const { error } = await remoteClient
-          .from(targetTable)
-          .select('count', { count: 'exact', head: true })
-          .limit(1);
+        // 升级逻辑：从简单的 select 改为 upsert (插入/更新心跳数据)
+        // 这样可以产生真实的 WAL 日志，比简单的查询更难被忽略。
+        const { error } = await remoteClient.from(targetTable).upsert(
+          {
+            service: this.serviceName,
+            last_active_at: new Date().toISOString(),
+          },
+          { onConflict: 'service' }
+        );
 
         if (error) {
-          throw new Error(`Remote Supabase check failed: ${error.message}`);
+          throw new Error(`Remote Supabase heart-beat failed: ${error.message}`);
         }
-        logger.info(`[${this.serviceName}] Remote Supabase check successful.`);
+        logger.info(`[${this.serviceName}] Remote Supabase heart-beat successful.`);
       }
 
       const beijingTime = getBeijingTime();
