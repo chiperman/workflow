@@ -105,7 +105,45 @@ export interface TaskConfigData {
 }
 
 /**
- * 服务完整配置 (对应 keep_alive 表结构)
+ * 数据库表：service_configs (静态配置)
+ */
+export interface DbServiceConfig {
+  service: string;
+  name: string;
+  type: 'http' | 'supabase_internal';
+  description?: string;
+  category?: string;
+  enabled: boolean;
+  config: TaskConfigData;
+  rules: {
+    success?: ValidationRules;
+    increment?: ValidationRules;
+  };
+  notification_level: NotificationLevel;
+  created_at: string;
+}
+
+/**
+ * 数据库表：service_stats (动态统计)
+ */
+export interface DbServiceStats {
+  service: string;
+  last_run_at: string | null;
+  manual_count: number;
+  auto_count: number;
+  failure_count: number;
+  updated_at: string;
+}
+
+/**
+ * 数据库联表查询结果 (configs JOIN stats)
+ */
+export interface DbServiceJoined extends DbServiceConfig {
+  service_stats?: DbServiceStats | DbServiceStats[];
+}
+
+/**
+ * 服务完整配置 (业务层使用的聚合对象)
  */
 export interface ServiceConfig {
   service: string;
@@ -158,6 +196,7 @@ export interface KeepAliveResult {
   message: string;
   duration: number;
   data?: ServiceStats;
+  rawResponse?: unknown;
   error?: string;
   /** 设为 true 时跳过日志记录（如 GLaDOS 重复签到场景） */
   skipLog?: boolean;

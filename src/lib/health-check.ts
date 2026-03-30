@@ -88,7 +88,7 @@ export async function checkServiceHealth(serviceId: string): Promise<ServiceHeal
  * 检查所有可用服务的健康状态
  */
 export async function checkAllServicesHealth(): Promise<Record<string, ServiceHealth>> {
-  const { data: configs, error } = await supabase.from('keep_alive').select('service');
+  const { data: configs, error } = await supabase.from('service_configs').select('service');
 
   if (error || !configs) return {};
 

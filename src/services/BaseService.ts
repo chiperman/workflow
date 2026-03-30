@@ -1,7 +1,7 @@
 import { logger } from '@/lib/logger';
 import { supabase } from '@/lib/supabase';
 import { getBeijingDateString } from '@/lib/utils';
-import type { KeepAliveResult, Result } from '@/types';
+import type { KeepAliveResult, Result, DbServiceConfig } from '@/types';
 
 export type NotificationLevel = 'always' | 'failure-only' | 'none';
 
@@ -50,21 +50,37 @@ export abstract class BaseService {
   > {
     try {
       const serviceKey = this.serviceName.toLowerCase();
+
+      // 使用 JOIN 联合查询配置和统计
       const { data: existing, error } = await supabase
-        .from('keep_alive')
-        .select('manual_count, auto_count, failure_count, enabled')
+        .from('service_stats')
+        .select(
+          `
+          manual_count, 
+          auto_count, 
+          failure_count,
+          configs:service_configs(enabled)
+        `
+        )
         .eq('service', serviceKey)
         .single();
 
       if (error) {
         if (error.code === 'PGRST116') {
+          // 如果没有统计记录，尝试只查询配置表获取 enabled 状态
+          const { data: configData } = await supabase
+            .from('service_configs')
+            .select('enabled')
+            .eq('service', serviceKey)
+            .single();
+
           return {
             ok: true,
             data: {
               manual_count: 0,
               auto_count: 0,
               failure_count: 0,
-              enabled: true,
+              enabled: configData?.enabled ?? true,
               tableExists: true,
             },
           };
@@ -72,11 +88,17 @@ export abstract class BaseService {
         if (error.code === '42P01') {
           return {
             ok: false,
-            error: "Table 'keep_alive' does not exist",
+            error: "Table 'service_stats' does not exist",
           };
         }
         throw error;
       }
+
+      // 使用强类型接口处理嵌套的 JOIN 数据
+      const row = existing as unknown as { configs: DbServiceConfig | DbServiceConfig[] };
+      const configs = row.configs;
+      const configItem = Array.isArray(configs) ? configs[0] : configs;
+      const enabledFinal = configItem?.enabled ?? true;
 
       return {
         ok: true,
@@ -84,7 +106,7 @@ export abstract class BaseService {
           manual_count: existing?.manual_count || 0,
           auto_count: existing?.auto_count || 0,
           failure_count: existing?.failure_count || 0,
-          enabled: existing?.enabled ?? true,
+          enabled: enabledFinal,
           tableExists: true,
         },
       };
@@ -166,7 +188,7 @@ export abstract class BaseService {
 
     // 1. Select existing record
     const { data: existing, error: fetchError } = await supabase
-      .from('keep_alive')
+      .from('service_stats')
       .select('*')
       .eq('service', serviceKey)
       .single();
@@ -175,7 +197,7 @@ export abstract class BaseService {
       if (fetchError.code === '42P01') {
         return {
           ok: false,
-          error: "Table 'keep_alive' does not exist. Please execute the SQL setup.",
+          error: "Table 'service_stats' does not exist. Please execute the SQL setup.",
         };
       }
       if (fetchError.code !== 'PGRST116') {
@@ -195,14 +217,13 @@ export abstract class BaseService {
 
     // 3. Upsert record
     const { error: upsertError } = await supabase
-      .from('keep_alive')
+      .from('service_stats')
       .upsert({
         service: serviceKey,
-        timestamp: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
         manual_count: manualCount,
         auto_count: autoCount,
         failure_count: existing?.failure_count || 0,
-        enabled: existing?.enabled ?? true,
       })
       .select()
       .single();

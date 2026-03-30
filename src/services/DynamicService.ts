@@ -33,15 +33,38 @@ export class DynamicService extends BaseService {
   }
 
   /**
+   * 暴露给外部的测试执行方法（不更新统计，不记录日志）
+   */
+  public async testExecution(): Promise<KeepAliveResult> {
+    const result = await this.performAction('manual');
+    return result;
+  }
+
+  /**
    * 核心执行逻辑
    */
   protected async executeKeepAlive(trigger: 'auto' | 'manual' = 'auto'): Promise<KeepAliveResult> {
     try {
-      if (this.fullConfig.type === 'supabase_internal') {
-        return await this.executeSupabaseInternal(trigger);
+      const result = await this.performAction(trigger);
+
+      if (!result.success) {
+        return result;
       }
 
-      return await this.executeHttpRequest(trigger);
+      // 只有成功执行后，才更新统计信息
+      const shouldIncrement = result.shouldIncrement ?? true;
+      const updateResult = await this.updateServiceStats(shouldIncrement, trigger);
+
+      if (!updateResult.ok) {
+        throw new Error(updateResult.error);
+      }
+
+      const { action, data: stats } = updateResult.data;
+      return {
+        ...result,
+        action,
+        data: stats,
+      };
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logger.error(`[${this.serviceName}] executeKeepAlive error:`, errorMessage);
@@ -50,10 +73,23 @@ export class DynamicService extends BaseService {
   }
 
   /**
-   * 执行 Supabase 内部保活（仅更新统计信息）
-   * 如果配置了远程项目的 url 和 key，则对远程项目执行查询
+   * 根据类型执行具体的动作 (不包含统计更新)
    */
-  private async executeSupabaseInternal(trigger: 'auto' | 'manual'): Promise<KeepAliveResult> {
+  private async performAction(
+    trigger: 'auto' | 'manual'
+  ): Promise<KeepAliveResult & { shouldIncrement?: boolean }> {
+    if (this.fullConfig.type === 'supabase_internal') {
+      return await this.performSupabaseInternal(trigger);
+    }
+    return await this.performHttpRequest(trigger);
+  }
+
+  /**
+   * 执行 Supabase 内部逻辑
+   */
+  private async performSupabaseInternal(
+    trigger: 'auto' | 'manual'
+  ): Promise<KeepAliveResult & { shouldIncrement?: boolean }> {
     const { config } = this.fullConfig;
     const isRemote = !!(config.supabase_url && config.supabase_key);
     const targetUrl = config.supabase_url || 'Current Project';
@@ -61,53 +97,50 @@ export class DynamicService extends BaseService {
     logger.info(`[${this.serviceName}] Executing Supabase keep-alive on: ${targetUrl}...`);
 
     try {
-      // 如果是远程项目，创建一个临时的客户端进行一次简单的查询
       if (isRemote) {
         const remoteClient = createClient(config.supabase_url!, config.supabase_key!);
         const targetTable = config.table_name || 'keep_alive';
 
-        // 执行一个简单的查询来触发活跃状态
-        const { error } = await remoteClient
-          .from(targetTable)
-          .select('count', { count: 'exact', head: true })
-          .limit(1);
+        // 升级逻辑：从简单的 select 改为 upsert (插入/更新心跳数据)
+        // 这样可以产生真实的 WAL 日志，比简单的查询更难被忽略。
+        const { error } = await remoteClient.from(targetTable).upsert(
+          {
+            service: this.serviceName,
+            last_active_at: new Date().toISOString(),
+          },
+          { onConflict: 'service' }
+        );
 
         if (error) {
-          throw new Error(`Remote Supabase check failed: ${error.message}`);
+          throw new Error(`Remote Supabase heart-beat failed: ${error.message}`);
         }
-        logger.info(`[${this.serviceName}] Remote Supabase check successful.`);
+        logger.info(`[${this.serviceName}] Remote Supabase heart-beat successful.`);
       }
 
-      // 无论远程还是本地，都更新当前系统中的统计信息
-      const updateResult = await this.updateServiceStats(true, trigger);
-      if (!updateResult.ok) {
-        throw new Error(updateResult.error);
-      }
-
-      const { action, data: stats } = updateResult.data;
       const beijingTime = getBeijingTime();
       const message = `${this.fullConfig.name} 成功: ${
-        isRemote ? '已触发远程保活' : action === 'created' ? '创建记录' : '更新记录'
+        isRemote ? '已触发远程保活' : '本地保活触发'
       } 于 ${beijingTime} (${trigger})`;
 
       return {
         success: true,
-        action,
         message,
         duration: 0,
-        data: stats,
+        shouldIncrement: true,
       };
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : 'Unknown Supabase error';
-      logger.error(`[${this.serviceName}] executeSupabaseInternal error:`, msg);
+      logger.error(`[${this.serviceName}] performSupabaseInternal error:`, msg);
       return { success: false, message: msg, duration: 0, error: msg };
     }
   }
 
   /**
-   * 执行通用 HTTP 请求
+   * 执行 HTTP 请求逻辑
    */
-  protected async executeHttpRequest(trigger: 'auto' | 'manual'): Promise<KeepAliveResult> {
+  private async performHttpRequest(
+    trigger: 'auto' | 'manual'
+  ): Promise<KeepAliveResult & { shouldIncrement?: boolean }> {
     const { config, rules } = this.fullConfig;
     const urls = config.urls || (config.url ? [config.url] : []);
 
@@ -119,14 +152,10 @@ export class DynamicService extends BaseService {
     let responseData: unknown = null;
     let responseStatus = 0;
 
-    // 遍历 URL (多 URL 轮询逻辑，模仿 GLaDOS)
     for (const url of urls) {
       try {
         logger.info(`[${this.serviceName}] Trying API: ${url}`);
-
         const headers: Record<string, string> = { ...config.headers };
-
-        // 注入专用 Cookie 字段 (如果配置了直接输入)
         if (config.cookie) {
           headers['Cookie'] = config.cookie;
         }
@@ -146,7 +175,6 @@ export class DynamicService extends BaseService {
           responseData = await response.text();
         }
 
-        // 校验成功规则
         const isSuccess = this.validateRules(responseStatus, responseData, rules.success);
         if (isSuccess) {
           lastError = null;
@@ -160,11 +188,7 @@ export class DynamicService extends BaseService {
         }
       } catch (error) {
         lastError = error instanceof Error ? error : new Error('Unknown error');
-        const isTimeout =
-          lastError.name === 'TimeoutError' || lastError.message.includes('timeout');
-        const errorType = isTimeout ? 'Timeout' : 'Network/Request Error';
-
-        logger.warn(`[${this.serviceName}] API ${url} failed (${errorType}):`, lastError.message);
+        logger.warn(`[${this.serviceName}] API ${url} failed:`, lastError.message);
         continue;
       }
     }
@@ -178,18 +202,8 @@ export class DynamicService extends BaseService {
       };
     }
 
-    // 校验是否需要增加统计计数
     const shouldIncrement = this.validateRules(responseStatus, responseData, rules.increment);
-    const updateResult = await this.updateServiceStats(shouldIncrement, trigger);
-
-    if (!updateResult.ok) {
-      throw new Error(updateResult.error);
-    }
-
-    const { action, data: stats } = updateResult.data;
     const beijingTime = getBeijingTime();
-
-    // 构造返回消息
     let message = `${this.fullConfig.name} 成功: 于 ${beijingTime} (${trigger})`;
     if (typeof responseData === 'object' && responseData && 'message' in responseData) {
       message = `${this.fullConfig.name}: "${String((responseData as Record<string, unknown>).message)}" [${beijingTime}]`;
@@ -197,11 +211,10 @@ export class DynamicService extends BaseService {
 
     return {
       success: true,
-      action,
       message,
       duration: 0,
-      data: stats,
-      // 如果不需要增加计数，通常意味着是“重复签到”之类的场景，我们可以选择跳过日志
+      rawResponse: responseData, // 这里的 rawResponse 供测试页面显示原始响应内容
+      shouldIncrement,
       skipLog: !shouldIncrement,
     };
   }
@@ -302,7 +315,7 @@ export class DynamicService extends BaseService {
     // 运行结束后更新最后运行时间 (异步执行，不等待)
     if (result.success) {
       defaultSupabase
-        .from('keep_alive')
+        .from('service_stats')
         .update({ last_run_at: new Date().toISOString() })
         .eq('service', this.serviceName.toLowerCase())
         .then(({ error }) => {

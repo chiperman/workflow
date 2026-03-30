@@ -1,27 +1,53 @@
 import { withApiHandler } from '@/lib/api-helper';
 import { supabase } from '@/lib/supabase';
+import { DbServiceJoined, DbServiceStats } from '@/types';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
 /**
- * 获取所有服务配置
+ * 获取所有服务配置（联表查询统计信息）
  */
 export const GET = withApiHandler(
   async () => {
     const { data, error } = await supabase
-      .from('keep_alive')
-      .select('*')
+      .from('service_configs')
+      .select('*, service_stats(*)')
       .order('service', { ascending: true });
 
     if (error) throw error;
-    return data;
+
+    // 平铺嵌套数据以保持前端 ServiceConfig 类型兼容
+    return (data as unknown[]).map((item: unknown) => {
+      const row = item as DbServiceJoined;
+      const rawStats = row.service_stats;
+      const stats = (Array.isArray(rawStats) ? rawStats[0] : rawStats) as
+        | DbServiceStats
+        | undefined;
+
+      const s = stats || {
+        manual_count: 0,
+        auto_count: 0,
+        failure_count: 0,
+        last_run_at: null,
+        updated_at: '',
+      };
+
+      return {
+        ...row,
+        manual_count: s.manual_count,
+        auto_count: s.auto_count,
+        failure_count: s.failure_count,
+        last_run_at: s.last_run_at || undefined,
+        timestamp: s.updated_at || row.created_at,
+      };
+    });
   },
   { requireAuth: true }
 );
 
 /**
- * 允许更新的字段白名单 (对应 keep_alive 表结构)
+ * 允许更新的配置字段白名单
  */
 const ALLOWED_CONFIG_KEYS = [
   'name',
@@ -35,7 +61,7 @@ const ALLOWED_CONFIG_KEYS = [
 ];
 
 /**
- * 更新完整的服务配置
+ * 更新服务配置
  */
 export const PUT = withApiHandler(
   async request => {
@@ -49,8 +75,6 @@ export const PUT = withApiHandler(
       );
     }
 
-    // 过滤掉不在白名单中的字段 (如 status, stats, todayCheckedIn, id 等)
-    // 避免 Supabase 因为列不存在而报错
     const configToUpdate: Record<string, unknown> = {};
     ALLOWED_CONFIG_KEYS.forEach(key => {
       if (key in body && body[key] !== undefined) {
@@ -58,9 +82,8 @@ export const PUT = withApiHandler(
       }
     });
 
-    // 确保 rules 内部的 smart_matching 能够被正确序列化 (rules 是 JSONB 类型)
     const { error } = await supabase
-      .from('keep_alive')
+      .from('service_configs')
       .update(configToUpdate)
       .eq('service', service);
     if (error) throw error;
@@ -85,7 +108,6 @@ export const POST = withApiHandler(
       );
     }
 
-    // 构造插入对象，确保只包含合法列
     const configToInsert: Record<string, unknown> = { service };
     ALLOWED_CONFIG_KEYS.forEach(key => {
       if (key in body && body[key] !== undefined) {
@@ -93,7 +115,7 @@ export const POST = withApiHandler(
       }
     });
 
-    const { error } = await supabase.from('keep_alive').insert([configToInsert]);
+    const { error } = await supabase.from('service_configs').insert([configToInsert]);
     if (error) throw error;
 
     return { message: `Service ${service} created` };
@@ -102,7 +124,7 @@ export const POST = withApiHandler(
 );
 
 /**
- * 删除服务配置
+ * 删除服务配置 (级联删除会自动清理 stats)
  */
 export const DELETE = withApiHandler(
   async request => {
@@ -123,7 +145,7 @@ export const DELETE = withApiHandler(
       );
     }
 
-    const { error } = await supabase.from('keep_alive').delete().eq('service', service);
+    const { error } = await supabase.from('service_configs').delete().eq('service', service);
     if (error) throw error;
 
     return { message: `Service ${service} deleted` };
@@ -132,7 +154,7 @@ export const DELETE = withApiHandler(
 );
 
 /**
- * 更新服务启用状态 (包含细粒度权限检查)
+ * 更新服务启用状态
  */
 export const PATCH = withApiHandler(
   async request => {
@@ -146,7 +168,10 @@ export const PATCH = withApiHandler(
       );
     }
 
-    const { error } = await supabase.from('keep_alive').update({ enabled }).eq('service', service);
+    const { error } = await supabase
+      .from('service_configs')
+      .update({ enabled })
+      .eq('service', service);
     if (error) throw error;
 
     return { service, enabled };
