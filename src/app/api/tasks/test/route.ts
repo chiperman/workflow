@@ -32,13 +32,12 @@ export const POST = withApiHandler(
     // 这里我们直接调用 run，但因为它是临时对象且没有 id 匹配，upsert 会失败，所以我们捕获并只返回执行结果
 
     try {
-      // @ts-expect-error - 访问内部执行逻辑进行测试
-      const result = await service.executeHttpRequest('manual');
+      const result = await service.testExecution();
 
       return {
         success: result.success,
         message: result.message,
-        data: result.data, // 包含原始响应内容，供前端分析
+        data: result.rawResponse, // 包含原始响应内容，供前端分析
         error: result.error,
       };
     } catch (err: unknown) {

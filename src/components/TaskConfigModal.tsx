@@ -86,7 +86,7 @@ export function TaskConfigModal({
    * 自动探测规则逻辑
    */
   const handleTestAndDetect = async () => {
-    if (!config.config?.urls?.[0]) {
+    if (config.type === 'http' && !config.config?.urls?.[0]) {
       toast.error('Please enter a target URL first');
       return;
     }

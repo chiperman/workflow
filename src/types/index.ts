@@ -158,6 +158,7 @@ export interface KeepAliveResult {
   message: string;
   duration: number;
   data?: ServiceStats;
+  rawResponse?: unknown;
   error?: string;
   /** 设为 true 时跳过日志记录（如 GLaDOS 重复签到场景） */
   skipLog?: boolean;
