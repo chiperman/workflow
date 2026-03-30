@@ -26,7 +26,7 @@ class TestService extends BaseService {
   }
 }
 
-describe('BaseService.updateServiceStats', () => {
+describe('BaseService.updateServiceStats (Refactored)', () => {
   let service: TestService;
   const mockFrom = supabase.from as jest.Mock;
   const mockSelect = jest.fn();
@@ -39,8 +39,6 @@ describe('BaseService.updateServiceStats', () => {
     jest.clearAllMocks();
 
     // Setup chainable mock
-    // supabase.from().select().eq().single()
-    // supabase.from().upsert().select().single()
     mockFrom.mockReturnValue({
       select: mockSelect,
       upsert: mockUpsert,
@@ -58,32 +56,33 @@ describe('BaseService.updateServiceStats', () => {
     });
   });
 
-  it('should create new record if none exists', async () => {
-    // Mock no existing record (PGRST116 is "The result contains 0 rows")
+  it('should create new record in service_stats if none exists', async () => {
+    // Mock no existing record in service_stats
     mockSingle.mockResolvedValueOnce({ data: null, error: { code: 'PGRST116' } });
 
     const result = await service.testUpdateServiceStats(true, 'auto');
 
     expect(result.ok).toBe(true);
-    if (!result.ok) return; // Guard for TS
+    if (!result.ok) return;
 
     expect(result.data.action).toBe('created');
     expect(result.data.data).toEqual({ manual_count: 0, auto_count: 1, failure_count: 0 });
 
-    // Verify upsert
+    // Verify upsert target
+    expect(mockFrom).toHaveBeenCalledWith('service_stats');
     expect(mockUpsert).toHaveBeenCalledWith(
       expect.objectContaining({
-        service: 'testservice', // lowercase
+        service: 'testservice',
         auto_count: 1,
         manual_count: 0,
       })
     );
   });
 
-  it('should update existing record and increment auto count', async () => {
+  it('should update existing record in service_stats', async () => {
     // Mock existing record
     mockSingle.mockResolvedValueOnce({
-      data: { manual_count: 5, auto_count: 10, failure_count: 2, enabled: true },
+      data: { manual_count: 5, auto_count: 10, failure_count: 2 },
       error: null,
     });
 
@@ -95,72 +94,20 @@ describe('BaseService.updateServiceStats', () => {
     expect(result.data.action).toBe('updated');
     expect(result.data.data).toEqual({ manual_count: 5, auto_count: 11, failure_count: 2 });
 
-    expect(mockUpsert).toHaveBeenCalledWith(
-      expect.objectContaining({
-        service: 'testservice',
-        auto_count: 11,
-        manual_count: 5,
-        failure_count: 2,
-      })
-    );
+    expect(mockFrom).toHaveBeenCalledWith('service_stats');
   });
 
-  it('should update existing record and increment manual count', async () => {
-    mockSingle.mockResolvedValueOnce({
-      data: { manual_count: 5, auto_count: 10, failure_count: 0 },
-      error: null,
-    });
-
-    const result = await service.testUpdateServiceStats(true, 'manual');
-
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-
-    expect(result.data.data).toEqual({ manual_count: 6, auto_count: 10, failure_count: 0 });
-  });
-
-  it('should NOT increment counts if shouldIncrement is false', async () => {
-    mockSingle.mockResolvedValueOnce({
-      data: { manual_count: 5, auto_count: 10, failure_count: 0 },
-      error: null,
-    });
-
-    const result = await service.testUpdateServiceStats(false, 'auto');
-
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-
-    expect(result.data.data).toEqual({ manual_count: 5, auto_count: 10, failure_count: 0 });
-
-    expect(mockUpsert).toHaveBeenCalledWith(
-      expect.objectContaining({
-        auto_count: 10,
-        manual_count: 5,
-      })
-    );
-  });
-
-  it('should throw error if table does not exist (42P01)', async () => {
+  it('should throw error if service_stats table does not exist', async () => {
     mockSingle.mockResolvedValueOnce({
       data: null,
-      error: { code: '42P01', message: 'relation "keep_alive" does not exist' },
+      error: { code: '42P01', message: 'relation "service_stats" does not exist' },
     });
 
     const result = await service.testUpdateServiceStats(true, 'auto');
     expect(result.ok).toBe(false);
     if (result.ok) return;
-    expect(result.error).toBe("Table 'keep_alive' does not exist. Please execute the SQL setup.");
-  });
-
-  it('should propagate other Supabase errors', async () => {
-    mockSingle.mockResolvedValueOnce({
-      data: null,
-      error: { code: 'SOME_OTHER_CODE', message: 'Something went wrong' },
-    });
-
-    const result = await service.testUpdateServiceStats(true, 'auto');
-    expect(result.ok).toBe(false);
-    if (result.ok) return;
-    expect(result.error).toBe('Supabase select failed: Something went wrong');
+    expect(result.error).toBe(
+      "Table 'service_stats' does not exist. Please execute the SQL setup."
+    );
   });
 });

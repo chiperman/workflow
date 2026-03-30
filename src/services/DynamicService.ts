@@ -315,7 +315,7 @@ export class DynamicService extends BaseService {
     // 运行结束后更新最后运行时间 (异步执行，不等待)
     if (result.success) {
       defaultSupabase
-        .from('keep_alive')
+        .from('service_stats')
         .update({ last_run_at: new Date().toISOString() })
         .eq('service', this.serviceName.toLowerCase())
         .then(({ error }) => {
