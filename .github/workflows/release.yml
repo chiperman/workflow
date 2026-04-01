@@ -5,26 +5,27 @@ on:
     branches:
       - main
       - dev
-    tags:
-      - 'v*'
     paths-ignore:
       - 'docs/**'
       - '**.md'
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
-  # 阶段 1: 在 dev 分支准备发布 (Bump version & CHANGELOG)
-  prepare-release:
+  release:
+    name: 📦 Bump & Release
     runs-on: ubuntu-latest
+    # 仅在 dev 分支且提交信息不含 [skip ci] 时运行
     if: github.ref == 'refs/heads/dev' && !contains(github.event.head_commit.message, '[skip ci]')
+    
     steps:
       - name: ⬇️ Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
@@ -35,7 +36,7 @@ jobs:
       - name: 📦 Install dependencies
         run: npm ci
 
-      - name: 🏷️ Bump Version on Dev
+      - name: 🏷️ Bump Version & Generate Changelog
         id: bump
         env:
           HUSKY: "0"
@@ -43,36 +44,27 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           
-          if npx standard-version --releaseCommitMessageFormat "chore(release): {{currentTag}} [skip ci]"; then
-            echo "bumped=true" >> $GITHUB_OUTPUT
-          else
-            echo "bumped=false" >> $GITHUB_OUTPUT
-          fi
+          # 执行版本自增和本地提交
+          npx standard-version --releaseCommitMessageFormat "chore(release): {{currentTag}} [skip ci]"
+          
+          # 获取生成的最新 Tag 名
+          NEW_TAG=$(git describe --tags --abbrev=0)
+          echo "tag=$NEW_TAG" >> $GITHUB_OUTPUT
+          
+          # 提取最新的 Changelog 内容作为 Release Notes
+          # 获取最近两个 ## 之间的内容
+          sed -n '/^## / {p; :a; n; /^## /q; p; ba}' CHANGELOG.md | sed '1d' > RELEASE_NOTE.md
 
-      - name: 📤 Push back to Dev (with Tags)
-        if: steps.bump.outputs.bumped == 'true'
-        env:
-          HUSKY: "0"
+      - name: 📤 Push Changes & Tag
         run: |
-          # 同时推送分支和新生成的标签
           git push origin dev --follow-tags
-
-  # 阶段 2: 监听到新 Tag 时正式发布 (Create GitHub Release)
-  publish-release:
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
-    steps:
-      - name: ⬇️ Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: 🎁 Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }}
-          name: Release ${{ github.ref_name }}
-          generate_release_notes: true
+          tag_name: ${{ steps.bump.outputs.tag }}
+          name: Release ${{ steps.bump.outputs.tag }}
+          body_path: RELEASE_NOTE.md
           draft: false
           prerelease: false
         env:
