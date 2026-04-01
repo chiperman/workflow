@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - dev
     paths-ignore:
       - 'docs/**'
       - '**.md'
@@ -17,8 +16,8 @@ jobs:
   release:
     name: 📦 Bump & Release
     runs-on: ubuntu-latest
-    # 仅在 dev 分支且提交信息不含 [skip ci] 时运行
-    if: github.ref == 'refs/heads/dev' && !contains(github.event.head_commit.message, '[skip ci]')
+    # 仅在 main 分支且提交信息不含 [skip ci] 时运行
+    if: github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, '[skip ci]')
     
     steps:
       - name: ⬇️ Checkout
@@ -52,12 +51,11 @@ jobs:
           echo "tag=$NEW_TAG" >> $GITHUB_OUTPUT
           
           # 提取最新的 Changelog 内容作为 Release Notes
-          # 获取最近两个 ## 之间的内容
           sed -n '/^## / {p; :a; n; /^## /q; p; ba}' CHANGELOG.md | sed '1d' > RELEASE_NOTE.md
 
-      - name: 📤 Push Changes & Tag
+      - name: 📤 Push Changes & Tag to Main
         run: |
-          git push origin dev --follow-tags
+          git push origin main --follow-tags
 
       - name: 🎁 Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -69,3 +67,11 @@ jobs:
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🔄 Sync back to Dev branch
+        if: success()
+        run: |
+          git checkout dev
+          git merge main --ff-only
+          git push origin dev
+
