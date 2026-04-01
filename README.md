@@ -29,10 +29,8 @@ cp env.example .env.local
 
 > ⚠️ **注意**: 必须填写 `NEXT_PUBLIC_SUPABASE_URL` 和 `SUPABASE_SERVICE_ROLE_KEY`。
 
-### 4. 初始化数据库 (Database Setup)
-
-登录 [Supabase Dashboard](https://supabase.com/dashboard)，进入 SQL Editor，执行以下文件中的完整脚本：
-👉 [**supabase/setup.sql**](./supabase/setup.sql)
+登录 [Supabase Dashboard](https://supabase.com/dashboard)，进入 SQL Editor，执行以下文件中的完整初始化脚本：
+👉 [**supabase/setup.sql**](./supabase/setup.sql) (包含 4 表分离架构与 RLS 强化策略)
 
 ### 5. 启动开发服务器 (Run)
 
@@ -122,4 +120,4 @@ npm run dev
 
 ---
 
-**最后更新**: 2026-03-18
+**最后更新**: 2026-04-01 (架构版本 2.0.0)
