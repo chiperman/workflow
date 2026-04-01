@@ -24,7 +24,7 @@ test.describe('Workflow Dashboard Smoke Test', () => {
     await page.goto('/');
 
     // 验证登录按钮是否存在 (预览模式下)
-    const signInBtn = page.getByRole('button', { name: /Sign in/i });
+    const signInBtn = page.getByRole('button', { name: 'Sign in', exact: true });
     await expect(signInBtn).toBeVisible();
   });
 });
