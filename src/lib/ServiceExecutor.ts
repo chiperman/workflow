@@ -15,7 +15,7 @@ export class ServiceExecutor {
    */
   private static async isEnabled(serviceKey: string): Promise<boolean> {
     const { data, error } = await supabase
-      .from('keep_alive')
+      .from('service_configs')
       .select('enabled')
       .eq('service', serviceKey)
       .single();
@@ -36,22 +36,28 @@ export class ServiceExecutor {
     try {
       // 获取当前统计
       const { data: existing } = await supabase
-        .from('keep_alive')
-        .select('*')
+        .from('service_stats')
+        .select('failure_count')
         .eq('service', serviceKey)
         .single();
 
-      const currentFail = existing?.failure_count || 0;
-
-      // 更新统计 (保留原有成功计数)
-      await supabase.from('keep_alive').upsert({
-        service: serviceKey,
-        timestamp: new Date().toISOString(),
-        manual_count: existing?.manual_count || 0,
-        auto_count: existing?.auto_count || 0,
-        failure_count: currentFail + 1,
-        enabled: existing?.enabled ?? true,
-      });
+      if (existing) {
+        // 更新现有统计 (仅更新失败计数和时间戳)
+        await supabase
+          .from('service_stats')
+          .update({
+            failure_count: (existing.failure_count || 0) + 1,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('service', serviceKey);
+      } else {
+        // 如果不存在统计记录，则创建
+        await supabase.from('service_stats').insert({
+          service: serviceKey,
+          failure_count: 1,
+          updated_at: new Date().toISOString(),
+        });
+      }
     } catch (err) {
       logger.warn(
         `[${serviceName}] Failed to record failure stats:`,
