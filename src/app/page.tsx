@@ -181,33 +181,6 @@ export default function Home() {
                                 >
                                   <Check className="w-3.5 h-3.5" />
                                 </motion.div>
-                              ) : Object.keys(groupedTasks).length === 0 ? (
-                                <motion.div
-                                  initial={{ opacity: 0, y: 20 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  className="flex flex-col items-center justify-center py-16 px-6"
-                                >
-                                  <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-                                    <Plus className="w-6 h-6 text-text-tertiary" />
-                                  </div>
-                                  <h3 className="text-lg font-medium text-foreground mb-2">
-                                    No tasks yet
-                                  </h3>
-                                  <p className="text-sm text-text-secondary text-center max-w-sm mb-6">
-                                    Get started by creating your first maintenance task. Tasks will
-                                    automatically run on schedule to keep your services active.
-                                  </p>
-                                  {!isGuest && (
-                                    <Button
-                                      variant="brand"
-                                      onClick={openCreateModal}
-                                      className="gap-2"
-                                    >
-                                      <Plus className="w-4 h-4" />
-                                      Create First Task
-                                    </Button>
-                                  )}
-                                </motion.div>
                               ) : (
                                 <motion.div
                                   key="error"
@@ -252,6 +225,7 @@ export default function Home() {
                             onClick={() => router.push('/login')}
                             className="sm:justify-start gap-2 h-9 sm:px-3 text-[10px] font-medium tracking-tight text-foreground hover:border-accent-primary/30 transition-colors duration-300 whitespace-nowrap shadow-sm"
                             title="Sign in"
+                            aria-label="Sign in"
                           >
                             <LogIn className="w-3.5 h-3.5" />
                             <span className="hidden sm:inline">Sign in</span>
@@ -269,6 +243,7 @@ export default function Home() {
                             onClick={() => setShowLogoutConfirm(true)}
                             className="sm:justify-start gap-2 h-9 sm:px-3 text-[10px] font-medium tracking-tight text-text-secondary hover:text-foreground hover:border-accent-primary/30 transition-colors duration-300 whitespace-nowrap shadow-sm"
                             title="Sign out"
+                            aria-label="Sign out"
                           >
                             <LogOut className="w-3.5 h-3.5" />
                             <span className="hidden sm:inline">Sign out</span>
@@ -362,48 +337,75 @@ export default function Home() {
                   </div>
                 ) : (
                   <AnimatePresence mode="popLayout">
-                    {Object.entries(groupedTasks).map(([category, tasks], groupIndex) => (
-                      <div key={category} className="flex flex-col gap-6">
-                        <motion.div
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{
-                            delay: groupIndex * 0.1,
-                            duration: 0.5,
-                          }}
-                          className="flex items-center gap-3"
-                        >
-                          <h2 className="text-[10px] font-bold uppercase tracking-[0.15em] text-text-secondary pl-1">
-                            {category}
-                          </h2>
-                          <div className="h-[1px] flex-1 bg-gradient-to-r from-border-custom to-transparent" />
-                        </motion.div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                          {tasks.map((task, index) => (
-                            <motion.div
-                              key={task.id}
-                              layout
-                              initial={{ opacity: 0, y: 20 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, scale: 0.95 }}
-                              transition={{
-                                delay: groupIndex * 0.1 + index * MOTION.delay.cardStagger,
-                                duration: MOTION.duration,
-                                ease: MOTION.ease,
-                              }}
-                            >
-                              <TaskCard
-                                {...task}
-                                onStatsUpdate={() => refreshAll()}
-                                onEdit={openEditModal}
-                                isGuest={isGuest}
-                              />
-                            </motion.div>
-                          ))}
+                    {Object.keys(groupedTasks).length === 0 ? (
+                      <motion.div
+                        key="empty-state"
+                        initial={{ opacity: 0, scale: 0.98 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.98 }}
+                        className="flex flex-col items-center justify-center py-20 px-6 bg-white/40 backdrop-blur-sm border border-border-custom rounded-2xl"
+                      >
+                        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-6">
+                          <Plus className="w-6 h-6 text-text-tertiary" />
                         </div>
-                      </div>
-                    ))}
+                        <h3 className="text-xl font-medium text-foreground mb-3 text-serif">
+                          No Tasks Protocol Found
+                        </h3>
+                        <p className="text-sm text-text-secondary text-center max-w-sm mb-8 font-light">
+                          Get started by creating your first automated maintenance protocol. Tasks
+                          will run on schedule to keep your services operational.
+                        </p>
+                        {!isGuest && (
+                          <Button variant="brand" onClick={openCreateModal} className="gap-2 h-10">
+                            <Plus className="w-4 h-4" />
+                            Initialize First Protocol
+                          </Button>
+                        )}
+                      </motion.div>
+                    ) : (
+                      Object.entries(groupedTasks).map(([category, tasks], groupIndex) => (
+                        <div key={category} className="flex flex-col gap-6">
+                          <motion.div
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{
+                              delay: groupIndex * 0.1,
+                              duration: 0.5,
+                            }}
+                            className="flex items-center gap-3"
+                          >
+                            <h2 className="text-[10px] font-bold uppercase tracking-[0.15em] text-text-secondary pl-1">
+                              {category}
+                            </h2>
+                            <div className="h-[1px] flex-1 bg-gradient-to-r from-border-custom to-transparent" />
+                          </motion.div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                            {tasks.map((task, index) => (
+                              <motion.div
+                                key={task.id}
+                                layout
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                transition={{
+                                  delay: groupIndex * 0.1 + index * MOTION.delay.cardStagger,
+                                  duration: MOTION.duration,
+                                  ease: MOTION.ease,
+                                }}
+                              >
+                                <TaskCard
+                                  {...task}
+                                  onStatsUpdate={() => refreshAll()}
+                                  onEdit={openEditModal}
+                                  isGuest={isGuest}
+                                />
+                              </motion.div>
+                            ))}
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </AnimatePresence>
                 )}
               </div>
