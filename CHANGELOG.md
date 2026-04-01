@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.9.5](https://github.com/chiperman/workflow/compare/v0.9.4...v0.9.5) (2026-04-01)
+
+
+### Features
+
+* **ci:** 增加 pre-push 钩子拦截 main 分支直接推送 ([9cfe6f8](https://github.com/chiperman/workflow/commit/9cfe6f8d6900578094e8078785d737ebb6e7d8f2))
+
+
+### Bug Fixes
+
+* **ci:** 跳过 CI 环境中的 pre-push 拦截 ([fbf384e](https://github.com/chiperman/workflow/commit/fbf384eaa37693b1284a42fdb802979987da7ddd))
+
 ### [0.9.4](https://github.com/chiperman/workflow/compare/v0.9.3...v0.9.4) (2026-04-01)
 
 
