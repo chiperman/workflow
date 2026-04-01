@@ -2,6 +2,58 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.9.2](https://github.com/chiperman/workflow/compare/v0.8.10...v0.9.2) (2026-04-01)
+
+
+### Features
+
+* **auth:** 开放首页访客查看权限并收紧操作安全控制 ([b4236c2](https://github.com/chiperman/workflow/commit/b4236c269af2e288ad7f7980225184eddee403dc))
+* **ci:** 引入 GitHub Actions 自动化发布流水线 ([8272974](https://github.com/chiperman/workflow/commit/82729748cb24151b5bc0cc1c9ec716b55adfe94b))
+* **core:** 实现多项目保活架构与动态通知系统 ([bc8d0aa](https://github.com/chiperman/workflow/commit/bc8d0aa1356d3dd034686dac0b820ca7229fb56c))
+* **heatmap:** 优化热力图 Tooltip 交互体验并修复裁剪问题 ([#9](https://github.com/chiperman/workflow/issues/9)) ([862e850](https://github.com/chiperman/workflow/commit/862e850442bf6a3351004849fa9faaae7215769d))
+* **heatmap:** 在悬浮提示中补全成功签到的服务列表 ([dcc5c19](https://github.com/chiperman/workflow/commit/dcc5c196c04437a5108f915ba5faed61a39c9de7))
+* **heatmap:** 实现基于创建日期的任务生命周期追踪 ([c7ba174](https://github.com/chiperman/workflow/commit/c7ba174e5e221d6e8a6325d082842e4a520ac39c))
+* **heatmap:** 实现热力图服务列表动态化并移除硬编码常量 ([91f35ef](https://github.com/chiperman/workflow/commit/91f35ef3ad8b74aae043990be6e0924e71fa35fa))
+* **interaction:** 改进微交互动画和加载状态 ([1d45e09](https://github.com/chiperman/workflow/commit/1d45e09f1673292281a06aa2a02daf3e653ecd3b))
+* **ui:** 优化任务卡片交互反馈与按钮布局 ([2cf49d3](https://github.com/chiperman/workflow/commit/2cf49d3b1795580323c77e870be6faa1a34dfa8f))
+* **ui:** 增加敏感信息输入框的密码可见性切换功能 ([60f2711](https://github.com/chiperman/workflow/commit/60f2711c4a530c6e8fd0df1fe14e8353317737eb))
+* **ui:** 引入任务分类分组渲染并清理冗余变量 ([df98db3](https://github.com/chiperman/workflow/commit/df98db3af79f7bb1b91ba3fb5690eca9f83d43fa))
+* **ui:** 统一并优化任务配置交互面板与卡片样式 ([ddc68ec](https://github.com/chiperman/workflow/commit/ddc68ecec8d986b013e5fee514c8bdef128f98fd))
+* **ux:** 添加空状态提示 ([142a9ea](https://github.com/chiperman/workflow/commit/142a9eab370f4074e63ad31b4f2dfdcbe0911115))
+* 为任务卡片添加删除功能及二次确认弹窗 ([e30ce31](https://github.com/chiperman/workflow/commit/e30ce31b5a5b118561afe73b46870b32e644e5a8))
+* 引入智能成功判定与一键探测功能，重构任务配置流程并修复保存失败问题 ([1f9e6f5](https://github.com/chiperman/workflow/commit/1f9e6f56704a72da2017aa985e371cd1689bd124))
+* 强化项目工作流与安全性 (Supabase Migrations, RLS, E2E, Release Fix) ([#11](https://github.com/chiperman/workflow/issues/11)) ([555823d](https://github.com/chiperman/workflow/commit/555823d10dfa64bc094fef5964f55d37fbb54d41))
+* 热力图重构与文档全面中文精简 ([#7](https://github.com/chiperman/workflow/issues/7)) ([e7412db](https://github.com/chiperman/workflow/commit/e7412dbad282be4d5e07c0915ce4e7d00a4d8df9)), closes [#888888](https://github.com/chiperman/workflow/issues/888888) [#d97757](https://github.com/chiperman/workflow/issues/d97757) [#191919](https://github.com/chiperman/workflow/issues/191919)
+
+
+### Bug Fixes
+
+* **a11y:** 为装饰性元素添加 aria-hidden 属性 ([d906fba](https://github.com/chiperman/workflow/commit/d906fbab1cb858d94fbf18bc585afb02162e2515))
+* **a11y:** 修复表单和热力图的可访问性问题 ([e574ca5](https://github.com/chiperman/workflow/commit/e574ca5a6792738295719f18fa8e1b73bb8ce7c1))
+* **a11y:** 增加触摸目标尺寸以满足 WCAG 2.5.8 要求 ([3d5d3d4](https://github.com/chiperman/workflow/commit/3d5d3d40d25eed26b040e57f47cd1b5c7a6e8486))
+* **css:** 修复 yearFadeIn 动画的语法错误 ([6bd7c2f](https://github.com/chiperman/workflow/commit/6bd7c2f720cb3fa28b58df021bc314a728ecb05b))
+* **heatmap:** 修复 TypeScript 类型错误以支持生产环境构建 ([e8ef262](https://github.com/chiperman/workflow/commit/e8ef262dc76ddb16461ac865b13b0ebf7895fd10))
+* **heatmap:** 修复热力图网格中的 React Key 冲突警告 ([eb2dd1b](https://github.com/chiperman/workflow/commit/eb2dd1b396d028be0b0abe52ae9d858923810a7b))
+* **keep-alive:** 统一保活系统架构并修复 400 架构不匹配错误 ([4d0df80](https://github.com/chiperman/workflow/commit/4d0df80fedabc07d852b65a7ea13bc3faf5125f9))
+* **layout:** 移除垂直居中对齐，修复内容加载后头部被挤出视野的问题 ([04118e3](https://github.com/chiperman/workflow/commit/04118e3c40f0862cdab2c4a8bb59cea780b2be42))
+* **responsive:** 优化热力图在移动端的显示 ([d26b745](https://github.com/chiperman/workflow/commit/d26b745ee2e86633e1b2da27ee4edcd370573bd3))
+* **service:** 修复 GLaDOS 签到失败并优化日志记录系统 ([ff8fa4f](https://github.com/chiperman/workflow/commit/ff8fa4f661f4f4ba161ff6cfe84c539ce7769661))
+* **ui:** 使用 Portal 修复 ConfirmDialog 定位问题 ([0ff9b8c](https://github.com/chiperman/workflow/commit/0ff9b8c80c22ca4917bf3d75389599d4bb28fcfa))
+* **ui:** 修复任务配置弹窗状态污染，优化 JSON 编辑体验并修复 ESLint 警告 ([5db78ce](https://github.com/chiperman/workflow/commit/5db78cea1f8290f7fdb6042b4c8ec1662f177ca6))
+* **ui:** 修复开关组件状态不生效及列表刷新时卡片乱跳的问题 ([faa55a6](https://github.com/chiperman/workflow/commit/faa55a6db371d2df85174f63e361ee2f23bbbd13))
+* **ui:** 修复页面加载状态闪烁及任务卡片本地状态未重置的问题 ([2e57bbd](https://github.com/chiperman/workflow/commit/2e57bbd13e4b5538e97cb4011ee5cd41f7c3a226))
+* **ui:** 完善骨架屏，补齐鉴权按钮占位块并优化响应式尺寸 ([2574e12](https://github.com/chiperman/workflow/commit/2574e12cdcd22b063bc7d2bdbfecaa3ae14f6761))
+* **ui:** 将任务列表加载状态升级为精致的任务卡片骨架屏 ([ace5d21](https://github.com/chiperman/workflow/commit/ace5d21999d963fcb25908d4086dc7fe645ba1bd))
+* **ui:** 改进 ConfirmDialog 样式以匹配项目风格 ([2c4bf1d](https://github.com/chiperman/workflow/commit/2c4bf1d0fde7473b655f3325c495d8ab6d0dd7fa))
+* **ui:** 移除任务配置弹窗中冗余的通知级别字段 ([2581c3b](https://github.com/chiperman/workflow/commit/2581c3baee90c2da5dee5cc2c354f82262f5db15))
+* **workflow:** 重构发布流水线，修复 GITHUB_TOKEN 递归限制引起的发布中断 ([b259626](https://github.com/chiperman/workflow/commit/b25962651ad2f841942b56515fa384d9ae36a24e))
+* 修复 JSX 语法错误及编译期类型报错，完善配置数据流 ([00ade6f](https://github.com/chiperman/workflow/commit/00ade6f2a5ec5e12ad2820bbd8bd30938eae70c6))
+* 修复代码审查中发现的各类问题，优化系统稳定性与代码质量 ([d6acb8f](https://github.com/chiperman/workflow/commit/d6acb8fc6377d301c5bed465a7ec2208a2fbf007))
+* 修复重构后的数据解析与环境隔离问题，恢复页面卡片与热力图显示 ([75f79c9](https://github.com/chiperman/workflow/commit/75f79c9cd187da0b6dbc235d3983c5a7ece5b12b))
+* 彻底修复状态同步报错与 500 错误，并满足严格类型检查 ([cd415ff](https://github.com/chiperman/workflow/commit/cd415ff2b5cd8e8e147f95807214ec2049a0ae2b))
+* 移除 TaskConfigModal 中多余的类型忽略指令，修复 build 错误 ([aff7fcd](https://github.com/chiperman/workflow/commit/aff7fcdc111e1b8020c7623e73c9d6ffa10942ae))
+* 落实代码审查优化，增强系统鲁棒性、安全性与性能 ([94dc83e](https://github.com/chiperman/workflow/commit/94dc83e3d9af2c0dafcbe89b8d31c3672d937782))
+
 ### [0.9.1](https://github.com/chiperman/workflow/compare/v0.9.0...v0.9.1) (2026-03-18)
 
 ### Features
