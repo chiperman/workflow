@@ -72,6 +72,6 @@ jobs:
         if: success()
         run: |
           git checkout dev
-          git merge main --ff-only
-          git push origin dev
+          git reset --hard main
+          git push origin dev --force
 
