@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.9.4](https://github.com/chiperman/workflow/compare/v0.9.3...v0.9.4) (2026-04-01)
+
+
+### Bug Fixes
+
+* **test:** 解决 E2E 测试中的元素定位歧义问题 ([239d407](https://github.com/chiperman/workflow/commit/239d407d0238f6ba1be7a24edb6ce81b65cec260))
+* **ui:** 修复空状态组件嵌套错误并增强登录按钮可访问性 ([108c0e6](https://github.com/chiperman/workflow/commit/108c0e678ce48787421dbf4dd1ece726c2436eba))
+
 ### [0.9.3](https://github.com/chiperman/workflow/compare/v0.8.10...v0.9.3) (2026-04-01)
 
 
