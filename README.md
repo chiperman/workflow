@@ -29,8 +29,18 @@ cp env.example .env.local
 
 > ⚠️ **注意**: 必须填写 `NEXT_PUBLIC_SUPABASE_URL` 和 `SUPABASE_SERVICE_ROLE_KEY`。
 
-登录 [Supabase Dashboard](https://supabase.com/dashboard)，进入 SQL Editor，执行以下文件中的完整初始化脚本：
-👉 [**supabase/setup.sql**](./supabase/setup.sql) (包含 4 表分离架构与 RLS 强化策略)
+登录 [Supabase Dashboard](https://supabase.com/dashboard) 创建项目。
+
+### 4. 数据库初始化 (Database)
+
+本项目使用 Supabase Migrations 进行版本管理。请确保已安装 Supabase CLI（`npx supabase`）：
+
+```bash
+# 将本地迁移推送到远程数据库
+npx supabase db push
+```
+
+> 💡 **提示**: 初始架构包含 4 表分离架构与 RLS 权限强化策略。详情见 [**supabase/migrations**](./supabase/migrations)。
 
 ### 5. 启动开发服务器 (Run)
 

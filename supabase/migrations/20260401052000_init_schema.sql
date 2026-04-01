@@ -1,5 +1,6 @@
--- Workflow Operations Center - 数据库初始化脚本 (V2.0)
--- 适用范围: 核心表结构、索引及 RLS 安全策略
+-- Workflow Operations Center - 数据库初始化脚本 (V2.1)
+-- 适用范围: 核心表结构、索引及 RLS 安全策略加固
+-- 迁移自: setup.sql
 
 -- 1. 表结构 (Tables)
 CREATE TABLE IF NOT EXISTS public.service_configs (
@@ -64,6 +65,18 @@ BEGIN
     CREATE POLICY "auth_read_logs" ON public.keep_alive_logs FOR ALL TO authenticated USING (true);
 END $$;
 
--- 3.2 Public 权限 (心跳)
-DROP POLICY IF EXISTS "pub_heartbeat" ON public.keep_alive;
-CREATE POLICY "pub_heartbeat" ON public.keep_alive FOR ALL TO public USING (true) WITH CHECK (true);
+-- 3.2 Public 权限 (心跳限制)
+-- 仅允许 public 角色进行必要的读取和更新，禁止删除。
+DO $$ 
+BEGIN
+    DROP POLICY IF EXISTS "pub_heartbeat" ON public.keep_alive;
+    
+    DROP POLICY IF EXISTS "pub_heartbeat_read" ON public.keep_alive;
+    CREATE POLICY "pub_heartbeat_read" ON public.keep_alive FOR SELECT TO public USING (true);
+
+    DROP POLICY IF EXISTS "pub_heartbeat_insert" ON public.keep_alive;
+    CREATE POLICY "pub_heartbeat_insert" ON public.keep_alive FOR INSERT TO public WITH CHECK (true);
+
+    DROP POLICY IF EXISTS "pub_heartbeat_update" ON public.keep_alive;
+    CREATE POLICY "pub_heartbeat_update" ON public.keep_alive FOR UPDATE TO public USING (true) WITH CHECK (true);
+END $$;

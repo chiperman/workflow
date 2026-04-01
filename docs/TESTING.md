@@ -24,6 +24,31 @@ npm test -- --coverage
 
 ---
 
+## 🎭 端到端 (E2E) 测试
+
+项目使用 **Playwright** 进行跨浏览器和端到端功能测试。
+
+### 1. 运行 E2E 测试
+
+```bash
+# 运行所有 E2E 测试 (无头模式)
+npm run test:e2e
+
+# 以交互式 UI 模式运行 (便于调试)
+npx playwright test --ui
+
+# 查看最后一次测试报告
+npx playwright show-report
+```
+
+### 2. 测试范围
+
+- **Smoke Tests**: 验证核心页面是否正常加载并渲染关键 UI 元素（如主标题、Dashboard 卡片、热力图）。
+- **用户流验证**: 确保关键业务路径（如登录、任务触发、配置保存）在真实环境下的连贯性。
+- **响应式验证**: 自动在不同视图（Desktop, Mobile）下执行测试。
+
+---
+
 ## 🧪 UI 组件测试清单
 
 ### ✅ TaskCard (任务卡片)
