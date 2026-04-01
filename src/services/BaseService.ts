@@ -131,25 +131,33 @@ export abstract class BaseService {
     try {
       const serviceKey = this.serviceName.toLowerCase();
 
-      // 如果任务成功，检查今天是否已经有成功的记录
+      // 检查今天是否已经有相同的执行结果记录 (如果是成功则仅查成功，如果是失败则查相同消息的记录)
+      const todayStr = getBeijingDateString();
+      const todayStart = new Date(`${todayStr}T00:00:00.000+08:00`).toISOString();
+
+      let query = supabase
+        .from('keep_alive_logs')
+        .select('*', { count: 'exact', head: true })
+        .eq('service', serviceKey)
+        .gte('timestamp', todayStart);
+
       if (result.success) {
-        // 获取北京时间当天的 00:00:00 (ISO String)
-        // 获取北京时间当天的 00:00:00 (ISO String)
-        // 简单实现：使用 sv-SE locale + Asia/Shanghai
-        const todayStr = getBeijingDateString();
-        const todayStart = new Date(`${todayStr}T00:00:00.000+08:00`).toISOString();
+        // 对于成功：今天只要成功过就不再记录
+        query = query.eq('status', 'success');
+      } else {
+        // 对于失败：今天已经记录过该特定错误就不再记录
+        query = query.eq('status', 'failure').eq('message', result.message);
+      }
 
-        const { count } = await supabase
-          .from('keep_alive_logs')
-          .select('*', { count: 'exact', head: true })
-          .eq('service', serviceKey)
-          .eq('status', 'success')
-          .gte('timestamp', todayStart);
+      const { count } = await query;
 
-        if (count && count > 0) {
-          logger.info(`[${this.serviceName}] Skipping duplicate log (already succeeded today).`);
-          return;
-        }
+      if (count && count > 0) {
+        logger.info(
+          `[${this.serviceName}] Skipping duplicate log (already ${
+            result.success ? 'succeeded' : 'recorded this error'
+          } today).`
+        );
+        return;
       }
 
       const { error } = await supabase.from('keep_alive_logs').insert({

@@ -24,9 +24,9 @@ export async function getHeatmapData(year: number): Promise<HeatmapData> {
       throw logError;
     }
 
-    // 2. 获取当前配置的所有服务列表及其创建时间 (用于动态计算生命周期)
+    // 2. 获取当前配置的所有服务列表及其创建时间 (从 service_configs 获取)
     const { data: serviceConfigs, error: serviceError } = await supabase
-      .from('keep_alive')
+      .from('service_configs')
       .select('service, created_at')
       .eq('enabled', true);
 
