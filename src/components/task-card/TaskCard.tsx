@@ -16,7 +16,7 @@ interface TaskCardProps {
   method: 'GET' | 'POST';
   serviceHealth: ServiceHealth;
   serviceName: string;
-  onStatsUpdate: (newHealth?: ServiceHealth) => void;
+  onStatsUpdate: (newHealth?: ServiceHealth) => void | Promise<void>;
   onEdit?: (id: string) => void;
   isGuest?: boolean;
 }
@@ -42,13 +42,15 @@ function TaskCardComponent({
   const [isToggling, setIsToggling] = useState(false);
   const [localEnabled, setLocalEnabled] = useState(serviceHealth.enabled ?? true);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [localHealth, setLocalHealth] = useState(serviceHealth);
 
   // 同步 props 变化到 local state
   useEffect(() => {
     if (serviceHealth.enabled !== undefined) {
       setLocalEnabled(serviceHealth.enabled);
     }
-  }, [serviceHealth.enabled]);
+    setLocalHealth(serviceHealth);
+  }, [serviceHealth]);
 
   // 自动重置卡片执行状态
   useEffect(() => {
@@ -65,11 +67,10 @@ function TaskCardComponent({
   // 计算最终状态
   const displayStatus = useMemo(() => {
     if (localStatus !== 'idle') return localStatus;
-    if (serviceHealth.status === 'outage' || serviceHealth.status === 'misconfigured')
-      return 'error';
-    if (serviceHealth.status === 'operational') return 'idle';
+    if (localHealth.status === 'outage' || localHealth.status === 'misconfigured') return 'error';
+    if (localHealth.status === 'operational') return 'idle';
     return 'idle';
-  }, [localStatus, serviceHealth.status]);
+  }, [localStatus, localHealth.status]);
 
   const handleRun = useCallback(async () => {
     if (localStatus === 'loading') return;
@@ -89,12 +90,26 @@ function TaskCardComponent({
         toast.success(data.message || `${title} success`, { id: loadingToast });
 
         if (data.data) {
-          onStatsUpdate({
+          const nextHealth: ServiceHealth = {
+            ...localHealth,
             status: 'operational',
             tableExists: true,
             stats: data.data,
             message: undefined,
-          });
+            todayCheckedIn: true,
+            consecutiveFailures: 0,
+            ...(localHealth.type === 'supabase_internal' && localHealth.config?.supabase_url
+              ? {
+                  remoteHeartbeatAt: new Date().toISOString(),
+                  remoteHeartbeatLagging: false,
+                }
+              : {}),
+          };
+
+          setLocalHealth(nextHealth);
+          await onStatsUpdate(nextHealth);
+        } else {
+          await onStatsUpdate();
         }
       } else {
         setLocalStatus('error');
@@ -104,7 +119,7 @@ function TaskCardComponent({
       setLocalStatus('error');
       toast.error(`${title} failed`, { id: loadingToast });
     }
-  }, [endpoint, method, localStatus, title, onStatsUpdate]);
+  }, [endpoint, method, localHealth, localStatus, title, onStatsUpdate]);
 
   const handleToggle = useCallback(async () => {
     if (isToggling) return;
@@ -121,7 +136,9 @@ function TaskCardComponent({
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        onStatsUpdate({ ...serviceHealth, enabled: newEnabled });
+        const nextHealth = { ...localHealth, enabled: newEnabled };
+        setLocalHealth(nextHealth);
+        await onStatsUpdate(nextHealth);
         success = true;
       } else {
         toast.error('Toggle failed');
@@ -134,7 +151,7 @@ function TaskCardComponent({
         toast.success(newEnabled ? 'Auto cron enabled' : 'Auto cron disabled');
       }
     }
-  }, [isToggling, localEnabled, serviceName, serviceHealth, onStatsUpdate]);
+  }, [isToggling, localEnabled, serviceName, localHealth, onStatsUpdate]);
 
   const handleDelete = useCallback(async () => {
     setShowDeleteConfirm(false);
@@ -165,7 +182,9 @@ function TaskCardComponent({
         category={category}
         localEnabled={localEnabled}
         isToggling={isToggling}
-        todayCheckedIn={serviceHealth.todayCheckedIn}
+        todayCheckedIn={localHealth.todayCheckedIn}
+        remoteHeartbeatLagging={localHealth.remoteHeartbeatLagging}
+        consecutiveFailures={localHealth.consecutiveFailures}
         onToggle={handleToggle}
         isGuest={isGuest}
         onEdit={onEdit}
@@ -173,7 +192,13 @@ function TaskCardComponent({
         serviceName={serviceName}
       />
 
-      <Stats stats={serviceHealth.stats} displayStatus={displayStatus} />
+      <Stats
+        stats={localHealth.stats}
+        displayStatus={displayStatus}
+        remoteHeartbeatAt={localHealth.remoteHeartbeatAt}
+        remoteHeartbeatLagging={localHealth.remoteHeartbeatLagging}
+        consecutiveFailures={localHealth.consecutiveFailures}
+      />
 
       <Actions
         displayStatus={displayStatus === 'deleting' ? 'loading' : displayStatus}

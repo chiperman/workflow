@@ -172,6 +172,34 @@ describe('TaskCard', () => {
     });
   });
 
+  it('手动执行成功后应立即更新远程心跳展示', async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: jest.fn().mockResolvedValue({
+        success: true,
+        message: 'Task completed successfully',
+        data: { auto_count: 10, manual_count: 6, failure_count: 0 },
+      }),
+    });
+
+    render(
+      <TaskCard
+        {...defaultProps}
+        serviceHealth={{
+          ...defaultProps.serviceHealth,
+          type: 'supabase_internal',
+          config: { supabase_url: 'https://example.supabase.co' },
+        }}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /run task/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Last heartbeat:/i)).toBeInTheDocument();
+    });
+  });
+
   it('API 请求失败应显示错误消息', async () => {
     (global.fetch as jest.Mock).mockResolvedValue({
       ok: false,
@@ -202,6 +230,25 @@ describe('TaskCard', () => {
     );
 
     expect(screen.getByText('Auto: OFF')).toBeInTheDocument();
+  });
+
+  it('应展示远程心跳和失败连续次数', () => {
+    render(
+      <TaskCard
+        {...defaultProps}
+        serviceHealth={{
+          ...defaultProps.serviceHealth,
+          remoteHeartbeatAt: '2026-04-17T10:49:58.468Z',
+          remoteHeartbeatLagging: true,
+          consecutiveFailures: 2,
+        }}
+      />
+    );
+
+    expect(screen.getByText('Heartbeat Lag')).toBeInTheDocument();
+    expect(screen.getByText('Failures: 2')).toBeInTheDocument();
+    expect(screen.getByText(/Last heartbeat:/i)).toBeInTheDocument();
+    expect(screen.getByText(/Failure streak: 2/i)).toBeInTheDocument();
   });
 
   it('开关按钮应可点击切换状态', async () => {
