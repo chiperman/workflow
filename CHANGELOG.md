@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.9.6](https://github.com/chiperman/workflow/compare/v0.9.5...v0.9.6) (2026-04-17)
+
+
+### Features
+
+* **task-card:** 增加心跳状态展示与即时刷新 ([810dbf8](https://github.com/chiperman/workflow/commit/810dbf800300a3f3a2937f519d1f7a76de8a390a))
+
 ### [0.9.5](https://github.com/chiperman/workflow/compare/v0.9.4...v0.9.5) (2026-04-01)
 
 
