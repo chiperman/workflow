@@ -12,6 +12,8 @@ interface HeaderProps {
   localEnabled: boolean;
   isToggling: boolean;
   todayCheckedIn?: boolean;
+  remoteHeartbeatLagging?: boolean;
+  consecutiveFailures?: number;
   onToggle: () => void;
   isGuest?: boolean;
   onEdit?: (id: string) => void;
@@ -26,6 +28,8 @@ export const Header = memo(function Header({
   localEnabled,
   isToggling,
   todayCheckedIn,
+  remoteHeartbeatLagging,
+  consecutiveFailures,
   onToggle,
   isGuest,
   onEdit,
@@ -62,6 +66,30 @@ export const Header = memo(function Header({
                 className="text-[9px] font-bold tracking-wider uppercase text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200"
               >
                 今日未签到
+              </motion.span>
+            )}
+            {remoteHeartbeatLagging && (
+              <motion.span
+                key="remote-heartbeat-lagging"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.2 }}
+                className="text-[9px] font-bold tracking-wider uppercase text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200"
+              >
+                Heartbeat Lag
+              </motion.span>
+            )}
+            {!!consecutiveFailures && (
+              <motion.span
+                key="failure-streak"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.2 }}
+                className="text-[9px] font-bold tracking-wider uppercase text-red-600 bg-red-50 px-2 py-0.5 rounded border border-red-200"
+              >
+                Failures: {consecutiveFailures}
               </motion.span>
             )}
           </AnimatePresence>

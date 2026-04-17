@@ -41,6 +41,12 @@ export interface ServiceHealth {
   type?: string;
   description?: string;
   category?: string;
+  /** 远程 Supabase 心跳更新时间 */
+  remoteHeartbeatAt?: string;
+  /** 远程心跳是否已落后于预期调度 */
+  remoteHeartbeatLagging?: boolean;
+  /** 最近连续失败次数（遇到最近一次成功即归零） */
+  consecutiveFailures?: number;
   config?: TaskConfigData;
   rules?: {
     success?: ValidationRules;
