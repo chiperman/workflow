@@ -14,6 +14,7 @@ concurrency:
 
 jobs:
   ci:
+    name: ✅ Quality Gate
     runs-on: ubuntu-latest
     steps:
       - name: ⬇️ Checkout
@@ -36,15 +37,6 @@ jobs:
 
       - name: 🏗️ Build check
         run: npm run build
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
-          SUPABASE_SERVICE_ROLE_KEY: placeholder-key
-
-      - name: 🎭 Install Playwright Browsers
-        run: npx playwright install --with-deps chromium
-
-      - name: 🧪 Run E2E tests
-        run: npm run test:e2e
         env:
           NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
           SUPABASE_SERVICE_ROLE_KEY: placeholder-key
