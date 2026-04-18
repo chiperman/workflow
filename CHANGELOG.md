@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.9.7](https://github.com/chiperman/workflow/compare/v0.9.6...v0.9.7) (2026-04-18)
+
+
+### Bug Fixes
+
+* **release:** 修正版本判定优先级 ([550e22b](https://github.com/chiperman/workflow/commit/550e22b4bb546803a0f991f5d568c9da64177685))
+
 ### [0.9.6](https://github.com/chiperman/workflow/compare/v0.9.5...v0.9.6) (2026-04-17)
 
 
