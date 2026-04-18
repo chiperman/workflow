@@ -1,4 +1,12 @@
 import { execSync } from 'node:child_process';
+import { appendFileSync } from 'node:fs';
+
+const RELEASE_PRIORITY = {
+  '': 0,
+  patch: 1,
+  minor: 2,
+  major: 3,
+};
 
 function run(command) {
   return execSync(command, {
@@ -18,18 +26,12 @@ function tryRun(command) {
 
 function setOutput(name, value) {
   if (process.env.GITHUB_OUTPUT) {
-    execSync(
-      `printf '%s=%s\n' ${shellEscape(name)} ${shellEscape(value)} >> ${shellEscape(process.env.GITHUB_OUTPUT)}`,
-      {
-        shell: '/bin/bash',
-        stdio: 'ignore',
-      }
-    );
+    appendFileSync(process.env.GITHUB_OUTPUT, `${name}=${value}\n`);
   }
 }
 
-function shellEscape(value) {
-  return `'${String(value).replace(/'/g, `'\\''`)}'`;
+function pickHigherRelease(current, candidate) {
+  return RELEASE_PRIORITY[candidate] > RELEASE_PRIORITY[current] ? candidate : current;
 }
 
 function collectCommits() {
@@ -53,13 +55,13 @@ function classifyRelease(commits) {
       break;
     }
 
-    if (!releaseAs && /^feat(?:\([^)]+\))?:/m.test(commit)) {
-      releaseAs = 'minor';
+    if (/^feat(?:\([^)]+\))?:/m.test(commit)) {
+      releaseAs = pickHigherRelease(releaseAs, 'minor');
       continue;
     }
 
-    if (!releaseAs && /^(fix|perf|revert)(?:\([^)]+\))?:/m.test(commit)) {
-      releaseAs = 'patch';
+    if (/^(fix|perf|revert)(?:\([^)]+\))?:/m.test(commit)) {
+      releaseAs = pickHigherRelease(releaseAs, 'patch');
     }
   }
 
