@@ -32,10 +32,6 @@ export class DynamicService extends BaseService {
     return this.fullConfig.category;
   }
 
-  private isGladosService(): boolean {
-    return this.serviceName.toLowerCase() === 'glados';
-  }
-
   private formatSuccessMessage(
     responseData: unknown,
     trigger: 'auto' | 'manual',
@@ -43,6 +39,9 @@ export class DynamicService extends BaseService {
   ): string {
     const beijingTime = getBeijingTime();
     const fallbackMessage = `${this.fullConfig.name} 成功: 于 ${beijingTime} (${trigger})`;
+    const template = shouldIncrement
+      ? this.fullConfig.config?.success_message_template
+      : this.fullConfig.config?.repeat_message_template;
 
     if (!responseData || typeof responseData !== 'object') {
       return fallbackMessage;
@@ -51,22 +50,29 @@ export class DynamicService extends BaseService {
     const payload = responseData as Record<string, unknown>;
     const rawMessage = typeof payload.message === 'string' ? payload.message : undefined;
 
-    if (this.isGladosService()) {
-      const rawPoints = payload.points;
-      const points =
-        typeof rawPoints === 'number'
-          ? rawPoints
-          : typeof rawPoints === 'string' && rawPoints.trim() !== ''
-            ? Number(rawPoints)
-            : undefined;
+    if (template) {
+      return template.replace(/\{\{\s*([^}]+)\s*\}\}/g, (_match, rawKey: string) => {
+        const key = rawKey.trim();
 
-      if (shouldIncrement && typeof points === 'number' && Number.isFinite(points) && points > 0) {
-        return `${this.fullConfig.name}: 签到成功，获得 ${points} 积分 [${beijingTime}]`;
-      }
+        if (key === 'service') {
+          return this.fullConfig.name;
+        }
+        if (key === 'time') {
+          return beijingTime;
+        }
+        if (key === 'trigger') {
+          return trigger;
+        }
 
-      if (!shouldIncrement) {
-        return `${this.fullConfig.name}: 今日已签到，未获得新积分 [${beijingTime}]`;
-      }
+        const value = this.getValueByPath(payload, key);
+        if (value === undefined || value === null) {
+          return '';
+        }
+        if (typeof value === 'object') {
+          return JSON.stringify(value);
+        }
+        return String(value);
+      });
     }
 
     if (rawMessage) {

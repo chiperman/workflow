@@ -62,16 +62,18 @@ describe('DynamicService Robustness Tests', () => {
     created_at: new Date().toISOString(),
   };
 
-  const gladosConfig: ServiceConfig = {
-    service: 'glados',
-    name: 'GLaDOS 签到',
+  const checkinConfig: ServiceConfig = {
+    service: 'daily-checkin',
+    name: '通用签到',
     type: 'http',
     enabled: true,
     notification_level: 'none',
     config: {
-      urls: ['https://glados.example.com/api/user/checkin'],
+      urls: ['https://checkin.example.com/api/user/checkin'],
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      success_message_template: '{{service}} 签到成功，获得 {{points}} 积分 [{{time}}]',
+      repeat_message_template: '{{service}} 今日已签到，{{message}}',
     },
     rules: {
       success: {
@@ -133,7 +135,7 @@ describe('DynamicService Robustness Tests', () => {
       expect(result.error).toContain('Validation failed. Status: 404');
     });
 
-    it('should show the correct GLaDOS points when check-in grants points', async () => {
+    it('should render configured success template for check-in services', async () => {
       (global.fetch as jest.Mock).mockResolvedValue({
         status: 200,
         headers: new Map([['content-type', 'application/json']]),
@@ -144,15 +146,16 @@ describe('DynamicService Robustness Tests', () => {
         }),
       });
 
-      const service = new DynamicService(gladosConfig);
+      const service = new DynamicService(checkinConfig);
       const result = await service.testExecution();
 
       expect(result.success).toBe(true);
+      expect(result.message).toContain('通用签到');
       expect(result.message).toContain('签到成功，获得 14 积分');
       expect(result.skipLog).toBe(false);
     });
 
-    it('should show a clear duplicate-check-in message for GLaDOS', async () => {
+    it('should render configured repeat template when check-in was already completed', async () => {
       (global.fetch as jest.Mock).mockResolvedValue({
         status: 200,
         headers: new Map([['content-type', 'application/json']]),
@@ -163,12 +166,37 @@ describe('DynamicService Robustness Tests', () => {
         }),
       });
 
-      const service = new DynamicService(gladosConfig);
+      const service = new DynamicService(checkinConfig);
       const result = await service.testExecution();
 
       expect(result.success).toBe(true);
-      expect(result.message).toContain('今日已签到，未获得新积分');
+      expect(result.message).toContain('通用签到 今日已签到');
+      expect(result.message).toContain("Today's observation logged.");
       expect(result.skipLog).toBe(true);
+    });
+
+    it('should support nested JSON paths in success message templates', async () => {
+      (global.fetch as jest.Mock).mockResolvedValue({
+        status: 200,
+        headers: new Map([['content-type', 'application/json']]),
+        json: async () => ({
+          code: 0,
+          data: { reward: 9 },
+          message: 'Checkin! Got 9 Points',
+        }),
+      });
+
+      const service = new DynamicService({
+        ...checkinConfig,
+        config: {
+          ...checkinConfig.config,
+          success_message_template: '{{service}} 签到成功，获得 {{data.reward}} 积分',
+        },
+      });
+      const result = await service.testExecution();
+
+      expect(result.success).toBe(true);
+      expect(result.message).toContain('签到成功，获得 9 积分');
     });
   });
 
