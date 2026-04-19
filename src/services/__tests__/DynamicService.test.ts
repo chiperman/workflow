@@ -62,6 +62,35 @@ describe('DynamicService Robustness Tests', () => {
     created_at: new Date().toISOString(),
   };
 
+  const checkinConfig: ServiceConfig = {
+    service: 'daily-checkin',
+    name: '通用签到',
+    type: 'http',
+    enabled: true,
+    notification_level: 'none',
+    config: {
+      urls: ['https://checkin.example.com/api/user/checkin'],
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      success_message_template: '{{service}} 签到成功，获得 {{points}} 积分 [{{time}}]',
+      repeat_message_template: '{{service}} 今日已签到，{{message}}',
+    },
+    rules: {
+      success: {
+        status: 200,
+        json: [{ path: 'code', operator: 'in', value: [0, 1] }],
+      },
+      increment: {
+        json: [{ path: 'code', operator: 'eq', value: 0 }],
+      },
+    },
+    manual_count: 0,
+    auto_count: 0,
+    failure_count: 0,
+    timestamp: '',
+    created_at: new Date().toISOString(),
+  };
+
   describe('HTTP Multi-URL & Failure Handling', () => {
     it('should try second URL if first one fails', async () => {
       // First call fails, second succeeds
@@ -104,6 +133,70 @@ describe('DynamicService Robustness Tests', () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('Validation failed. Status: 404');
+    });
+
+    it('should render configured success template for check-in services', async () => {
+      (global.fetch as jest.Mock).mockResolvedValue({
+        status: 200,
+        headers: new Map([['content-type', 'application/json']]),
+        json: async () => ({
+          code: 0,
+          points: 14,
+          message: 'Checkin! Got 14 Points',
+        }),
+      });
+
+      const service = new DynamicService(checkinConfig);
+      const result = await service.testExecution();
+
+      expect(result.success).toBe(true);
+      expect(result.message).toContain('通用签到');
+      expect(result.message).toContain('签到成功，获得 14 积分');
+      expect(result.skipLog).toBe(false);
+    });
+
+    it('should render configured repeat template when check-in was already completed', async () => {
+      (global.fetch as jest.Mock).mockResolvedValue({
+        status: 200,
+        headers: new Map([['content-type', 'application/json']]),
+        json: async () => ({
+          code: 1,
+          points: 0,
+          message: "Today's observation logged. Return tomorrow for more points.",
+        }),
+      });
+
+      const service = new DynamicService(checkinConfig);
+      const result = await service.testExecution();
+
+      expect(result.success).toBe(true);
+      expect(result.message).toContain('通用签到 今日已签到');
+      expect(result.message).toContain("Today's observation logged.");
+      expect(result.skipLog).toBe(true);
+    });
+
+    it('should support nested JSON paths in success message templates', async () => {
+      (global.fetch as jest.Mock).mockResolvedValue({
+        status: 200,
+        headers: new Map([['content-type', 'application/json']]),
+        json: async () => ({
+          code: 0,
+          data: { reward: 9 },
+          message: 'Checkin! Got 9 Points',
+        }),
+      });
+
+      const service = new DynamicService({
+        ...checkinConfig,
+        config: {
+          ...checkinConfig.config,
+          success_message_template: '{{service}} 签到成功，获得 {{data.reward}} 积分',
+        },
+      });
+      const result = await service.testExecution();
+
+      expect(result.success).toBe(true);
+      expect(result.message).toContain('签到成功，获得 9 积分');
     });
   });
 

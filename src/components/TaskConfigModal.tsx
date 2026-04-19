@@ -32,7 +32,15 @@ const DEFAULT_CONFIG: Partial<ServiceConfig> = {
   type: 'http',
   enabled: true,
   notification_level: 'failure-only',
-  config: { urls: [''], method: 'POST', headers: {}, cookie: '', body: '' },
+  config: {
+    urls: [''],
+    method: 'POST',
+    headers: {},
+    cookie: '',
+    body: '',
+    success_message_template: '',
+    repeat_message_template: '',
+  },
   rules: { success: { status: 200 } },
 };
 
@@ -68,7 +76,14 @@ export function TaskConfigModal({
     if (initialConfig) {
       const finalConfig = {
         ...initialConfig,
-        config: initialConfig.config || { urls: [''], method: 'POST', headers: {}, body: '' },
+        config: initialConfig.config || {
+          urls: [''],
+          method: 'POST',
+          headers: {},
+          body: '',
+          success_message_template: '',
+          repeat_message_template: '',
+        },
         rules: initialConfig.rules || { success: { status: 200, smart_matching: true } },
       };
       setConfig(finalConfig);
@@ -505,6 +520,60 @@ export function TaskConfigModal({
                       }}
                       className="w-full px-3 py-2 bg-[#f9f9f9] border border-[#e5e5e0] rounded-lg text-sm font-mono"
                     />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label
+                      htmlFor="success-message-template"
+                      className="text-[11px] font-medium text-text-tertiary"
+                    >
+                      Success Message Template
+                    </label>
+                    <input
+                      id="success-message-template"
+                      value={config.config?.success_message_template || ''}
+                      onChange={e =>
+                        setConfig({
+                          ...config,
+                          config: {
+                            ...config.config!,
+                            success_message_template: e.target.value,
+                          },
+                        })
+                      }
+                      placeholder="例如：{{service}} 签到成功，获得 {{points}} 积分 [{{time}}]"
+                      className="w-full px-3 py-2 bg-[#f9f9f9] border border-[#e5e5e0] rounded-lg text-sm"
+                    />
+                    <p className="text-[11px] text-text-secondary">
+                      可用变量：{'{{service}}'}、{'{{time}}'}、{'{{trigger}}'} 以及返回 JSON
+                      路径，如
+                      {' {{points}} '}或 {'{{data.reward}}'}。
+                    </p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label
+                      htmlFor="repeat-message-template"
+                      className="text-[11px] font-medium text-text-tertiary"
+                    >
+                      Repeat Check-in Template
+                    </label>
+                    <input
+                      id="repeat-message-template"
+                      value={config.config?.repeat_message_template || ''}
+                      onChange={e =>
+                        setConfig({
+                          ...config,
+                          config: {
+                            ...config.config!,
+                            repeat_message_template: e.target.value,
+                          },
+                        })
+                      }
+                      placeholder="例如：{{service}} 今日已签到，未获得新积分"
+                      className="w-full px-3 py-2 bg-[#f9f9f9] border border-[#e5e5e0] rounded-lg text-sm"
+                    />
+                    <p className="text-[11px] text-text-secondary">
+                      当接口成功但不增加计数时使用，适合“今日已签到”这类重复签到提示。
+                    </p>
                   </div>
                 </section>
               )}

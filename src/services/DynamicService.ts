@@ -32,6 +32,56 @@ export class DynamicService extends BaseService {
     return this.fullConfig.category;
   }
 
+  private formatSuccessMessage(
+    responseData: unknown,
+    trigger: 'auto' | 'manual',
+    shouldIncrement: boolean
+  ): string {
+    const beijingTime = getBeijingTime();
+    const fallbackMessage = `${this.fullConfig.name} 成功: 于 ${beijingTime} (${trigger})`;
+    const template = shouldIncrement
+      ? this.fullConfig.config?.success_message_template
+      : this.fullConfig.config?.repeat_message_template;
+
+    if (!responseData || typeof responseData !== 'object') {
+      return fallbackMessage;
+    }
+
+    const payload = responseData as Record<string, unknown>;
+    const rawMessage = typeof payload.message === 'string' ? payload.message : undefined;
+
+    if (template) {
+      return template.replace(/\{\{\s*([^}]+)\s*\}\}/g, (_match, rawKey: string) => {
+        const key = rawKey.trim();
+
+        if (key === 'service') {
+          return this.fullConfig.name;
+        }
+        if (key === 'time') {
+          return beijingTime;
+        }
+        if (key === 'trigger') {
+          return trigger;
+        }
+
+        const value = this.getValueByPath(payload, key);
+        if (value === undefined || value === null) {
+          return '';
+        }
+        if (typeof value === 'object') {
+          return JSON.stringify(value);
+        }
+        return String(value);
+      });
+    }
+
+    if (rawMessage) {
+      return `${this.fullConfig.name}: "${rawMessage}" [${beijingTime}]`;
+    }
+
+    return fallbackMessage;
+  }
+
   /**
    * 暴露给外部的测试执行方法（不更新统计，不记录日志）
    */
@@ -203,11 +253,7 @@ export class DynamicService extends BaseService {
     }
 
     const shouldIncrement = this.validateRules(responseStatus, responseData, rules.increment);
-    const beijingTime = getBeijingTime();
-    let message = `${this.fullConfig.name} 成功: 于 ${beijingTime} (${trigger})`;
-    if (typeof responseData === 'object' && responseData && 'message' in responseData) {
-      message = `${this.fullConfig.name}: "${String((responseData as Record<string, unknown>).message)}" [${beijingTime}]`;
-    }
+    const message = this.formatSuccessMessage(responseData, trigger, shouldIncrement);
 
     return {
       success: true,

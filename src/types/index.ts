@@ -100,6 +100,8 @@ export interface TaskConfigData {
   cookie?: string;
   body?: string;
   timeout?: number;
+  success_message_template?: string;
+  repeat_message_template?: string;
 
   // Supabase 专用
   supabase_url?: string;
