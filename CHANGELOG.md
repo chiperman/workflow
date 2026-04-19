@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.9.8](https://github.com/chiperman/workflow/compare/v0.9.7...v0.9.8) (2026-04-19)
+
+
+### Bug Fixes
+
+* **auth:** 加快登录状态切换反馈 ([#21](https://github.com/chiperman/workflow/issues/21)) ([364429b](https://github.com/chiperman/workflow/commit/364429b303036af213706ed8ecaf79d86ef15d3b))
+
 ### [0.9.7](https://github.com/chiperman/workflow/compare/v0.9.6...v0.9.7) (2026-04-18)
 
 
