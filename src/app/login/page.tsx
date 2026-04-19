@@ -33,11 +33,7 @@ export default function LoginPage() {
 
       if (data.success) {
         setIsExiting(true);
-        // 等待离场动画完成再跳转
-        setTimeout(() => {
-          router.push('/');
-          router.refresh();
-        }, 500);
+        window.location.replace('/');
       } else {
         setError(data.message || 'Access key denied');
       }

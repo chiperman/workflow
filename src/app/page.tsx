@@ -76,11 +76,7 @@ export default function Home() {
     setShowLogoutConfirm(false);
     setIsExiting(true);
     await fetch('/api/auth', { method: 'DELETE' });
-
-    setTimeout(() => {
-      router.push('/login');
-      router.refresh();
-    }, 500);
+    window.location.replace('/login');
   };
 
   return (
