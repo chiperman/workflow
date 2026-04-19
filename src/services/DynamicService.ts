@@ -32,6 +32,50 @@ export class DynamicService extends BaseService {
     return this.fullConfig.category;
   }
 
+  private isGladosService(): boolean {
+    return this.serviceName.toLowerCase() === 'glados';
+  }
+
+  private formatSuccessMessage(
+    responseData: unknown,
+    trigger: 'auto' | 'manual',
+    shouldIncrement: boolean
+  ): string {
+    const beijingTime = getBeijingTime();
+    const fallbackMessage = `${this.fullConfig.name} 成功: 于 ${beijingTime} (${trigger})`;
+
+    if (!responseData || typeof responseData !== 'object') {
+      return fallbackMessage;
+    }
+
+    const payload = responseData as Record<string, unknown>;
+    const rawMessage = typeof payload.message === 'string' ? payload.message : undefined;
+
+    if (this.isGladosService()) {
+      const rawPoints = payload.points;
+      const points =
+        typeof rawPoints === 'number'
+          ? rawPoints
+          : typeof rawPoints === 'string' && rawPoints.trim() !== ''
+            ? Number(rawPoints)
+            : undefined;
+
+      if (shouldIncrement && typeof points === 'number' && Number.isFinite(points) && points > 0) {
+        return `${this.fullConfig.name}: 签到成功，获得 ${points} 积分 [${beijingTime}]`;
+      }
+
+      if (!shouldIncrement) {
+        return `${this.fullConfig.name}: 今日已签到，未获得新积分 [${beijingTime}]`;
+      }
+    }
+
+    if (rawMessage) {
+      return `${this.fullConfig.name}: "${rawMessage}" [${beijingTime}]`;
+    }
+
+    return fallbackMessage;
+  }
+
   /**
    * 暴露给外部的测试执行方法（不更新统计，不记录日志）
    */
@@ -203,11 +247,7 @@ export class DynamicService extends BaseService {
     }
 
     const shouldIncrement = this.validateRules(responseStatus, responseData, rules.increment);
-    const beijingTime = getBeijingTime();
-    let message = `${this.fullConfig.name} 成功: 于 ${beijingTime} (${trigger})`;
-    if (typeof responseData === 'object' && responseData && 'message' in responseData) {
-      message = `${this.fullConfig.name}: "${String((responseData as Record<string, unknown>).message)}" [${beijingTime}]`;
-    }
+    const message = this.formatSuccessMessage(responseData, trigger, shouldIncrement);
 
     return {
       success: true,

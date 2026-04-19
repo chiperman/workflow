@@ -62,6 +62,33 @@ describe('DynamicService Robustness Tests', () => {
     created_at: new Date().toISOString(),
   };
 
+  const gladosConfig: ServiceConfig = {
+    service: 'glados',
+    name: 'GLaDOS 签到',
+    type: 'http',
+    enabled: true,
+    notification_level: 'none',
+    config: {
+      urls: ['https://glados.example.com/api/user/checkin'],
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    },
+    rules: {
+      success: {
+        status: 200,
+        json: [{ path: 'code', operator: 'in', value: [0, 1] }],
+      },
+      increment: {
+        json: [{ path: 'code', operator: 'eq', value: 0 }],
+      },
+    },
+    manual_count: 0,
+    auto_count: 0,
+    failure_count: 0,
+    timestamp: '',
+    created_at: new Date().toISOString(),
+  };
+
   describe('HTTP Multi-URL & Failure Handling', () => {
     it('should try second URL if first one fails', async () => {
       // First call fails, second succeeds
@@ -104,6 +131,44 @@ describe('DynamicService Robustness Tests', () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('Validation failed. Status: 404');
+    });
+
+    it('should show the correct GLaDOS points when check-in grants points', async () => {
+      (global.fetch as jest.Mock).mockResolvedValue({
+        status: 200,
+        headers: new Map([['content-type', 'application/json']]),
+        json: async () => ({
+          code: 0,
+          points: 14,
+          message: 'Checkin! Got 14 Points',
+        }),
+      });
+
+      const service = new DynamicService(gladosConfig);
+      const result = await service.testExecution();
+
+      expect(result.success).toBe(true);
+      expect(result.message).toContain('签到成功，获得 14 积分');
+      expect(result.skipLog).toBe(false);
+    });
+
+    it('should show a clear duplicate-check-in message for GLaDOS', async () => {
+      (global.fetch as jest.Mock).mockResolvedValue({
+        status: 200,
+        headers: new Map([['content-type', 'application/json']]),
+        json: async () => ({
+          code: 1,
+          points: 0,
+          message: "Today's observation logged. Return tomorrow for more points.",
+        }),
+      });
+
+      const service = new DynamicService(gladosConfig);
+      const result = await service.testExecution();
+
+      expect(result.success).toBe(true);
+      expect(result.message).toContain('今日已签到，未获得新积分');
+      expect(result.skipLog).toBe(true);
     });
   });
 
