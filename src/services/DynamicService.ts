@@ -5,6 +5,7 @@ import { ServiceExecutor } from '@/lib/ServiceExecutor';
 import type { KeepAliveResult, ServiceConfig, ValidationRules } from '@/types';
 import { BaseService } from './BaseService';
 import { createClient } from '@supabase/supabase-js';
+import { decryptConfig } from '@/lib/crypto';
 
 export class DynamicService extends BaseService {
   public readonly fullConfig: ServiceConfig;
@@ -14,6 +15,24 @@ export class DynamicService extends BaseService {
     this.fullConfig = config;
     this.notificationLevel = config.notification_level;
     this.notificationKey = config.config?.notification_key;
+  }
+
+  /**
+   * 获取运行时配置 (自动处理解密和环境变量注入)
+   */
+  private get runtimeConfig(): Record<string, string | undefined> {
+    const config = decryptConfig({ ...this.fullConfig.config }) as Record<
+      string,
+      string | undefined
+    >;
+
+    // 环境变量注入优先级：配置项 > 环境变量 > 空
+    // 特别针对 GLaDOS 签到场景
+    if (this.serviceName.toLowerCase() === 'glados' && !config.cookie) {
+      config.cookie = process.env.GLADOS_COOKIE;
+    }
+
+    return config;
   }
 
   public get type(): string {
@@ -140,7 +159,7 @@ export class DynamicService extends BaseService {
   private async performSupabaseInternal(
     trigger: 'auto' | 'manual'
   ): Promise<KeepAliveResult & { shouldIncrement?: boolean }> {
-    const { config } = this.fullConfig;
+    const config = this.runtimeConfig;
     const isRemote = !!(config.supabase_url && config.supabase_key);
     const targetUrl = config.supabase_url || 'Current Project';
 
@@ -191,7 +210,8 @@ export class DynamicService extends BaseService {
   private async performHttpRequest(
     trigger: 'auto' | 'manual'
   ): Promise<KeepAliveResult & { shouldIncrement?: boolean }> {
-    const { config, rules } = this.fullConfig;
+    const config = this.runtimeConfig;
+    const { rules } = this.fullConfig;
     const urls = config.urls || (config.url ? [config.url] : []);
 
     if (urls.length === 0) {
@@ -205,16 +225,25 @@ export class DynamicService extends BaseService {
     for (const url of urls) {
       try {
         logger.info(`[${this.serviceName}] Trying API: ${url}`);
-        const headers: Record<string, string> = { ...config.headers };
+        const headers: Record<string, string> = {
+          ...(config.headers && typeof config.headers === 'object'
+            ? (config.headers as Record<string, string>)
+            : {}),
+        };
         if (config.cookie) {
           headers['Cookie'] = config.cookie;
+        }
+        if (config.token) {
+          headers['Authorization'] = config.token.startsWith('Bearer ')
+            ? config.token
+            : `Bearer ${config.token}`;
         }
 
         const response = await fetch(url, {
           method: config.method || 'GET',
           headers,
           body: config.body ? config.body : undefined,
-          signal: AbortSignal.timeout(config.timeout || 10000),
+          signal: AbortSignal.timeout(Number(config.timeout) || 10000),
         });
 
         responseStatus = response.status;

@@ -2,6 +2,7 @@ import { withApiHandler } from '@/lib/api-helper';
 import { supabase } from '@/lib/supabase';
 import { DbServiceJoined, DbServiceStats } from '@/types';
 import { NextResponse } from 'next/server';
+import { encryptConfig, maskConfig } from '@/lib/crypto';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,7 +34,7 @@ export const GET = withApiHandler(
         updated_at: '',
       };
 
-      return {
+      const result = {
         ...row,
         manual_count: s.manual_count,
         auto_count: s.auto_count,
@@ -41,6 +42,9 @@ export const GET = withApiHandler(
         last_run_at: s.last_run_at || undefined,
         timestamp: s.updated_at || row.created_at,
       };
+
+      // 脱敏处理，防止敏感信息（即使加密了）在 UI 侧被完整暴露
+      return maskConfig(result);
     });
   },
   { requireAuth: true }
@@ -78,7 +82,8 @@ export const PUT = withApiHandler(
     const configToUpdate: Record<string, unknown> = {};
     ALLOWED_CONFIG_KEYS.forEach(key => {
       if (key in body && body[key] !== undefined) {
-        configToUpdate[key] = body[key];
+        // 如果是 config 字段，则进行加密
+        configToUpdate[key] = key === 'config' ? encryptConfig(body[key]) : body[key];
       }
     });
 
@@ -111,7 +116,8 @@ export const POST = withApiHandler(
     const configToInsert: Record<string, unknown> = { service };
     ALLOWED_CONFIG_KEYS.forEach(key => {
       if (key in body && body[key] !== undefined) {
-        configToInsert[key] = body[key];
+        // 如果是 config 字段，则进行加密
+        configToInsert[key] = key === 'config' ? encryptConfig(body[key]) : body[key];
       }
     });
 
