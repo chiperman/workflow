@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.9.9](https://github.com/chiperman/workflow/compare/v0.9.8...v0.9.9) (2026-04-20)
+
+
+### Bug Fixes
+
+* **glados:** 实现敏感字段加密存储并修复签到失效问题 ([1a1a1d3](https://github.com/chiperman/workflow/commit/1a1a1d3d736a2b4a21f923479468e9c51ba0d128))
+
 ### [0.9.8](https://github.com/chiperman/workflow/compare/v0.9.7...v0.9.8) (2026-04-19)
 
 
