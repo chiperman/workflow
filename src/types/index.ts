@@ -97,6 +97,7 @@ export interface TaskConfigData {
   url?: string;
   urls?: string[]; // 支持多个 URL 轮询
   method?: string;
+  headers?: Record<string, string>;
   body?: string;
   timeout?: number;
   success_message_template?: string;
