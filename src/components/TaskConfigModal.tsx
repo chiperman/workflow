@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import type { ServiceConfig } from '@/types';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { normalizeConfigSegments } from '@/lib/crypto';
+import { normalizeConfigSegments, splitHeadersBySensitivity } from '@/lib/crypto';
 import {
   X,
   Save,
@@ -36,12 +36,12 @@ const DEFAULT_CONFIG: Partial<ServiceConfig> = {
   config: {
     urls: [''],
     method: 'POST',
+    headers: {},
     body: '',
     success_message_template: '',
     repeat_message_template: '',
   },
   secret_config: {
-    headers: {},
     cookie: '',
     supabase_key: '',
     notification_key: '',
@@ -59,7 +59,6 @@ export function TaskConfigModal({
   const [isSaving, setIsSaving] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [showAdvancedRules, setShowAdvancedRules] = useState(false);
-  const [showSupabaseKey, setShowSupabaseKey] = useState(false);
   const [showBarkKey, setShowBarkKey] = useState(false);
 
   const [config, setConfig] = useState<Partial<ServiceConfig>>(DEFAULT_CONFIG);
@@ -85,12 +84,12 @@ export function TaskConfigModal({
         config: normalized.config || {
           urls: [''],
           method: 'POST',
+          headers: {},
           body: '',
           success_message_template: '',
           repeat_message_template: '',
         },
         secret_config: normalized.secret_config || {
-          headers: {},
           cookie: '',
           supabase_key: '',
           notification_key: '',
@@ -98,7 +97,16 @@ export function TaskConfigModal({
         rules: initialConfig.rules || { success: { status: 200, smart_matching: true } },
       };
       setConfig(finalConfig);
-      setHeadersStr(JSON.stringify(finalConfig.secret_config?.headers || {}, null, 2));
+      setHeadersStr(
+        JSON.stringify(
+          {
+            ...(finalConfig.config?.headers || {}),
+            ...(finalConfig.secret_config?.headers || {}),
+          },
+          null,
+          2
+        )
+      );
       setRulesStr(JSON.stringify(finalConfig.rules?.success || {}, null, 2));
 
       // 如果已经有复杂的 json 规则，自动显示高级设置
@@ -527,9 +535,17 @@ export function TaskConfigModal({
                         setHeadersStr(e.target.value);
                         try {
                           const h = JSON.parse(e.target.value);
+                          const { configHeaders, secretHeaders } = splitHeadersBySensitivity(h);
                           setConfig({
                             ...config,
-                            secret_config: { ...config.secret_config!, headers: h },
+                            config: {
+                              ...config.config!,
+                              headers: configHeaders,
+                            },
+                            secret_config: {
+                              ...config.secret_config!,
+                              headers: secretHeaders,
+                            },
                           });
                         } catch (_err) {
                           // Silently handle invalid JSON while typing
@@ -633,7 +649,7 @@ export function TaskConfigModal({
                     <div className="relative">
                       <input
                         id="supabase-key"
-                        type={showSupabaseKey ? 'text' : 'password'}
+                        type="password"
                         value={config.secret_config?.supabase_key || ''}
                         onChange={e =>
                           setConfig({
@@ -647,20 +663,6 @@ export function TaskConfigModal({
                         placeholder="your-service-role-key"
                         className="w-full pl-3 pr-10 py-2 bg-[#f9f9f9] border border-[#e5e5e0] rounded-lg text-sm focus:outline-none focus:border-[#d97757]/50"
                       />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setShowSupabaseKey(!showSupabaseKey)}
-                        className="absolute right-1 top-1/2 -translate-y-1/2 text-text-secondary hover:text-foreground"
-                        aria-label={showSupabaseKey ? 'Hide supabase key' : 'Show supabase key'}
-                      >
-                        {showSupabaseKey ? (
-                          <EyeOff className="w-4 h-4" aria-hidden="true" />
-                        ) : (
-                          <Eye className="w-4 h-4" aria-hidden="true" />
-                        )}
-                      </Button>
                     </div>
                   </div>
                   <div className="space-y-1.5">

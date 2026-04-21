@@ -6,13 +6,18 @@ import type { SecretConfigData, TaskConfigData, RuntimeTaskConfigData } from '@/
  */
 export const MASKED_SECRET_VALUE = '********';
 
-const LEGACY_SECRET_KEYS = [
-  'headers',
+const LEGACY_SECRET_KEYS = ['cookie', 'token', 'supabase_key', 'notification_key'] as const;
+
+const SENSITIVE_HEADER_NAMES = new Set([
+  'authorization',
+  'proxy-authorization',
   'cookie',
-  'token',
-  'supabase_key',
-  'notification_key',
-] as const;
+  'set-cookie',
+  'x-api-key',
+  'x-auth-token',
+  'x-access-token',
+  'x-csrf-token',
+]);
 
 type ConfigValue = object;
 
@@ -87,6 +92,52 @@ function cloneConfigValue<T>(value: T): T {
     return cloned as T;
   }
   return value;
+}
+
+function isSensitiveHeaderName(name: string): boolean {
+  const normalized = name.trim().toLowerCase();
+
+  if (!normalized) return false;
+  if (SENSITIVE_HEADER_NAMES.has(normalized)) return true;
+
+  return (
+    normalized.includes('token') ||
+    normalized.includes('secret') ||
+    normalized.includes('authorization') ||
+    normalized.endsWith('-key') ||
+    normalized.includes('api-key')
+  );
+}
+
+function normalizeHeaderMap(headers: unknown): Record<string, string> {
+  if (!headers || typeof headers !== 'object' || Array.isArray(headers)) {
+    return {};
+  }
+
+  return Object.fromEntries(
+    Object.entries(headers as Record<string, unknown>).filter(
+      ([key, value]) => key.trim() && typeof value === 'string'
+    )
+  ) as Record<string, string>;
+}
+
+export function splitHeadersBySensitivity(headers: unknown): {
+  configHeaders: Record<string, string>;
+  secretHeaders: Record<string, string>;
+} {
+  const headerMap = normalizeHeaderMap(headers);
+  const configHeaders: Record<string, string> = {};
+  const secretHeaders: Record<string, string> = {};
+
+  Object.entries(headerMap).forEach(([key, value]) => {
+    if (isSensitiveHeaderName(key)) {
+      secretHeaders[key] = value;
+      return;
+    }
+    configHeaders[key] = value;
+  });
+
+  return { configHeaders, secretHeaders };
 }
 
 /**
@@ -215,6 +266,24 @@ export function normalizeConfigSegments(
   const nextConfig = cloneConfigValue(config) as Record<string, unknown>;
   const nextSecretConfig = cloneConfigValue(secretConfig) as Record<string, unknown>;
 
+  const mergedHeaders = {
+    ...normalizeHeaderMap(nextConfig.headers),
+    ...normalizeHeaderMap(nextSecretConfig.headers),
+  };
+  const { configHeaders, secretHeaders } = splitHeadersBySensitivity(mergedHeaders);
+
+  if (Object.keys(configHeaders).length > 0) {
+    nextConfig.headers = configHeaders;
+  } else {
+    delete nextConfig.headers;
+  }
+
+  if (Object.keys(secretHeaders).length > 0) {
+    nextSecretConfig.headers = secretHeaders;
+  } else {
+    delete nextSecretConfig.headers;
+  }
+
   LEGACY_SECRET_KEYS.forEach(key => {
     if (nextConfig[key] !== undefined && nextSecretConfig[key] === undefined) {
       nextSecretConfig[key] = nextConfig[key];
@@ -236,9 +305,15 @@ export function mergeConfigSegments(
   secretConfig: SecretConfigData = {}
 ): RuntimeTaskConfigData {
   const normalized = normalizeConfigSegments(config, secretConfig);
+  const headers = {
+    ...(normalized.config.headers || {}),
+    ...(normalized.secret_config.headers || {}),
+  };
+
   return {
     ...normalized.config,
     ...normalized.secret_config,
+    ...(Object.keys(headers).length > 0 ? { headers } : {}),
   };
 }
 
