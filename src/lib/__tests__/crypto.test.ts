@@ -1,4 +1,12 @@
-import { mergeConfigSegments, normalizeConfigSegments, splitHeadersBySensitivity } from '../crypto';
+import {
+  encrypt,
+  mergeConfigSegments,
+  mergeSecretConfig,
+  normalizeConfigSegments,
+  normalizeStoredConfigSegments,
+  resolveUpdatedConfigSegments,
+  splitHeadersBySensitivity,
+} from '../crypto';
 
 describe('crypto config segmentation', () => {
   it('should keep non-sensitive headers in config and move sensitive headers to secret_config', () => {
@@ -52,6 +60,83 @@ describe('crypto config segmentation', () => {
     });
     expect(result.secretHeaders).toEqual({
       'X-API-Key': 'secret-key',
+    });
+  });
+
+  it('should decrypt legacy secrets stored in config before normalization', () => {
+    const result = normalizeStoredConfigSegments(
+      {
+        cookie: encrypt('legacy-cookie'),
+      } as unknown as import('@/types').TaskConfigData,
+      {}
+    );
+
+    expect(result.secret_config.cookie).toBe('legacy-cookie');
+  });
+
+  it('should preserve omitted secret fields during partial secret_config updates', () => {
+    const result = mergeSecretConfig(
+      {
+        cookie: 'cookie-value',
+        headers: {
+          Authorization: 'Bearer existing',
+        },
+      },
+      {
+        notification_key: 'notify-me',
+      }
+    );
+
+    expect(result).toEqual({
+      cookie: 'cookie-value',
+      headers: {
+        Authorization: 'Bearer existing',
+      },
+      notification_key: 'notify-me',
+    });
+  });
+
+  it('should preserve decrypted legacy secrets when the UI sends masked placeholders', () => {
+    const result = resolveUpdatedConfigSegments({
+      existingConfig: {
+        cookie: encrypt('legacy-cookie'),
+      } as unknown as import('@/types').TaskConfigData,
+      incomingSecretConfig: {
+        cookie: '********',
+      },
+    });
+
+    expect(result.secret_config.cookie).toBe('legacy-cookie');
+  });
+
+  it('should migrate secrets from config-only PUT payloads without dropping existing secrets', () => {
+    const result = resolveUpdatedConfigSegments({
+      existingConfig: {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+      existingSecretConfig: {
+        cookie: 'existing-cookie',
+      },
+      incomingConfig: {
+        headers: {
+          Authorization: 'Bearer next-token',
+          'Content-Type': 'application/json',
+        },
+      },
+    });
+
+    expect(result.config).toEqual({
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    expect(result.secret_config).toEqual({
+      cookie: 'existing-cookie',
+      headers: {
+        Authorization: 'Bearer next-token',
+      },
     });
   });
 });

@@ -121,6 +121,17 @@ function normalizeHeaderMap(headers: unknown): Record<string, string> {
   ) as Record<string, string>;
 }
 
+function decryptHeaderMap(headers: unknown): Record<string, string> {
+  const headerMap = normalizeHeaderMap(headers);
+
+  return Object.fromEntries(
+    Object.entries(headerMap).map(([key, value]) => [
+      key,
+      value.startsWith('enc:') ? decrypt(value) : value,
+    ])
+  ) as Record<string, string>;
+}
+
 export function splitHeadersBySensitivity(headers: unknown): {
   configHeaders: Record<string, string>;
   secretHeaders: Record<string, string>;
@@ -244,16 +255,36 @@ function mergePreservingMasked(existing: unknown, incoming: unknown): unknown {
       existing && typeof existing === 'object' && !Array.isArray(existing)
         ? (existing as Record<string, unknown>)
         : {};
-    const merged: Record<string, unknown> = {};
+    const merged = ((pruneSecretValue(existingObject) as Record<string, unknown> | undefined) ??
+      {}) as Record<string, unknown>;
     Object.entries(incoming as Record<string, unknown>).forEach(([key, item]) => {
       const next = mergePreservingMasked(existingObject[key], item);
       if (next !== undefined) {
         merged[key] = next;
+      } else {
+        delete merged[key];
       }
     });
     return Object.keys(merged).length > 0 ? merged : undefined;
   }
   return pruneSecretValue(incoming);
+}
+
+function decryptLegacyConfigSecrets(config: TaskConfigData = {}): TaskConfigData {
+  const nextConfig = cloneConfigValue(config) as Record<string, unknown>;
+
+  LEGACY_SECRET_KEYS.forEach(key => {
+    const value = nextConfig[key];
+    if (typeof value === 'string' && value.startsWith('enc:')) {
+      nextConfig[key] = decrypt(value);
+    }
+  });
+
+  if (nextConfig.headers !== undefined) {
+    nextConfig.headers = decryptHeaderMap(nextConfig.headers);
+  }
+
+  return nextConfig as TaskConfigData;
 }
 
 /**
@@ -298,6 +329,19 @@ export function normalizeConfigSegments(
 }
 
 /**
+ * 将数据库中读取出的旧配置归一化为当前结构，并解开历史上遗留在 config 内的 secret
+ */
+export function normalizeStoredConfigSegments(
+  config: TaskConfigData = {},
+  secretConfig: SecretConfigData = {}
+): { config: TaskConfigData; secret_config: SecretConfigData } {
+  return normalizeConfigSegments(
+    decryptLegacyConfigSecrets(config),
+    decryptSecretConfig(secretConfig) as SecretConfigData
+  );
+}
+
+/**
  * 合并普通配置与解密后的敏感配置，供运行时使用
  */
 export function mergeConfigSegments(
@@ -325,4 +369,28 @@ export function mergeSecretConfig(
   incoming?: SecretConfigData
 ): SecretConfigData {
   return (mergePreservingMasked(existing, incoming) ?? {}) as SecretConfigData;
+}
+
+/**
+ * 计算 PUT 更新后的最终配置分段，兼容旧版 config 结构和部分 secret_config 更新
+ */
+export function resolveUpdatedConfigSegments(params: {
+  existingConfig?: TaskConfigData;
+  existingSecretConfig?: SecretConfigData;
+  incomingConfig?: TaskConfigData;
+  incomingSecretConfig?: SecretConfigData;
+}): { config: TaskConfigData; secret_config: SecretConfigData } {
+  const existing = normalizeStoredConfigSegments(
+    params.existingConfig || {},
+    params.existingSecretConfig || {}
+  );
+  const incoming = normalizeConfigSegments(
+    params.incomingConfig || {},
+    params.incomingSecretConfig || {}
+  );
+
+  return {
+    config: params.incomingConfig !== undefined ? incoming.config : existing.config,
+    secret_config: mergeSecretConfig(existing.secret_config, incoming.secret_config),
+  };
 }
