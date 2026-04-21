@@ -48,6 +48,7 @@ export interface ServiceHealth {
   /** 最近连续失败次数（遇到最近一次成功即归零） */
   consecutiveFailures?: number;
   config?: TaskConfigData;
+  secret_config?: SecretConfigData;
   rules?: {
     success?: ValidationRules;
     increment?: ValidationRules;
@@ -96,8 +97,6 @@ export interface TaskConfigData {
   url?: string;
   urls?: string[]; // 支持多个 URL 轮询
   method?: string;
-  headers?: Record<string, string>;
-  cookie?: string;
   body?: string;
   timeout?: number;
   success_message_template?: string;
@@ -105,12 +104,24 @@ export interface TaskConfigData {
 
   // Supabase 专用
   supabase_url?: string;
-  supabase_key?: string;
   table_name?: string;
+}
 
-  // 通知专用
+/**
+ * 敏感配置数据
+ */
+export interface SecretConfigData {
+  headers?: Record<string, string>;
+  cookie?: string;
+  token?: string;
+  supabase_key?: string;
   notification_key?: string;
 }
+
+/**
+ * 运行时聚合后的完整配置
+ */
+export type RuntimeTaskConfigData = TaskConfigData & SecretConfigData;
 
 /**
  * 数据库表：service_configs (静态配置)
@@ -123,6 +134,7 @@ export interface DbServiceConfig {
   category?: string;
   enabled: boolean;
   config: TaskConfigData;
+  secret_config: SecretConfigData;
   rules: {
     success?: ValidationRules;
     increment?: ValidationRules;
@@ -160,6 +172,7 @@ export interface ServiceConfig {
   category?: string;
   type: 'http' | 'supabase_internal';
   config: TaskConfigData;
+  secret_config: SecretConfigData;
   rules: {
     success?: ValidationRules;
     increment?: ValidationRules;

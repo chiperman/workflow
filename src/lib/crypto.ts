@@ -1,9 +1,20 @@
 import crypto from 'crypto';
+import type { SecretConfigData, TaskConfigData, RuntimeTaskConfigData } from '@/types';
 
 /**
- * 敏感字段名列表
+ * UI 占位符，用于保留已有 secret
  */
-const SENSITIVE_KEYS = ['cookie', 'token', 'password', 'supabase_key', 'api_key', 'secret'];
+export const MASKED_SECRET_VALUE = '********';
+
+const LEGACY_SECRET_KEYS = [
+  'headers',
+  'cookie',
+  'token',
+  'supabase_key',
+  'notification_key',
+] as const;
+
+type ConfigValue = object;
 
 /**
  * 获取加密密钥 (从 APP_KEY 派生 32 字节密钥)
@@ -62,69 +73,181 @@ export function decrypt(encryptedText: string): string {
 }
 
 /**
- * 通用递归 JSON 对象类型
+ * 深拷贝 JSON 兼容对象
  */
-type ConfigObject = Record<string, unknown> | unknown[];
+function cloneConfigValue<T>(value: T): T {
+  if (Array.isArray(value)) {
+    return value.map(item => cloneConfigValue(item)) as T;
+  }
+  if (value && typeof value === 'object') {
+    const cloned: Record<string, unknown> = {};
+    Object.entries(value as Record<string, unknown>).forEach(([key, item]) => {
+      cloned[key] = cloneConfigValue(item);
+    });
+    return cloned as T;
+  }
+  return value;
+}
 
 /**
- * 递归加密对象中的敏感字段
+ * 递归加密 secret_config 中的所有字符串
  */
-export function encryptConfig(obj: ConfigObject): ConfigObject {
+export function encryptSecretConfig(obj: ConfigValue): ConfigValue {
   if (!obj || typeof obj !== 'object') return obj;
 
-  const newObj = (Array.isArray(obj) ? [...obj] : { ...obj }) as Record<string, unknown>;
+  const newObj = cloneConfigValue(obj) as Record<string, unknown>;
 
   for (const key in newObj) {
     const value = newObj[key];
     if (value && typeof value === 'object') {
-      newObj[key] = encryptConfig(value as ConfigObject);
-    } else if (typeof value === 'string' && SENSITIVE_KEYS.includes(key.toLowerCase())) {
+      newObj[key] = encryptSecretConfig(value as ConfigValue);
+    } else if (typeof value === 'string' && value.trim()) {
       newObj[key] = encrypt(value);
     }
   }
 
-  return newObj as ConfigObject;
+  return newObj as ConfigValue;
 }
 
 /**
- * 递归解密对象中的敏感字段
+ * 递归解密 secret_config 中的所有字符串
  */
-export function decryptConfig(obj: ConfigObject): ConfigObject {
+export function decryptSecretConfig(obj: ConfigValue): ConfigValue {
   if (!obj || typeof obj !== 'object') return obj;
 
-  const newObj = (Array.isArray(obj) ? [...obj] : { ...obj }) as Record<string, unknown>;
+  const newObj = cloneConfigValue(obj) as Record<string, unknown>;
 
   for (const key in newObj) {
     const value = newObj[key];
     if (value && typeof value === 'object') {
-      newObj[key] = decryptConfig(value as ConfigObject);
+      newObj[key] = decryptSecretConfig(value as ConfigValue);
     } else if (typeof value === 'string' && value.startsWith('enc:')) {
       newObj[key] = decrypt(value);
     }
   }
 
-  return newObj as ConfigObject;
+  return newObj as ConfigValue;
 }
 
 /**
- * 递归脱敏对象中的加密字段 (用于 UI 展示)
+ * 递归脱敏 secret_config (用于 UI 展示)
  */
-export function maskConfig(obj: ConfigObject): ConfigObject {
+export function maskSecretConfig(obj: ConfigValue): ConfigValue {
   if (!obj || typeof obj !== 'object') return obj;
 
-  const newObj = (Array.isArray(obj) ? [...obj] : { ...obj }) as Record<string, unknown>;
+  const newObj = cloneConfigValue(obj) as Record<string, unknown>;
 
   for (const key in newObj) {
     const value = newObj[key];
     if (value && typeof value === 'object') {
-      newObj[key] = maskConfig(value as ConfigObject);
-    } else if (
-      typeof value === 'string' &&
-      (value.startsWith('enc:') || SENSITIVE_KEYS.includes(key.toLowerCase()))
-    ) {
-      newObj[key] = '********';
+      newObj[key] = maskSecretConfig(value as ConfigValue);
+    } else if (typeof value === 'string' && value.trim()) {
+      newObj[key] = MASKED_SECRET_VALUE;
     }
   }
 
-  return newObj as ConfigObject;
+  return newObj as ConfigValue;
+}
+
+function pruneSecretValue(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    const items = value.map(item => pruneSecretValue(item)).filter(item => item !== undefined);
+    return items.length > 0 ? items : undefined;
+  }
+  if (value && typeof value === 'object') {
+    const pruned: Record<string, unknown> = {};
+    Object.entries(value as Record<string, unknown>).forEach(([key, item]) => {
+      const next = pruneSecretValue(item);
+      if (next !== undefined) {
+        pruned[key] = next;
+      }
+    });
+    return Object.keys(pruned).length > 0 ? pruned : undefined;
+  }
+  if (typeof value === 'string') {
+    return value.trim() ? value : undefined;
+  }
+  return value ?? undefined;
+}
+
+function mergePreservingMasked(existing: unknown, incoming: unknown): unknown {
+  if (incoming === undefined) {
+    return pruneSecretValue(existing);
+  }
+  if (typeof incoming === 'string') {
+    if (incoming === MASKED_SECRET_VALUE) {
+      return pruneSecretValue(existing);
+    }
+    return pruneSecretValue(incoming);
+  }
+  if (Array.isArray(incoming)) {
+    const merged = incoming
+      .map((item, index) =>
+        mergePreservingMasked(Array.isArray(existing) ? existing[index] : undefined, item)
+      )
+      .filter(item => item !== undefined);
+    return merged.length > 0 ? merged : undefined;
+  }
+  if (incoming && typeof incoming === 'object') {
+    const existingObject =
+      existing && typeof existing === 'object' && !Array.isArray(existing)
+        ? (existing as Record<string, unknown>)
+        : {};
+    const merged: Record<string, unknown> = {};
+    Object.entries(incoming as Record<string, unknown>).forEach(([key, item]) => {
+      const next = mergePreservingMasked(existingObject[key], item);
+      if (next !== undefined) {
+        merged[key] = next;
+      }
+    });
+    return Object.keys(merged).length > 0 ? merged : undefined;
+  }
+  return pruneSecretValue(incoming);
+}
+
+/**
+ * 将历史上放在 config 内的敏感字段统一迁移到 secret_config
+ */
+export function normalizeConfigSegments(
+  config: TaskConfigData = {},
+  secretConfig: SecretConfigData = {}
+): { config: TaskConfigData; secret_config: SecretConfigData } {
+  const nextConfig = cloneConfigValue(config) as Record<string, unknown>;
+  const nextSecretConfig = cloneConfigValue(secretConfig) as Record<string, unknown>;
+
+  LEGACY_SECRET_KEYS.forEach(key => {
+    if (nextConfig[key] !== undefined && nextSecretConfig[key] === undefined) {
+      nextSecretConfig[key] = nextConfig[key];
+    }
+    delete nextConfig[key];
+  });
+
+  return {
+    config: nextConfig as TaskConfigData,
+    secret_config: (pruneSecretValue(nextSecretConfig) ?? {}) as SecretConfigData,
+  };
+}
+
+/**
+ * 合并普通配置与解密后的敏感配置，供运行时使用
+ */
+export function mergeConfigSegments(
+  config: TaskConfigData = {},
+  secretConfig: SecretConfigData = {}
+): RuntimeTaskConfigData {
+  const normalized = normalizeConfigSegments(config, secretConfig);
+  return {
+    ...normalized.config,
+    ...normalized.secret_config,
+  };
+}
+
+/**
+ * 合并 UI 回传的 secret_config，保留未改动的掩码值
+ */
+export function mergeSecretConfig(
+  existing: SecretConfigData = {},
+  incoming?: SecretConfigData
+): SecretConfigData {
+  return (mergePreservingMasked(existing, incoming) ?? {}) as SecretConfigData;
 }

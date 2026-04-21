@@ -53,7 +53,8 @@ describe('DynamicService Robustness Tests', () => {
     type: 'http',
     enabled: true,
     notification_level: 'none',
-    config: { urls: ['https://api1.com', 'https://api2.com'], method: 'GET', headers: {} },
+    config: { urls: ['https://api1.com', 'https://api2.com'], method: 'GET' },
+    secret_config: { headers: {} },
     rules: { success: { status: 200 } },
     manual_count: 0,
     auto_count: 0,
@@ -71,9 +72,11 @@ describe('DynamicService Robustness Tests', () => {
     config: {
       urls: ['https://checkin.example.com/api/user/checkin'],
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       success_message_template: '{{service}} 签到成功，获得 {{points}} 积分 [{{time}}]',
       repeat_message_template: '{{service}} 今日已签到，{{message}}',
+    },
+    secret_config: {
+      headers: { 'Content-Type': 'application/json' },
     },
     rules: {
       success: {
@@ -202,7 +205,12 @@ describe('DynamicService Robustness Tests', () => {
 
   describe('Supabase Internal Modes', () => {
     it('should execute local mode when URL is missing', async () => {
-      const localConfig = { ...httpConfig, type: 'supabase_internal', config: {} } as ServiceConfig;
+      const localConfig = {
+        ...httpConfig,
+        type: 'supabase_internal',
+        config: {},
+        secret_config: {},
+      } as ServiceConfig;
       const service = new DynamicService(localConfig);
       const result = await service.testExecution();
 
@@ -214,7 +222,8 @@ describe('DynamicService Robustness Tests', () => {
       const remoteConfig = {
         ...httpConfig,
         type: 'supabase_internal',
-        config: { supabase_url: 'https://err.co', supabase_key: 'k' },
+        config: { supabase_url: 'https://err.co' },
+        secret_config: { supabase_key: 'k' },
       } as ServiceConfig;
 
       const createClientSpy = jest.spyOn(supabaseJs, 'createClient');

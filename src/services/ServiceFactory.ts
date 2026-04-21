@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import type { ServiceConfig, DbServiceJoined, DbServiceStats } from '@/types';
 import { DynamicService } from './DynamicService';
+import { normalizeConfigSegments } from '@/lib/crypto';
 
 export class ServiceFactory {
   /**
@@ -18,6 +19,8 @@ export class ServiceFactory {
       updated_at: '',
     };
 
+    const normalized = normalizeConfigSegments(item.config, item.secret_config);
+
     return {
       service: item.service,
       name: item.name,
@@ -25,7 +28,8 @@ export class ServiceFactory {
       description: item.description,
       category: item.category,
       enabled: item.enabled,
-      config: item.config,
+      config: normalized.config,
+      secret_config: normalized.secret_config,
       rules: item.rules,
       notification_level: item.notification_level,
       created_at: item.created_at,

@@ -2,7 +2,13 @@ import { withApiHandler } from '@/lib/api-helper';
 import { supabase } from '@/lib/supabase';
 import { DbServiceJoined, DbServiceStats } from '@/types';
 import { NextResponse } from 'next/server';
-import { encryptConfig, maskConfig } from '@/lib/crypto';
+import {
+  decryptSecretConfig,
+  encryptSecretConfig,
+  maskSecretConfig,
+  mergeSecretConfig,
+  normalizeConfigSegments,
+} from '@/lib/crypto';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,6 +42,10 @@ export const GET = withApiHandler(
 
       const result = {
         ...row,
+        ...normalizeConfigSegments(
+          row.config,
+          decryptSecretConfig(row.secret_config || {}) as typeof row.secret_config
+        ),
         manual_count: s.manual_count,
         auto_count: s.auto_count,
         failure_count: s.failure_count,
@@ -43,8 +53,10 @@ export const GET = withApiHandler(
         timestamp: s.updated_at || row.created_at,
       };
 
-      // 脱敏处理，防止敏感信息（即使加密了）在 UI 侧被完整暴露
-      return maskConfig(result);
+      return {
+        ...result,
+        secret_config: maskSecretConfig(result.secret_config || {}),
+      };
     });
   },
   { requireAuth: true }
@@ -59,10 +71,22 @@ const ALLOWED_CONFIG_KEYS = [
   'category',
   'type',
   'config',
+  'secret_config',
   'rules',
   'notification_level',
   'enabled',
 ];
+
+async function getExistingConfig(service: string) {
+  const { data, error } = await supabase
+    .from('service_configs')
+    .select('config, secret_config')
+    .eq('service', service)
+    .single();
+
+  if (error) throw error;
+  return data;
+}
 
 /**
  * 更新服务配置
@@ -79,13 +103,42 @@ export const PUT = withApiHandler(
       );
     }
 
+    const existing = await getExistingConfig(service);
+    const normalizedExisting = normalizeConfigSegments(
+      existing?.config || {},
+      decryptSecretConfig(existing?.secret_config || {}) as Record<string, unknown>
+    );
+    const normalizedIncoming = normalizeConfigSegments(body.config || {}, body.secret_config || {});
     const configToUpdate: Record<string, unknown> = {};
+
     ALLOWED_CONFIG_KEYS.forEach(key => {
       if (key in body && body[key] !== undefined) {
-        // 如果是 config 字段，则进行加密
-        configToUpdate[key] = key === 'config' ? encryptConfig(body[key]) : body[key];
+        if (key === 'config') {
+          configToUpdate[key] = normalizedIncoming.config;
+          return;
+        }
+        if (key === 'secret_config') {
+          const mergedSecrets = mergeSecretConfig(
+            normalizedExisting.secret_config,
+            normalizedIncoming.secret_config
+          );
+          configToUpdate[key] = encryptSecretConfig(mergedSecrets);
+          return;
+        }
+        configToUpdate[key] = body[key];
       }
     });
+
+    if ('config' in body && !('secret_config' in body)) {
+      configToUpdate.config = normalizedIncoming.config;
+    }
+    if ('secret_config' in body && !('config' in body)) {
+      const mergedSecrets = mergeSecretConfig(
+        normalizedExisting.secret_config,
+        normalizedIncoming.secret_config
+      );
+      configToUpdate.secret_config = encryptSecretConfig(mergedSecrets);
+    }
 
     const { error } = await supabase
       .from('service_configs')
@@ -113,13 +166,28 @@ export const POST = withApiHandler(
       );
     }
 
+    const normalizedIncoming = normalizeConfigSegments(body.config || {}, body.secret_config || {});
     const configToInsert: Record<string, unknown> = { service };
     ALLOWED_CONFIG_KEYS.forEach(key => {
       if (key in body && body[key] !== undefined) {
-        // 如果是 config 字段，则进行加密
-        configToInsert[key] = key === 'config' ? encryptConfig(body[key]) : body[key];
+        if (key === 'config') {
+          configToInsert[key] = normalizedIncoming.config;
+          return;
+        }
+        if (key === 'secret_config') {
+          configToInsert[key] = encryptSecretConfig(normalizedIncoming.secret_config);
+          return;
+        }
+        configToInsert[key] = body[key];
       }
     });
+
+    if (!('config' in configToInsert)) {
+      configToInsert.config = normalizedIncoming.config;
+    }
+    if (!('secret_config' in configToInsert)) {
+      configToInsert.secret_config = encryptSecretConfig(normalizedIncoming.secret_config);
+    }
 
     const { error } = await supabase.from('service_configs').insert([configToInsert]);
     if (error) throw error;

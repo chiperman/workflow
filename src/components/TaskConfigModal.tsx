@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import type { ServiceConfig } from '@/types';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { normalizeConfigSegments } from '@/lib/crypto';
 import {
   X,
   Save,
@@ -35,11 +36,15 @@ const DEFAULT_CONFIG: Partial<ServiceConfig> = {
   config: {
     urls: [''],
     method: 'POST',
-    headers: {},
-    cookie: '',
     body: '',
     success_message_template: '',
     repeat_message_template: '',
+  },
+  secret_config: {
+    headers: {},
+    cookie: '',
+    supabase_key: '',
+    notification_key: '',
   },
   rules: { success: { status: 200 } },
 };
@@ -74,20 +79,26 @@ export function TaskConfigModal({
 
     // 如果传入了 initialConfig，直接同步到本地状态，不再调用 API
     if (initialConfig) {
+      const normalized = normalizeConfigSegments(initialConfig.config, initialConfig.secret_config);
       const finalConfig = {
         ...initialConfig,
-        config: initialConfig.config || {
+        config: normalized.config || {
           urls: [''],
           method: 'POST',
-          headers: {},
           body: '',
           success_message_template: '',
           repeat_message_template: '',
         },
+        secret_config: normalized.secret_config || {
+          headers: {},
+          cookie: '',
+          supabase_key: '',
+          notification_key: '',
+        },
         rules: initialConfig.rules || { success: { status: 200, smart_matching: true } },
       };
       setConfig(finalConfig);
-      setHeadersStr(JSON.stringify(finalConfig.config?.headers || {}, null, 2));
+      setHeadersStr(JSON.stringify(finalConfig.secret_config?.headers || {}, null, 2));
       setRulesStr(JSON.stringify(finalConfig.rules?.success || {}, null, 2));
 
       // 如果已经有复杂的 json 规则，自动显示高级设置
@@ -354,11 +365,14 @@ export function TaskConfigModal({
                         <input
                           id="bark-key"
                           type={showBarkKey ? 'text' : 'password'}
-                          value={config.config?.notification_key || ''}
+                          value={config.secret_config?.notification_key || ''}
                           onChange={e =>
                             setConfig({
                               ...config,
-                              config: { ...config.config!, notification_key: e.target.value },
+                              secret_config: {
+                                ...config.secret_config!,
+                                notification_key: e.target.value,
+                              },
                             })
                           }
                           placeholder="individual device key"
@@ -490,11 +504,11 @@ export function TaskConfigModal({
                       </label>
                       <input
                         id="cookie"
-                        value={config.config?.cookie || ''}
+                        value={config.secret_config?.cookie || ''}
                         onChange={e =>
                           setConfig({
                             ...config,
-                            config: { ...config.config!, cookie: e.target.value },
+                            secret_config: { ...config.secret_config!, cookie: e.target.value },
                           })
                         }
                         placeholder="paste your cookie string here"
@@ -513,7 +527,10 @@ export function TaskConfigModal({
                         setHeadersStr(e.target.value);
                         try {
                           const h = JSON.parse(e.target.value);
-                          setConfig({ ...config, config: { ...config.config!, headers: h } });
+                          setConfig({
+                            ...config,
+                            secret_config: { ...config.secret_config!, headers: h },
+                          });
                         } catch (_err) {
                           // Silently handle invalid JSON while typing
                         }
@@ -617,11 +634,14 @@ export function TaskConfigModal({
                       <input
                         id="supabase-key"
                         type={showSupabaseKey ? 'text' : 'password'}
-                        value={config.config?.supabase_key || ''}
+                        value={config.secret_config?.supabase_key || ''}
                         onChange={e =>
                           setConfig({
                             ...config,
-                            config: { ...config.config!, supabase_key: e.target.value },
+                            secret_config: {
+                              ...config.secret_config!,
+                              supabase_key: e.target.value,
+                            },
                           })
                         }
                         placeholder="your-service-role-key"
