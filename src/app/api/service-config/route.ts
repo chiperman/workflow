@@ -3,11 +3,11 @@ import { supabase } from '@/lib/supabase';
 import { DbServiceJoined, DbServiceStats } from '@/types';
 import { NextResponse } from 'next/server';
 import {
-  decryptSecretConfig,
   encryptSecretConfig,
   maskSecretConfig,
-  mergeSecretConfig,
   normalizeConfigSegments,
+  normalizeStoredConfigSegments,
+  resolveUpdatedConfigSegments,
 } from '@/lib/crypto';
 
 export const dynamic = 'force-dynamic';
@@ -42,10 +42,7 @@ export const GET = withApiHandler(
 
       const result = {
         ...row,
-        ...normalizeConfigSegments(
-          row.config,
-          decryptSecretConfig(row.secret_config || {}) as typeof row.secret_config
-        ),
+        ...normalizeStoredConfigSegments(row.config, row.secret_config || {}),
         manual_count: s.manual_count,
         auto_count: s.auto_count,
         failure_count: s.failure_count,
@@ -104,40 +101,43 @@ export const PUT = withApiHandler(
     }
 
     const existing = await getExistingConfig(service);
-    const normalizedExisting = normalizeConfigSegments(
-      existing?.config || {},
-      decryptSecretConfig(existing?.secret_config || {}) as Record<string, unknown>
-    );
-    const normalizedIncoming = normalizeConfigSegments(body.config || {}, body.secret_config || {});
+    const hasConfig = 'config' in body && body.config !== undefined;
+    const hasSecretConfig = 'secret_config' in body && body.secret_config !== undefined;
+    const resolvedSegments =
+      hasConfig || hasSecretConfig
+        ? resolveUpdatedConfigSegments({
+            existingConfig: existing?.config || {},
+            existingSecretConfig: existing?.secret_config || {},
+            ...(hasConfig ? { incomingConfig: body.config } : {}),
+            ...(hasSecretConfig ? { incomingSecretConfig: body.secret_config } : {}),
+          })
+        : null;
     const configToUpdate: Record<string, unknown> = {};
 
     ALLOWED_CONFIG_KEYS.forEach(key => {
       if (key in body && body[key] !== undefined) {
         if (key === 'config') {
-          configToUpdate[key] = normalizedIncoming.config;
+          if (resolvedSegments) {
+            configToUpdate[key] = resolvedSegments.config;
+          }
           return;
         }
         if (key === 'secret_config') {
-          const mergedSecrets = mergeSecretConfig(
-            normalizedExisting.secret_config,
-            normalizedIncoming.secret_config
-          );
-          configToUpdate[key] = encryptSecretConfig(mergedSecrets);
+          if (resolvedSegments) {
+            configToUpdate[key] = encryptSecretConfig(resolvedSegments.secret_config);
+          }
           return;
         }
         configToUpdate[key] = body[key];
       }
     });
 
-    if ('config' in body && !('secret_config' in body)) {
-      configToUpdate.config = normalizedIncoming.config;
+    if (hasConfig && !('secret_config' in body) && resolvedSegments) {
+      configToUpdate.config = resolvedSegments.config;
+      configToUpdate.secret_config = encryptSecretConfig(resolvedSegments.secret_config);
     }
-    if ('secret_config' in body && !('config' in body)) {
-      const mergedSecrets = mergeSecretConfig(
-        normalizedExisting.secret_config,
-        normalizedIncoming.secret_config
-      );
-      configToUpdate.secret_config = encryptSecretConfig(mergedSecrets);
+    if (hasSecretConfig && !('config' in body) && resolvedSegments) {
+      configToUpdate.secret_config = encryptSecretConfig(resolvedSegments.secret_config);
     }
 
     const { error } = await supabase
