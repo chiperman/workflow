@@ -2,10 +2,15 @@ import { logger } from '@/lib/logger';
 import { supabase as defaultSupabase } from '@/lib/supabase';
 import { getBeijingTime } from '@/lib/utils';
 import { ServiceExecutor } from '@/lib/ServiceExecutor';
-import type { KeepAliveResult, ServiceConfig, ValidationRules } from '@/types';
+import type {
+  KeepAliveResult,
+  RuntimeTaskConfigData,
+  ServiceConfig,
+  ValidationRules,
+} from '@/types';
 import { BaseService } from './BaseService';
 import { createClient } from '@supabase/supabase-js';
-import { decryptConfig } from '@/lib/crypto';
+import { decryptSecretConfig, mergeConfigSegments } from '@/lib/crypto';
 
 export class DynamicService extends BaseService {
   public readonly fullConfig: ServiceConfig;
@@ -14,17 +19,19 @@ export class DynamicService extends BaseService {
     super(config.service);
     this.fullConfig = config;
     this.notificationLevel = config.notification_level;
-    this.notificationKey = config.config?.notification_key;
+    this.notificationKey = this.runtimeConfig.notification_key;
   }
 
   /**
    * 获取运行时配置 (自动处理解密和环境变量注入)
    */
-  private get runtimeConfig(): Record<string, string | undefined> {
-    const config = decryptConfig({ ...this.fullConfig.config }) as Record<
-      string,
-      string | undefined
-    >;
+  public get runtimeConfig(): RuntimeTaskConfigData {
+    const config = mergeConfigSegments(
+      this.fullConfig.config,
+      decryptSecretConfig({
+        ...this.fullConfig.secret_config,
+      }) as typeof this.fullConfig.secret_config
+    );
 
     // 环境变量注入优先级：配置项 > 环境变量 > 空
     // 特别针对 GLaDOS 签到场景

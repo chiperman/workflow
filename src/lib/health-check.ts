@@ -4,6 +4,7 @@ import { getBeijingDateString } from './utils';
 import { ServiceFactory } from '@/services/ServiceFactory';
 import { DynamicService } from '@/services/DynamicService';
 import { createClient } from '@supabase/supabase-js';
+import { maskSecretConfig } from './crypto';
 
 const HEARTBEAT_STALE_HOURS = 36;
 
@@ -77,7 +78,7 @@ async function getRemoteHeartbeat(service: DynamicService): Promise<{
   remoteHeartbeatAt?: string;
   remoteHeartbeatLagging?: boolean;
 }> {
-  const { config } = service.fullConfig;
+  const config = service.runtimeConfig;
   const isRemote = !!(config.supabase_url && config.supabase_key);
 
   if (!isRemote || service.type !== 'supabase_internal') {
@@ -141,12 +142,16 @@ export async function checkServiceHealth(serviceId: string): Promise<ServiceHeal
 
   // 如果是 DynamicService，获取其完整配置以供前端瞬间展示
   let config = undefined;
+  let secretConfig = undefined;
   let rules = undefined;
   let remoteHeartbeatAt = undefined;
   let remoteHeartbeatLagging = undefined;
 
   if (service instanceof DynamicService) {
     config = service.fullConfig?.config;
+    secretConfig = maskSecretConfig(
+      service.fullConfig?.secret_config || {}
+    ) as typeof service.fullConfig.secret_config;
     rules = service.fullConfig?.rules;
     ({ remoteHeartbeatAt, remoteHeartbeatLagging } = await getRemoteHeartbeat(service));
   }
@@ -166,6 +171,7 @@ export async function checkServiceHealth(serviceId: string): Promise<ServiceHeal
     ...(remoteHeartbeatAt ? { remoteHeartbeatAt } : {}),
     ...(remoteHeartbeatLagging !== undefined ? { remoteHeartbeatLagging } : {}),
     ...(config ? { config } : {}),
+    ...(secretConfig ? { secret_config: secretConfig } : {}),
     ...(rules ? { rules } : {}),
   };
 

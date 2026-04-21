@@ -2,6 +2,7 @@ import { withApiHandler } from '@/lib/api-helper';
 import { DynamicService } from '@/services/DynamicService';
 import { ServiceConfig } from '@/types';
 import { NextResponse } from 'next/server';
+import { normalizeConfigSegments } from '@/lib/crypto';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,10 +13,13 @@ export const dynamic = 'force-dynamic';
 export const POST = withApiHandler(
   async request => {
     const body = await request.json();
+    const normalized = normalizeConfigSegments(body.config || {}, body.secret_config || {});
 
     // 构造临时服务实例
     const tempConfig: ServiceConfig = {
       ...body,
+      config: normalized.config,
+      secret_config: normalized.secret_config,
       // 填充必要的默认字段，确保 DynamicService 能正常构造
       service: body.service || 'test-service',
       manual_count: 0,
