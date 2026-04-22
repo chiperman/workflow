@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.9.10](https://github.com/chiperman/workflow/compare/v0.9.9...v0.9.10) (2026-04-22)
+
+
+### Bug Fixes
+
+* **config:** 修复密钥更新时的保留与迁移逻辑 ([145fe56](https://github.com/chiperman/workflow/commit/145fe56731b088d93237db0ff6588d442583ba3e))
+* **config:** 修正请求头脱敏范围与密钥展示 ([7064112](https://github.com/chiperman/workflow/commit/7064112de4a76e3cda2c67023d26b72255519e35))
+
 ### [0.9.9](https://github.com/chiperman/workflow/compare/v0.9.8...v0.9.9) (2026-04-20)
 
 
