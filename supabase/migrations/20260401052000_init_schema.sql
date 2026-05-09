@@ -66,17 +66,27 @@ BEGIN
 END $$;
 
 -- 3.2 Public 权限 (心跳限制)
--- 仅允许 public 角色进行必要的读取和更新，禁止删除。
+-- 允许匿名和认证用户进行必要的心跳操作。
 DO $$ 
 BEGIN
     DROP POLICY IF EXISTS "pub_heartbeat" ON public.keep_alive;
-    
     DROP POLICY IF EXISTS "pub_heartbeat_read" ON public.keep_alive;
-    CREATE POLICY "pub_heartbeat_read" ON public.keep_alive FOR SELECT TO public USING (true);
-
     DROP POLICY IF EXISTS "pub_heartbeat_insert" ON public.keep_alive;
-    CREATE POLICY "pub_heartbeat_insert" ON public.keep_alive FOR INSERT TO public WITH CHECK (true);
-
     DROP POLICY IF EXISTS "pub_heartbeat_update" ON public.keep_alive;
-    CREATE POLICY "pub_heartbeat_update" ON public.keep_alive FOR UPDATE TO public USING (true) WITH CHECK (true);
+
+    -- 统一策略支持 SELECT, INSERT, UPDATE，确保 Upsert 逻辑不被 RLS 拦截
+    CREATE POLICY "allow_heartbeat_ops" 
+    ON public.keep_alive 
+    FOR ALL 
+    TO anon, authenticated 
+    USING (true) 
+    WITH CHECK (true);
+
+    -- 针对日志表增加 INSERT 权限，确保推送时可以记录远程状态
+    DROP POLICY IF EXISTS "allow_anon_insert_logs" ON public.keep_alive_logs;
+    CREATE POLICY "allow_anon_insert_logs" 
+    ON public.keep_alive_logs 
+    FOR INSERT 
+    TO anon, authenticated 
+    WITH CHECK (true);
 END $$;
