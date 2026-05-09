@@ -1,6 +1,6 @@
 import { withApiHandler } from '@/lib/api-helper';
 import { supabase } from '@/lib/supabase';
-import { DbServiceJoined, DbServiceStats } from '@/types';
+import { DbServiceConfig, DbServiceJoined, DbServiceStats } from '@/types';
 import { NextResponse } from 'next/server';
 import {
   encryptSecretConfig,
@@ -101,42 +101,29 @@ export const PUT = withApiHandler(
     }
 
     const existing = await getExistingConfig(service);
-    const hasConfig = 'config' in body && body.config !== undefined;
-    const hasSecretConfig = 'secret_config' in body && body.secret_config !== undefined;
     const resolvedSegments =
-      hasConfig || hasSecretConfig
+      ('config' in body && body.config !== undefined) ||
+      ('secret_config' in body && body.secret_config !== undefined)
         ? resolveUpdatedConfigSegments({
             existingConfig: existing?.config || {},
             existingSecretConfig: existing?.secret_config || {},
-            ...(hasConfig ? { incomingConfig: body.config } : {}),
-            ...(hasSecretConfig ? { incomingSecretConfig: body.secret_config } : {}),
+            ...('config' in body ? { incomingConfig: body.config } : {}),
+            ...('secret_config' in body ? { incomingSecretConfig: body.secret_config } : {}),
           })
         : null;
-    const configToUpdate: Record<string, unknown> = {};
 
-    ALLOWED_CONFIG_KEYS.forEach(key => {
-      if (key in body && body[key] !== undefined) {
-        if (key === 'config') {
-          if (resolvedSegments) {
-            configToUpdate[key] = resolvedSegments.config;
-          }
-          return;
-        }
-        if (key === 'secret_config') {
-          if (resolvedSegments) {
-            configToUpdate[key] = encryptSecretConfig(resolvedSegments.secret_config);
-          }
-          return;
-        }
-        configToUpdate[key] = body[key];
-      }
-    });
+    const configToUpdate: Partial<DbServiceConfig> = {};
+    if (body.name !== undefined) configToUpdate.name = body.name;
+    if (body.description !== undefined) configToUpdate.description = body.description;
+    if (body.category !== undefined) configToUpdate.category = body.category;
+    if (body.type !== undefined) configToUpdate.type = body.type;
+    if (body.rules !== undefined) configToUpdate.rules = body.rules;
+    if (body.notification_level !== undefined)
+      configToUpdate.notification_level = body.notification_level;
+    if (body.enabled !== undefined) configToUpdate.enabled = body.enabled;
 
-    if (hasConfig && !('secret_config' in body) && resolvedSegments) {
+    if (resolvedSegments) {
       configToUpdate.config = resolvedSegments.config;
-      configToUpdate.secret_config = encryptSecretConfig(resolvedSegments.secret_config);
-    }
-    if (hasSecretConfig && !('config' in body) && resolvedSegments) {
       configToUpdate.secret_config = encryptSecretConfig(resolvedSegments.secret_config);
     }
 
