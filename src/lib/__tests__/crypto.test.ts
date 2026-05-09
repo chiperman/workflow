@@ -139,4 +139,15 @@ describe('crypto config segmentation', () => {
       },
     });
   });
+
+  it('should handle legacy encrypted secrets in config when merging for runtime', () => {
+    const runtime = mergeConfigSegments(
+      {
+        cookie: encrypt('legacy-encrypted-cookie'),
+      } as unknown as import('@/types').TaskConfigData,
+      {}
+    );
+
+    expect(runtime.cookie).toBe('legacy-encrypted-cookie');
+  });
 });
