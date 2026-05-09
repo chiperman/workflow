@@ -348,7 +348,7 @@ export function mergeConfigSegments(
   config: TaskConfigData = {},
   secretConfig: SecretConfigData = {}
 ): RuntimeTaskConfigData {
-  const normalized = normalizeConfigSegments(config, secretConfig);
+  const normalized = normalizeStoredConfigSegments(config, secretConfig);
   const headers = {
     ...(normalized.config.headers || {}),
     ...(normalized.secret_config.headers || {}),
