@@ -60,6 +60,7 @@ export function TaskConfigModal({
   const [isTesting, setIsTesting] = useState(false);
   const [showAdvancedRules, setShowAdvancedRules] = useState(false);
   const [showBarkKey, setShowBarkKey] = useState(false);
+  const [showSupabaseKey, setShowSupabaseKey] = useState(false);
 
   const [config, setConfig] = useState<Partial<ServiceConfig>>(DEFAULT_CONFIG);
   // 局部状态处理 JSON 字符串，避免直接绑定 JSON.stringify 导致的编辑卡顿
@@ -649,7 +650,7 @@ export function TaskConfigModal({
                     <div className="relative">
                       <input
                         id="supabase-key"
-                        type="password"
+                        type={showSupabaseKey ? 'text' : 'password'}
                         value={config.secret_config?.supabase_key || ''}
                         onChange={e =>
                           setConfig({
@@ -663,8 +664,23 @@ export function TaskConfigModal({
                         placeholder="your-service-role-key"
                         className="w-full pl-3 pr-10 py-2 bg-[#f9f9f9] border border-[#e5e5e0] rounded-lg text-sm focus:outline-none focus:border-[#d97757]/50"
                       />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setShowSupabaseKey(!showSupabaseKey)}
+                        className="absolute right-1 top-1/2 -translate-y-1/2 text-text-secondary hover:text-foreground"
+                        aria-label={showSupabaseKey ? 'Hide service key' : 'Show service key'}
+                      >
+                        {showSupabaseKey ? (
+                          <EyeOff className="w-4 h-4" aria-hidden="true" />
+                        ) : (
+                          <Eye className="w-4 h-4" aria-hidden="true" />
+                        )}
+                      </Button>
                     </div>
                   </div>
+
                   <div className="space-y-1.5">
                     <label
                       htmlFor="table-name"
