@@ -77,7 +77,7 @@ BEGIN
     -- 统一策略支持 SELECT, INSERT, UPDATE，确保 Upsert 逻辑不被 RLS 拦截
     CREATE POLICY "allow_heartbeat_ops" 
     ON public.keep_alive 
-    FOR ALL 
+    FOR SELECT, INSERT, UPDATE 
     TO anon, authenticated 
     USING (true) 
     WITH CHECK (true);
