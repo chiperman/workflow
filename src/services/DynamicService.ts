@@ -172,20 +172,46 @@ export class DynamicService extends BaseService {
         const remoteClient = createClient(config.supabase_url!, config.supabase_key!);
         const targetTable = config.table_name || 'keep_alive';
 
-        // 升级逻辑：从简单的 select 改为 upsert (插入/更新心跳数据)
-        // 这样可以产生真实的 WAL 日志，比简单的查询更难被忽略。
-        const { error } = await remoteClient.from(targetTable).upsert(
-          {
-            service: this.serviceName,
-            last_active_at: new Date().toISOString(),
-          },
-          { onConflict: 'service' }
-        );
+        const heartbeat = {
+          service: this.serviceName,
+          last_active_at: new Date().toISOString(),
+        };
 
-        if (error) {
-          throw new Error(`Remote Supabase heart-beat failed: ${error.message}`);
+        const { error: upsertError } = await remoteClient
+          .from(targetTable)
+          .upsert(heartbeat, { onConflict: 'service' });
+
+        if (upsertError) {
+          throw new Error(`Remote Supabase heart-beat write failed: ${upsertError.message}`);
         }
-        logger.info(`[${this.serviceName}] Remote Supabase heart-beat successful.`);
+
+        const { error: readBackError } = await remoteClient
+          .from(targetTable)
+          .select('service,last_active_at')
+          .eq('service', this.serviceName)
+          .maybeSingle();
+
+        if (readBackError) {
+          throw new Error(`Remote Supabase heart-beat readback failed: ${readBackError.message}`);
+        }
+
+        if (config.probe_table) {
+          const { error: probeError } = await remoteClient
+            .from(config.probe_table)
+            .select('*')
+            .limit(1);
+
+          if (probeError) {
+            throw new Error(
+              `Remote Supabase probe table "${config.probe_table}" failed: ${probeError.message}`
+            );
+          }
+        }
+
+        logger.info(`[${this.serviceName}] Remote Supabase heart-beat successful.`, {
+          targetTable,
+          probeTable: config.probe_table || null,
+        });
       }
 
       const beijingTime = getBeijingTime();

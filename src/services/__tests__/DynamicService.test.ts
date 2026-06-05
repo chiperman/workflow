@@ -11,9 +11,15 @@ jest.mock('@/lib/supabase', () => ({
 
 jest.mock('@supabase/supabase-js', () => ({
   createClient: jest.fn().mockReturnValue({
-    from: jest.fn().mockReturnValue({
+    from: jest.fn(() => ({
       upsert: jest.fn().mockResolvedValue({ data: null, error: null }),
-    }),
+      select: jest.fn(() => ({
+        eq: jest.fn(() => ({
+          maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
+        })),
+        limit: jest.fn().mockResolvedValue({ data: [], error: null }),
+      })),
+    })),
   }),
 }));
 
@@ -239,7 +245,83 @@ describe('DynamicService Robustness Tests', () => {
       const result = await service.testExecution();
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain('Remote Supabase heart-beat failed');
+      expect(result.error).toContain('Remote Supabase heart-beat write failed');
+      createClientSpy.mockRestore();
+    });
+
+    it('should write heartbeat, read it back, and probe configured table', async () => {
+      const remoteConfig = {
+        ...httpConfig,
+        type: 'supabase_internal',
+        config: {
+          supabase_url: 'https://project.supabase.co',
+          table_name: 'keep_alive',
+          probe_table: 'memos',
+        },
+        secret_config: { supabase_key: 'k' },
+      } as ServiceConfig;
+
+      const upsert = jest.fn().mockResolvedValue({ data: null, error: null });
+      const maybeSingle = jest.fn().mockResolvedValue({ data: null, error: null });
+      const limit = jest.fn().mockResolvedValue({ data: [], error: null });
+      const from = jest.fn((table: string) => ({
+        upsert,
+        select: jest.fn(() => ({
+          eq: jest.fn(() => ({ maybeSingle })),
+          limit,
+        })),
+        table,
+      }));
+      const createClientSpy = jest.spyOn(supabaseJs, 'createClient');
+      createClientSpy.mockReturnValueOnce({
+        from,
+      } as unknown as ReturnType<typeof supabaseJs.createClient>);
+
+      const service = new DynamicService(remoteConfig);
+      const result = await service.testExecution();
+
+      expect(result.success).toBe(true);
+      expect(from).toHaveBeenCalledWith('keep_alive');
+      expect(from).toHaveBeenCalledWith('memos');
+      expect(upsert).toHaveBeenCalledTimes(1);
+      expect(maybeSingle).toHaveBeenCalledTimes(1);
+      expect(limit).toHaveBeenCalledWith(1);
+      createClientSpy.mockRestore();
+    });
+
+    it('should report probe table failures separately', async () => {
+      const remoteConfig = {
+        ...httpConfig,
+        type: 'supabase_internal',
+        config: {
+          supabase_url: 'https://project.supabase.co',
+          probe_table: 'memos',
+        },
+        secret_config: { supabase_key: 'k' },
+      } as ServiceConfig;
+
+      const from = jest.fn((table: string) => ({
+        upsert: jest.fn().mockResolvedValue({ data: null, error: null }),
+        select: jest.fn(() => ({
+          eq: jest.fn(() => ({
+            maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
+          })),
+          limit: jest.fn().mockResolvedValue({
+            data: null,
+            error: { message: table === 'memos' ? 'permission denied' : 'unexpected' },
+          }),
+        })),
+      }));
+      const createClientSpy = jest.spyOn(supabaseJs, 'createClient');
+      createClientSpy.mockReturnValueOnce({
+        from,
+      } as unknown as ReturnType<typeof supabaseJs.createClient>);
+
+      const service = new DynamicService(remoteConfig);
+      const result = await service.testExecution();
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Remote Supabase probe table "memos" failed');
       createClientSpy.mockRestore();
     });
   });
