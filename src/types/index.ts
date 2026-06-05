@@ -106,6 +106,7 @@ export interface TaskConfigData {
   // Supabase 专用
   supabase_url?: string;
   table_name?: string;
+  probe_table?: string;
 }
 
 /**

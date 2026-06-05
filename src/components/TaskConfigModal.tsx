@@ -701,6 +701,27 @@ export function TaskConfigModal({
                       className="w-full px-3 py-2 bg-[#f9f9f9] border border-[#e5e5e0] rounded-lg text-sm focus:outline-none focus:border-[#d97757]/50"
                     />
                   </div>
+
+                  <div className="space-y-1.5">
+                    <label
+                      htmlFor="probe-table"
+                      className="text-[11px] font-medium text-text-tertiary"
+                    >
+                      Probe Table (optional)
+                    </label>
+                    <input
+                      id="probe-table"
+                      value={config.config?.probe_table || ''}
+                      onChange={e =>
+                        setConfig({
+                          ...config,
+                          config: { ...config.config!, probe_table: e.target.value },
+                        })
+                      }
+                      placeholder="memos, users, or another business table"
+                      className="w-full px-3 py-2 bg-[#f9f9f9] border border-[#e5e5e0] rounded-lg text-sm focus:outline-none focus:border-[#d97757]/50"
+                    />
+                  </div>
                 </section>
               )}
 
