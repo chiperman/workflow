@@ -1,133 +1,177 @@
 # Workflow Operations Center
 
-一套基于 Next.js 16 的轻量级全栈自动化保活解决方案。旨在通过统一的控制面板管理、监控并自动执行各类保活协议（如 Supabase, GLaDOS 等），彻底解决因不活跃导致的服务停用问题。
+Workflow Operations Center 是一个私有的任务维护控制台，用来集中配置、触发和观察周期性保活任务。当前项目基于 Next.js App Router 与 Supabase 构建，适合部署在 Vercel 上，由 Vercel Cron 定时调用统一任务入口。
 
----
+它解决的核心问题很具体：把 Supabase、GLaDOS 或其他 HTTP 型维护任务放到同一个面板里管理，记录每次执行结果，并在需要时通过 Bark 推送通知。
 
-## 🚀 快速入门 (Quick Start)
+## 当前能力
 
-### 1. 准备工作 (Prerequisites)
+- 任务配置：通过控制台新增、编辑、启停和删除维护任务。
+- 任务执行：支持手动触发单个任务，也支持 `/api/cron-all` 批量执行所有启用任务。
+- 任务类型：支持通用 HTTP 任务与 Supabase 内部维护任务。
+- 成功判定：支持状态码、JSON 路径、操作符和期望值组合校验。
+- 执行记录：保存成功、失败、耗时、触发来源和响应摘要。
+- 状态视图：提供任务卡片、系统健康状态和年度热力图。
+- 通知策略：支持全局 Bark Key，也支持任务级通知配置。
+- 访问控制：控制台使用 `APP_KEY` 登录，自动化入口使用 `CRON_SECRET` 鉴权。
 
-- **Supabase**: 创建一个免费项目。
-- **Node.js**: 建议版本 `v20.x` 或以上。
+## 技术栈
 
-### 2. 克隆与安装 (Installation)
+- Next.js 16 / React 19 / TypeScript
+- Tailwind CSS 4 / Framer Motion / SWR
+- Supabase PostgreSQL
+- Jest / React Testing Library / Playwright
+- ESLint / Prettier / Commitlint / Husky
+
+## 本地开发
+
+### 环境要求
+
+- Node.js 20 及以上，仓库内提供 `.nvmrc`
+- npm
+- Supabase 项目
+- Supabase CLI，可通过 `npx supabase` 使用
+
+### 安装依赖
 
 ```bash
-git clone https://github.com/your-username/workflow.git
-cd workflow
 npm install
 ```
 
-### 3. 配置环境变量 (Configuration)
-
-复制示例环境文件并填写您的密钥：
+### 配置环境变量
 
 ```bash
 cp env.example .env.local
 ```
 
-> ⚠️ **注意**: 必须填写 `NEXT_PUBLIC_SUPABASE_URL` 和 `SUPABASE_SERVICE_ROLE_KEY`。
-
-登录 [Supabase Dashboard](https://supabase.com/dashboard) 创建项目。
-
-### 4. 数据库初始化 (Database)
-
-本项目使用 Supabase Migrations 进行版本管理。请确保已安装 Supabase CLI（`npx supabase`）：
+至少需要填写：
 
 ```bash
-# 将本地迁移推送到远程数据库
+NEXT_PUBLIC_SUPABASE_URL=...
+SUPABASE_SERVICE_ROLE_KEY=...
+APP_KEY=...
+CRON_SECRET=...
+```
+
+可选变量：
+
+```bash
+BARK_DEVICE_KEY=...
+LOG_LEVEL=info
+```
+
+注意：`SUPABASE_SERVICE_ROLE_KEY` 只应存在于服务端环境，不要暴露到浏览器或公开日志。
+
+### 初始化数据库
+
+项目使用 Supabase migration 管理表结构：
+
+```bash
 npx supabase db push
 ```
 
-> 💡 **提示**: 初始架构包含 4 表分离架构与 RLS 权限强化策略。详情见 [**supabase/migrations**](./supabase/migrations)。
+当前 migration 位于 `supabase/migrations/`，包含初始化表结构和任务密钥配置字段。
 
-### 5. 启动开发服务器 (Run)
+### 启动开发服务
 
 ```bash
 npm run dev
 ```
 
-访问 `http://localhost:3000` 即可看到控制面板。
+打开 `http://localhost:3000`，使用 `.env.local` 中的 `APP_KEY` 登录控制台。
 
----
+## 常用命令
 
-## ⚙️ 配置说明 (Configuration)
+| 命令                 | 用途                               |
+| -------------------- | ---------------------------------- |
+| `npm run dev`        | 启动本地开发服务                   |
+| `npm run lint`       | 运行 ESLint                        |
+| `npm run lint:check` | 以零 warning 标准检查 lint         |
+| `npm run type-check` | 运行 TypeScript 类型检查           |
+| `npm test`           | 运行 Jest 测试                     |
+| `npm run test:e2e`   | 运行 Playwright E2E 测试           |
+| `npm run build`      | 先 lint、类型检查，再构建生产包    |
+| `npm run release`    | 使用 standard-version 生成版本变更 |
 
-### 1. 环境变量 (.env)
+## 运行方式
 
-| 变量名                      | 说明                             | 示例                      |
-| :-------------------------- | :------------------------------- | :------------------------ |
-| `NEXT_PUBLIC_SUPABASE_URL`  | Supabase 项目 API 地址           | `https://xyz.supabase.co` |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase 服务角色密钥 (不可泄露) | `ey...`                   |
-| `APP_KEY`                   | 访问控制面板的专用密钥           | `my-secret-key`           |
-| `CRON_SECRET`               | Vercel Cron 任务鉴权密钥         | `cron-secret-123`         |
-| `GLADOS_COOKIE`             | GLaDOS 自动签到所需的 Cookie     | `koa:sess=...`            |
-| `BARK_DEVICE_KEY`           | Bark iOS 推送设备密钥            | `abc123def456`            |
-| `LOG_LEVEL`                 | 日志级别 (debug/info/warn/error) | `info`                    |
+### 控制台登录
 
-### 2. 任务配置项 (Task Settings)
+控制台通过 `/login` 输入 `APP_KEY` 登录。登录成功后会写入 `workflow_session` Cookie，有效期 7 天。
 
-通过 UI 编辑任务时，可配置以下核心参数：
+### 手动触发任务
 
-- **Service ID**: 任务唯一标识符，用于 API 定位。
-- **Task Type**:
-  - `http`: 外部接口保活 (支持多 URL 冗余、自定义 Method/Headers/Body)。
-  - `supabase_internal`: 数据库内部保活逻辑。
-- **Notification Level**:
-  - `always`: 每次执行均推送通知。
-  - `failure-only`: 仅在执行失败时推送。
-  - `none`: 不推送通知。
-- **Success Rules**: 基于 JSON 路径、操作符（eq, neq, gt, lt, in, contains）及期望值灵活定义执行成功标准。
+控制台内可以直接触发单个任务。后端实际调用：
 
-### 3. 在线配置 (Online Configuration)
+```text
+POST /api/tasks/[id]?trigger=manual
+```
 
-本系统支持**零代码、免重启**的动态配置：
+### 定时触发任务
 
-- **即时生效**: 通过控制面板底部的 `+ Add Task` 或任务卡片上的 `Edit` 按钮即可进入配置界面。所有更改直接保存至 Supabase 数据库，后端 Cron 任务及前端展示将立即同步更新。
-- **安全隔离**: 敏感配置项（如 API Keys）建议在 UI 中使用环境变量占位符，避免在数据库中直接明文存储。
-- **配置导出**: 如果需要备份或迁移，可直接在 Supabase Dashboard 导出 `service_config` 表的数据。
+Vercel Cron 当前配置在 `vercel.json`：
 
----
+```json
+{
+  "crons": [
+    {
+      "path": "/api/cron-all",
+      "schedule": "0 1 * * *"
+    }
+  ]
+}
+```
 
-## 🎨 核心功能
+`/api/cron-all` 会加载所有启用任务并并行执行。请求需要带上：
 
-- **可视化热力图**: GitHub 风格的签到统计，任务状态一目了然。
-- **动态任务系统**: 无需修改代码，通过 UI 直接添加、编辑或删除保活任务。
-- **智能化通知策略**: 支持按需触发 Bark 推送，告警精确，拒绝骚扰。
-- **增强型日志系统**: 记录每次执行的详细消息、状态和耗时，并支持在验证失败时记录响应片段。
-- **安全保障**: 全接口鉴权保护，支持独立 APP Key 访问控制。
-- **Anthropic 极简设计**: 沉浸式、极轻量且专注的运维视觉体验。
+```text
+Authorization: Bearer <CRON_SECRET>
+```
 
----
+## 目录结构
 
-## 📚 详细文档 (Documentation)
+```text
+workflow/
+├── docs/                  # API、配置、测试和发布说明
+├── e2e/                   # Playwright 测试
+├── src/
+│   ├── app/               # Next.js 页面与 API Routes
+│   ├── components/        # 页面组件与基础 UI
+│   ├── config/            # 常量与 SWR 配置
+│   ├── hooks/             # 前端数据 hooks
+│   ├── lib/               # 鉴权、Supabase、日志、工具函数
+│   ├── services/          # 任务执行与服务工厂
+│   └── types/             # 共享类型
+├── supabase/              # Supabase 配置与 migrations
+├── env.example            # 环境变量示例
+├── vercel.json            # Vercel Cron 配置
+└── package.json           # 脚本与依赖
+```
 
-为保持简洁，更多细节已迁移至专门的文档：
+## 文档入口
 
-- 🛠️ [**开发指南**](./docs/DEVELOPMENT.md) - 架构说明、目录结构、如何添加新服务。
-- ⚙️ [**配置手册**](./docs/TASK_CONFIGURATION.md) - 深入了解任务 ID、HTTP 配置及校验规则。
-- 📋 [**API 参考**](./docs/API.md) - 核心端点定义、鉴权模式及变更日志。
-- 🧪 [**测试说明**](./docs/TESTING.md) - 单元测试与 UI 组件验证指南。
+- [开发指南](./docs/DEVELOPMENT.md)：架构、目录和新增协议说明。
+- [任务配置](./docs/TASK_CONFIGURATION.md)：任务字段、HTTP 配置和成功规则。
+- [API 文档](./docs/API.md)：核心接口、鉴权方式和响应格式。
+- [测试指南](./docs/TESTING.md)：Jest、Playwright 和组件测试范围。
+- [Git 工作流](./docs/GIT_WORKFLOW.md)：提交、分支和发布约定。
+- [发布检查清单](./docs/RELEASE_SETUP_CHECKLIST.md)：上线前配置核对。
 
----
+## 部署
 
-## 🛠️ 技术栈
+推荐部署到 Vercel：
 
-- **Frontend**: Next.js 16 (App Router), React 19, Framer Motion, Tailwind CSS 4.
-- **Backend**: Next.js API Routes, Supabase (PostgreSQL).
-- **Tooling**: Jest, SWR, ESLint, Commitlint.
+1. 关联代码仓库。
+2. 在 Vercel Project Settings 中配置 `.env.local` 对应的环境变量。
+3. 确认 Supabase migration 已推送到目标项目。
+4. 检查 `vercel.json` 中的 Cron 时间是否符合预期。
+5. 部署后访问控制台，创建或校验任务配置。
+6. 手动触发一次任务，并确认执行记录、热力图和通知符合预期。
 
----
+## 维护注意事项
 
-## 📦 部署 (Deployment)
-
-推荐部署至 **Vercel**：
-
-1. 关联 GitHub 仓库。
-2. 在 Vercel Settings 中配置环境变量。
-3. 检查 `vercel.json` 中的 Cron 调度是否符合您的时区需求。
-
----
-
-**最后更新**: 2026-04-01 (架构版本 2.0.0)
+- 新增任务类型前，优先确认现有 `DynamicService` 是否已经能覆盖。
+- 涉及敏感值时，优先使用环境变量或 secret 字段，不要把密钥写入普通配置。
+- 修改任务执行链路后，至少运行 `npm run type-check`、`npm test`，必要时补充 `npm run test:e2e`。
+- 修改 Cron 行为时，同步更新 `vercel.json` 与本文档。
+- 发布版本使用 `npm run release`，变更记录维护在 [CHANGELOG.md](./CHANGELOG.md)。
