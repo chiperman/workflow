@@ -46,3 +46,4 @@ next-env.d.ts
 
 # local notes (AI tasks, personal docs)
 .notes/
+.env*.local

@@ -29,37 +29,45 @@ export const Stats = memo(function Stats({
   consecutiveFailures,
   remoteHeartbeatLagging,
 }: StatsProps) {
+  const items = [
+    {
+      label: 'Auto',
+      value: stats.auto_count,
+      dotClassName: 'bg-[#a8a8a0]',
+    },
+    {
+      label: 'Manual',
+      value: stats.manual_count,
+      dotClassName: 'bg-[#a8a8a0]',
+    },
+    {
+      label: 'Failed',
+      value: stats.failure_count,
+      dotClassName: displayStatus === 'error' ? 'bg-red-500' : 'bg-[#c9c9c2]',
+    },
+  ];
+
   return (
-    <div aria-label="Task statistics">
-      <div className="flex mt-4 text-xs font-mono text-text-secondary uppercase tracking-wider">
-        <div className="flex items-center gap-1.5 w-24 shrink-0">
-          <span
-            className={`w-1.5 h-1.5 rounded-full ${displayStatus === 'error' ? 'bg-red-500' : 'bg-blue-400'}`}
-            aria-hidden="true"
-          ></span>
-          <span>
-            Auto: <RollingNumber value={stats.auto_count} />
-          </span>
-        </div>
-        <div className="flex items-center gap-1.5 w-28 shrink-0">
-          <span
-            className={`w-1.5 h-1.5 rounded-full ${displayStatus === 'error' ? 'bg-red-500' : 'bg-emerald-400'}`}
-            aria-hidden="true"
-          ></span>
-          <span>
-            Manual: <RollingNumber value={stats.manual_count} />
-          </span>
-        </div>
-        <div className="flex items-center gap-1.5 w-28 shrink-0">
-          <span className="w-1.5 h-1.5 rounded-full bg-red-500" aria-hidden="true"></span>
-          <span>
-            Failed: <RollingNumber value={stats.failure_count} />
-          </span>
-        </div>
+    <div className="mt-5" aria-label="Task statistics">
+      <div className="grid grid-cols-3 gap-2 border-y border-[#f0f0ed] py-3">
+        {items.map(item => (
+          <div key={item.label} className="min-w-0">
+            <div className="mb-1 flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.08em] text-text-secondary">
+              <span
+                className={`h-1.5 w-1.5 rounded-full ${item.dotClassName}`}
+                aria-hidden="true"
+              />
+              <span className="truncate">{item.label}</span>
+            </div>
+            <div className="font-mono text-lg leading-none tabular-nums text-foreground">
+              <RollingNumber value={item.value} />
+            </div>
+          </div>
+        ))}
       </div>
 
       {(remoteHeartbeatAt || remoteHeartbeatLagging || consecutiveFailures) && (
-        <div className="mt-3 pt-3 border-t border-[#f0f0ed] flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-text-tertiary">
+        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-text-tertiary">
           {(remoteHeartbeatAt || remoteHeartbeatLagging) && (
             <span className={remoteHeartbeatLagging ? 'text-amber-700' : undefined}>
               Last heartbeat:{' '}
