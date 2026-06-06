@@ -1,6 +1,6 @@
-# Git 工作流交互规范
+# Git 工作流规范
 
-为了保证项目开发效率、主线历史清晰度与自动发版的稳定性，本项目采用单主干工作流。
+为了保证项目开发效率与主线历史清晰度，本项目采用轻量单主干工作流。
 
 ## 1. 分支职责说明
 
@@ -17,36 +17,44 @@
 - **提交方式**：通过 Pull Request (PR) 提交。
 - **合并策略**：**Rebase and Merge** (变基合并)。
 - **理由**：保持 `main` 提交历史绝对线性，同时保留开发分支上的原子化语义提交。
-- **CI 要求**：PR 合并前必须通过 `lint`、`type-check`、`test` 与 `build`。
+- **验证要求**：合并前由开发者本地按改动风险运行必要检查。
 
-## 3. 自动发布流程 (CI/CD)
+## 3. 验证与发布
 
-项目配置了 GitHub Actions 自动化发布：
+仓库只保留轻量 GitHub Actions CI，不配置自动发布。默认验证分两层：
 
-1. **触发条件**：当开发分支的 PR 以 **Rebase and Merge** 方式合并到 `main` 分支时。
-2. **自动化动作**：
-   - 自动执行质量门：`lint`、`type-check`、`test`、`build`。
-   - 自动计算版本号。
-   - 更新 `package.json` 版本号。
-   - 自动生成 `CHANGELOG.md`。
-   - 自动打出 **Git Tag**。
-   - 自动创建 **GitHub Release**。
-   - 仅对 `feat`、`fix`、`perf`、`revert` 与 `BREAKING CHANGE` 触发正式版本发布。
+PR 到 `main` 时会自动运行：
 
-### 3.1 版本升级规则
+- `npm run type-check`
+- `npm run lint:check`
+- `npm test -- --runInBand`
+
+本地按改动风险可额外运行：
+
+- `npm run build`
+
+发布也改为手动执行：
+
+1. 确认 `main` 是目标发布状态。
+2. 本地运行必要验证。
+3. 使用 `npm run release` 或 `npx standard-version --release-as <patch|minor|major>` 生成版本提交与 tag。
+4. 推送 release commit 和 tag。
+5. 需要 GitHub Release 时，在 GitHub 页面或 `gh release create` 手动创建。
+
+### 3.1 版本升级建议
 
 - `BREAKING CHANGE` 或 `type(scope)!:` -> `major`
 - `feat: ...` -> `minor`
 - `fix: ...`、`perf: ...`、`revert: ...` -> `patch`
-- `docs`、`test`、`chore`、`style`、`refactor`、`ci`、`build` -> **不发版、不打 Tag**
+- `docs`、`test`、`chore`、`style`、`refactor`、`ci`、`build` -> 通常不发版
 
 ### 3.2 分支保护建议
 
 - `main` 必须开启 Branch Protection。
 - 禁止直接 Push 到 `main`。
 - 必须通过 PR 合并。
-- 必须要求 CI Checks 全绿后才能合并。
 - 推荐开启 `Rebase and Merge`，关闭 `Merge Commit` 到 `main`。
+- 可选择将轻量 CI 设为 required status check。
 
 ## 4. Commit Message 规范
 
@@ -68,4 +76,4 @@
 - `chore: ...` -> 对应构建过程或辅助工具的变动
 - `docs: ...` -> 对应文档变更
 
-发布流水线只会对 `feat`、`fix`、`perf`、`revert` 与 `BREAKING CHANGE` 生成新版本。`docs`、`test`、`chore` 等提交仍会通过 CI，但不会发版或打 Tag。
+手动发布时优先根据 `feat`、`fix`、`perf`、`revert` 与 `BREAKING CHANGE` 判断版本级别。
