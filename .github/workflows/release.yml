@@ -26,10 +26,10 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GH_PAT != '' && secrets.GH_PAT || github.token }}
+          token: ${{ github.token }}
 
       - name: 🔐 Select release token
-        run: echo "RELEASE_TOKEN=${{ secrets.GH_PAT != '' && secrets.GH_PAT || github.token }}" >> "$GITHUB_ENV"
+        run: echo "RELEASE_TOKEN=${{ github.token }}" >> "$GITHUB_ENV"
 
       - name: 🔎 Determine release type
         id: plan
