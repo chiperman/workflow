@@ -331,23 +331,25 @@ h6 {
   }
 }
 
-/* Shimmer animation for skeleton loading */
+/* 加载骨架的暖色低对比光泽 */
 @keyframes shimmer {
   0% {
-    background-position: -200% 0;
+    background-position: 180% 0;
   }
   100% {
-    background-position: 200% 0;
+    background-position: -180% 0;
   }
 }
 
 .animate-shimmer {
   background: linear-gradient(
     90deg,
-    var(--muted) 25%,
-    var(--muted-foreground) 50%,
-    var(--muted) 75%
+    #f1f0ea 0%,
+    #f7f5ee 42%,
+    #e8e6de 50%,
+    #f7f5ee 58%,
+    #f1f0ea 100%
   );
-  background-size: 200% 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
+  background-size: 260% 100%;
+  animation: shimmer 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }

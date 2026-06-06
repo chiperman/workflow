@@ -282,50 +282,77 @@ export default function Home() {
               <div className="flex flex-col gap-12 mb-12 relative min-h-[200px]">
                 {isLoading ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 w-full">
-                    {[1, 2, 3].map(i => (
+                    {[0, 1, 2].map(i => (
                       <div
                         key={i}
-                        className="flex flex-col h-full bg-white border border-border-custom p-6 rounded-lg"
+                        className="flex min-h-[360px] flex-col rounded-lg border border-border-custom bg-white/80 p-5 shadow-sm shadow-black/[0.02]"
+                        aria-hidden="true"
                       >
-                        <div className="flex justify-between items-start mb-4">
-                          <div className="flex flex-col gap-2">
-                            <div className="w-16 h-3 bg-muted rounded animate-shimmer" />
+                        <div className="mb-5 flex items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1 pt-1">
                             <div
-                              className="w-48 h-6 bg-muted rounded animate-shimmer"
-                              style={{ animationDelay: '0.1s' }}
+                              className="h-2.5 w-20 rounded-full bg-muted animate-shimmer"
+                              style={{ animationDelay: `${i * 0.12}s` }}
                             />
+                            <div
+                              className="mt-6 h-7 w-4/5 rounded-md bg-muted animate-shimmer"
+                              style={{ animationDelay: `${i * 0.12 + 0.08}s` }}
+                            />
+                            <div className="mt-4 space-y-2.5">
+                              <div
+                                className="h-3 w-full rounded-full bg-muted animate-shimmer"
+                                style={{ animationDelay: `${i * 0.12 + 0.16}s` }}
+                              />
+                              <div
+                                className="h-3 w-2/3 rounded-full bg-muted animate-shimmer"
+                                style={{ animationDelay: `${i * 0.12 + 0.24}s` }}
+                              />
+                            </div>
                           </div>
-                          <div
-                            className="w-10 h-5 bg-muted rounded-full animate-shimmer"
-                            style={{ animationDelay: '0.2s' }}
-                          />
-                        </div>
-                        <div className="flex gap-12 mb-6">
-                          <div className="flex flex-col gap-2">
+                          <div className="flex shrink-0 items-center gap-2">
                             <div
-                              className="w-20 h-3 bg-muted rounded animate-shimmer"
-                              style={{ animationDelay: '0.3s' }}
+                              className="h-8 w-8 rounded-md bg-muted animate-shimmer"
+                              style={{ animationDelay: `${i * 0.12 + 0.12}s` }}
                             />
                             <div
-                              className="w-12 h-5 bg-muted rounded animate-shimmer"
-                              style={{ animationDelay: '0.4s' }}
-                            />
-                          </div>
-                          <div className="flex flex-col gap-2">
-                            <div
-                              className="w-20 h-3 bg-muted rounded animate-shimmer"
-                              style={{ animationDelay: '0.5s' }}
-                            />
-                            <div
-                              className="w-12 h-5 bg-muted rounded animate-shimmer"
-                              style={{ animationDelay: '0.6s' }}
+                              className="h-5 w-10 rounded-full bg-muted animate-shimmer"
+                              style={{ animationDelay: `${i * 0.12 + 0.2}s` }}
                             />
                           </div>
                         </div>
-                        <div className="mt-auto pt-4 border-t border-gray-50">
+
+                        <div className="mt-5 grid grid-cols-3 gap-2 border-y border-[#f0f0ed] py-3">
+                          {[0, 1, 2].map(statIndex => (
+                            <div key={statIndex} className="min-w-0">
+                              <div className="mb-2 flex items-center gap-1.5">
+                                <span className="h-1.5 w-1.5 rounded-full bg-[#d5d5cd]" />
+                                <div
+                                  className="h-2.5 w-12 rounded-full bg-muted animate-shimmer"
+                                  style={{ animationDelay: `${i * 0.12 + statIndex * 0.08}s` }}
+                                />
+                              </div>
+                              <div
+                                className="h-5 w-8 rounded-md bg-muted animate-shimmer"
+                                style={{ animationDelay: `${i * 0.12 + statIndex * 0.08 + 0.12}s` }}
+                              />
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="mt-auto flex items-center justify-between pt-5">
+                          <div className="space-y-2">
+                            <div
+                              className="h-2.5 w-24 rounded-full bg-muted animate-shimmer"
+                              style={{ animationDelay: `${i * 0.12 + 0.34}s` }}
+                            />
+                            <div
+                              className="h-2.5 w-16 rounded-full bg-muted animate-shimmer"
+                              style={{ animationDelay: `${i * 0.12 + 0.42}s` }}
+                            />
+                          </div>
                           <div
-                            className="w-24 h-4 bg-muted rounded animate-shimmer"
-                            style={{ animationDelay: '0.7s' }}
+                            className="h-9 w-28 rounded-md bg-muted animate-shimmer"
+                            style={{ animationDelay: `${i * 0.12 + 0.5}s` }}
                           />
                         </div>
                       </div>

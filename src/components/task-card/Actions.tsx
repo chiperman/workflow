@@ -10,13 +10,13 @@ interface ActionsProps {
 
 export const Actions = memo(function Actions({ displayStatus, onRun, isGuest }: ActionsProps) {
   return (
-    <div className="mt-auto pt-6 border-t border-[#f0f0ed]">
-      <div className="flex items-center gap-4">
+    <div className="mt-auto pt-5">
+      <div className="flex items-center justify-end">
         <Button
-          variant="default"
+          variant="outline"
           onClick={onRun}
           disabled={displayStatus === 'loading' || isGuest}
-          className="px-6 h-11 gap-2"
+          className="h-9 gap-2 border-[#d8d8d2] bg-[#191919] px-4 text-sm text-primary-foreground shadow-sm shadow-black/10 hover:bg-[#2a2a2a] hover:text-primary-foreground hover:border-[#191919]"
           title={isGuest ? 'Sign in to run task' : 'Run Task'}
         >
           {displayStatus === 'loading' ? (

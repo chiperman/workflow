@@ -36,13 +36,88 @@ export const Header = memo(function Header({
   onDelete,
   serviceName,
 }: HeaderProps) {
+  const hasStatusBadges =
+    !localEnabled || todayCheckedIn === false || remoteHeartbeatLagging || !!consecutiveFailures;
+
   return (
-    <div className="mb-4">
-      <div className="flex justify-between items-center mb-1.5">
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] font-medium tracking-wider uppercase text-text-secondary block">
+    <div className="mb-5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 pt-1">
+          <span className="block truncate text-[10px] font-semibold tracking-[0.18em] uppercase text-text-secondary">
             {category}
           </span>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          {!isGuest && (
+            <div className="flex items-center gap-0.5">
+              {onDelete && (
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onDelete(serviceName)}
+                        className="h-8 w-8 text-text-secondary hover:text-red-500 hover:bg-red-50"
+                        aria-label="Delete task"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    }
+                  />
+                  <TooltipContent side="top">
+                    <p className="text-xs">Delete Task</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
+              {onEdit && (
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onEdit(serviceName)}
+                        className="h-8 w-8 text-text-secondary hover:text-accent-primary hover:bg-[#f9f9f9]"
+                        aria-label="Edit configuration"
+                      >
+                        <Settings className="w-3.5 h-3.5" />
+                      </Button>
+                    }
+                  />
+                  <TooltipContent side="top">
+                    <p className="text-xs">Edit Configuration</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
+            </div>
+          )}
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Switch
+                  checked={localEnabled}
+                  onCheckedChange={onToggle}
+                  disabled={isToggling || isGuest}
+                  aria-label={localEnabled ? 'Disable auto cron' : 'Enable auto cron'}
+                />
+              }
+            />
+            <TooltipContent side="top">
+              <p className="text-xs">
+                {isGuest
+                  ? 'Sign in to configure'
+                  : localEnabled
+                    ? 'Disable auto cron'
+                    : 'Enable auto cron'}
+              </p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      </div>
+
+      {hasStatusBadges && (
+        <div className="mt-3 min-h-6">
           <AnimatePresence mode="popLayout">
             {!localEnabled && (
               <motion.span
@@ -51,7 +126,7 @@ export const Header = memo(function Header({
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.2 }}
-                className="text-[9px] font-bold tracking-wider uppercase text-orange-600 bg-orange-100 px-2 py-0.5 rounded border border-orange-200"
+                className="mr-1.5 mb-1.5 inline-flex h-6 items-center whitespace-nowrap rounded-md border border-orange-200 bg-orange-50 px-2 text-[10px] font-bold tracking-[0.08em] uppercase text-orange-700"
               >
                 Auto: OFF
               </motion.span>
@@ -63,7 +138,7 @@ export const Header = memo(function Header({
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.2 }}
-                className="text-[9px] font-bold tracking-wider uppercase text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200"
+                className="mr-1.5 mb-1.5 inline-flex h-6 items-center whitespace-nowrap rounded-md border border-amber-200 bg-amber-50 px-2 text-[10px] font-bold tracking-[0.04em] text-amber-700"
               >
                 今日未签到
               </motion.span>
@@ -75,7 +150,7 @@ export const Header = memo(function Header({
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.2 }}
-                className="text-[9px] font-bold tracking-wider uppercase text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200"
+                className="mr-1.5 mb-1.5 inline-flex h-6 items-center whitespace-nowrap rounded-md border border-amber-200 bg-amber-50 px-2 text-[10px] font-bold tracking-[0.08em] uppercase text-amber-700"
               >
                 Heartbeat Lag
               </motion.span>
@@ -87,86 +162,19 @@ export const Header = memo(function Header({
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.2 }}
-                className="text-[9px] font-bold tracking-wider uppercase text-red-600 bg-red-50 px-2 py-0.5 rounded border border-red-200"
+                className="mr-1.5 mb-1.5 inline-flex h-6 items-center whitespace-nowrap rounded-md border border-red-200 bg-red-50 px-2 text-[10px] font-bold tracking-[0.08em] uppercase text-red-700"
               >
                 Failures: {consecutiveFailures}
               </motion.span>
             )}
           </AnimatePresence>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1">
-            {!isGuest && (
-              <>
-                {onDelete && (
-                  <Tooltip>
-                    <TooltipTrigger
-                      render={
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => onDelete(serviceName)}
-                          className="h-11 w-11 text-text-secondary hover:text-red-500 hover:bg-red-50"
-                          aria-label="Delete task"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
-                      }
-                    />
-                    <TooltipContent side="top">
-                      <p className="text-xs">Delete Task</p>
-                    </TooltipContent>
-                  </Tooltip>
-                )}
-                {onEdit && (
-                  <Tooltip>
-                    <TooltipTrigger
-                      render={
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => onEdit(serviceName)}
-                          className="h-11 w-11 text-text-secondary hover:text-accent-primary hover:bg-[#f9f9f9]"
-                          aria-label="Edit configuration"
-                        >
-                          <Settings className="w-3.5 h-3.5" />
-                        </Button>
-                      }
-                    />
-                    <TooltipContent side="top">
-                      <p className="text-xs">Edit Configuration</p>
-                    </TooltipContent>
-                  </Tooltip>
-                )}
-              </>
-            )}
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <Switch
-                    checked={localEnabled}
-                    onCheckedChange={onToggle}
-                    disabled={isToggling || isGuest}
-                    aria-label={localEnabled ? 'Disable auto cron' : 'Enable auto cron'}
-                  />
-                }
-              />
-              <TooltipContent side="top">
-                {' '}
-                <p className="text-xs">
-                  {isGuest
-                    ? 'Sign in to configure'
-                    : localEnabled
-                      ? 'Disable auto cron'
-                      : 'Enable auto cron'}
-                </p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
-        </div>
-      </div>
-      <h2 className="text-xl font-medium text-foreground mb-2 font-serif">{title}</h2>
-      <p className="text-text-tertiary leading-relaxed text-sm">{description}</p>
+      )}
+
+      <h2 className="mt-4 text-xl font-medium text-foreground font-serif leading-tight">{title}</h2>
+      <p className="mt-3 line-clamp-2 min-h-11 text-text-tertiary leading-relaxed text-sm">
+        {description}
+      </p>
     </div>
   );
 });
