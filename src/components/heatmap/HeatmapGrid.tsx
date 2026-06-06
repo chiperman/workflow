@@ -8,13 +8,14 @@ interface MemoizedCellProps {
   date: string;
   dayData: HeatmapDay | undefined;
   globalIndex: number;
+  isLoading: boolean;
   onHover: (day: HeatmapDay, rect: DOMRect) => void;
 }
 
 // 基础格子布局样式 (共享)
 const CELL_BASE_CLASS = 'w-full aspect-square rounded-[2px]';
 const MemoizedCell = memo(
-  function MemoizedCell({ date, dayData, globalIndex, onHover }: MemoizedCellProps) {
+  function MemoizedCell({ date, dayData, globalIndex, isLoading, onHover }: MemoizedCellProps) {
     const [hasCompletedReveal, setHasCompletedReveal] = useState(false);
     const cellRef = useRef<HTMLDivElement>(null);
 
@@ -48,10 +49,11 @@ const MemoizedCell = memo(
     const colorClass = getColorClass(date, dayData);
 
     const handleMouseEnter = useCallback(() => {
+      if (isLoading) return;
       if (cellRef.current) {
         onHover(tooltipData, cellRef.current.getBoundingClientRect());
       }
-    }, [onHover, tooltipData]);
+    }, [isLoading, onHover, tooltipData]);
 
     const handleKeyDown = useCallback(
       (e: React.KeyboardEvent) => {
@@ -76,22 +78,30 @@ const MemoizedCell = memo(
         ref={cellRef}
         role="gridcell"
         tabIndex={0}
-        aria-label={ariaLabel}
+        aria-label={isLoading ? `${date}: loading activity` : ariaLabel}
         onMouseEnter={handleMouseEnter}
         onKeyDown={handleKeyDown}
         className={cn(
           CELL_BASE_CLASS,
-          'cursor-pointer heatmap-cell focus:outline-none focus:ring-2 focus:ring-[#d97757] focus:ring-offset-1',
-          !hasCompletedReveal ? 'is-revealing' : 'is-ready',
-          colorClass
+          isLoading
+            ? 'animate-shimmer cursor-default'
+            : 'cursor-pointer heatmap-cell focus:outline-none focus:ring-2 focus:ring-[#d97757] focus:ring-offset-1',
+          !isLoading && (!hasCompletedReveal ? 'is-revealing' : 'is-ready'),
+          !isLoading && colorClass
         )}
         style={{
-          animationDelay: !hasCompletedReveal ? `${delay}ms` : undefined,
+          animationDelay: isLoading
+            ? `${(globalIndex % 12) * 0.04}s`
+            : !hasCompletedReveal
+              ? `${delay}ms`
+              : undefined,
         }}
       />
     );
   },
   (prevProps, nextProps) => {
+    if (prevProps.isLoading !== nextProps.isLoading) return false;
+
     const prevDay = prevProps.dayData;
     const nextDay = nextProps.dayData;
 
@@ -110,12 +120,20 @@ interface HeatmapGridProps {
   days: string[];
   dataMap: Map<string, HeatmapDay>;
   isInitialLoad: boolean;
+  isLoading?: boolean;
   allServices?: { service: string; created_at: string }[];
   onHover: (day: HeatmapDay, rect: DOMRect) => void;
   onMouseLeave: () => void;
 }
 
-export function HeatmapGrid({ weeks, days, dataMap, onHover, onMouseLeave }: HeatmapGridProps) {
+export function HeatmapGrid({
+  weeks,
+  days,
+  dataMap,
+  isLoading = false,
+  onHover,
+  onMouseLeave,
+}: HeatmapGridProps) {
   const dayIndexMap = useMemo(() => {
     const map = new Map<string, number>();
     days.forEach((d, i) => map.set(d, i));
@@ -164,6 +182,7 @@ export function HeatmapGrid({ weeks, days, dataMap, onHover, onMouseLeave }: Hea
                   date={date}
                   dayData={dayData}
                   globalIndex={globalIndex}
+                  isLoading={isLoading}
                   onHover={onHover}
                 />
               );

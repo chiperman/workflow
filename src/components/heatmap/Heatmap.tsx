@@ -154,6 +154,7 @@ export function Heatmap() {
                 days={days}
                 dataMap={dataMap}
                 isInitialLoad={isInitialLoad}
+                isLoading={loading}
                 allServices={services}
                 onHover={handleCellHover}
                 onMouseLeave={handleMouseLeave}

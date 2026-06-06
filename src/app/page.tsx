@@ -19,6 +19,78 @@ import { Button } from '@/components/ui/button';
 
 const MotionButton = motion(Button);
 
+const TASK_CARD_SKELETON_COUNT = 3;
+
+function SkeletonBlock({ className, delay = 0 }: { className: string; delay?: number }) {
+  return <div className={`animate-shimmer ${className}`} style={{ animationDelay: `${delay}s` }} />;
+}
+
+function TaskCardSkeleton({ index }: { index: number }) {
+  const delay = index * 0.1;
+
+  return (
+    <div
+      className="flex h-full min-h-[360px] flex-col rounded-lg border border-border-custom bg-white/95 p-5"
+      aria-hidden="true"
+    >
+      <div className="mb-5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1 pt-1">
+            <SkeletonBlock className="h-3 w-28 rounded-sm" delay={delay} />
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <SkeletonBlock className="h-8 w-8 rounded-md" delay={delay + 0.06} />
+            <SkeletonBlock className="h-8 w-8 rounded-md" delay={delay + 0.12} />
+            <SkeletonBlock className="h-7 w-[54px] rounded-full" delay={delay + 0.18} />
+          </div>
+        </div>
+
+        <SkeletonBlock className="mt-6 h-6 w-44 rounded-sm" delay={delay + 0.1} />
+        <div className="mt-3 space-y-2">
+          <SkeletonBlock className="h-4 w-full max-w-[360px] rounded-sm" delay={delay + 0.18} />
+          <SkeletonBlock className="h-4 w-3/5 rounded-sm" delay={delay + 0.26} />
+        </div>
+      </div>
+
+      <div className="mt-5 grid grid-cols-3 gap-2 border-y border-[#f0f0ed] py-3">
+        {[0, 1, 2].map(statIndex => (
+          <div key={statIndex} className="min-w-0">
+            <div className="mb-2 flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#c9c9c2]" />
+              <SkeletonBlock className="h-3 w-14 rounded-sm" delay={delay + statIndex * 0.06} />
+            </div>
+            <SkeletonBlock
+              className="h-5 w-10 rounded-sm"
+              delay={delay + statIndex * 0.06 + 0.12}
+            />
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-auto flex items-center justify-end pt-5">
+        <SkeletonBlock className="h-9 w-[138px] rounded-md" delay={delay + 0.4} />
+      </div>
+    </div>
+  );
+}
+
+function TaskGroupsSkeleton() {
+  return (
+    <div className="flex w-full flex-col gap-6" aria-label="Loading tasks">
+      <div className="flex items-center gap-3">
+        <SkeletonBlock className="h-3 w-28 rounded-sm" />
+        <div className="h-[1px] flex-1 bg-gradient-to-r from-border-custom to-transparent" />
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+        {Array.from({ length: TASK_CARD_SKELETON_COUNT }).map((_, index) => (
+          <TaskCardSkeleton key={index} index={index} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /**
  * Workflow Dashboard - 核心控制面板 (已恢复原始布局)
  */
@@ -281,83 +353,7 @@ export default function Home() {
               {/* Task Cards List - 响应式多列布局 */}
               <div className="flex flex-col gap-12 mb-12 relative min-h-[200px]">
                 {isLoading ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 w-full">
-                    {[0, 1, 2].map(i => (
-                      <div
-                        key={i}
-                        className="flex min-h-[360px] flex-col rounded-lg border border-border-custom bg-white/80 p-5 shadow-sm shadow-black/[0.02]"
-                        aria-hidden="true"
-                      >
-                        <div className="mb-5 flex items-start justify-between gap-3">
-                          <div className="min-w-0 flex-1 pt-1">
-                            <div
-                              className="h-2.5 w-20 rounded-full bg-muted animate-shimmer"
-                              style={{ animationDelay: `${i * 0.12}s` }}
-                            />
-                            <div
-                              className="mt-6 h-7 w-4/5 rounded-md bg-muted animate-shimmer"
-                              style={{ animationDelay: `${i * 0.12 + 0.08}s` }}
-                            />
-                            <div className="mt-4 space-y-2.5">
-                              <div
-                                className="h-3 w-full rounded-full bg-muted animate-shimmer"
-                                style={{ animationDelay: `${i * 0.12 + 0.16}s` }}
-                              />
-                              <div
-                                className="h-3 w-2/3 rounded-full bg-muted animate-shimmer"
-                                style={{ animationDelay: `${i * 0.12 + 0.24}s` }}
-                              />
-                            </div>
-                          </div>
-                          <div className="flex shrink-0 items-center gap-2">
-                            <div
-                              className="h-8 w-8 rounded-md bg-muted animate-shimmer"
-                              style={{ animationDelay: `${i * 0.12 + 0.12}s` }}
-                            />
-                            <div
-                              className="h-5 w-10 rounded-full bg-muted animate-shimmer"
-                              style={{ animationDelay: `${i * 0.12 + 0.2}s` }}
-                            />
-                          </div>
-                        </div>
-
-                        <div className="mt-5 grid grid-cols-3 gap-2 border-y border-[#f0f0ed] py-3">
-                          {[0, 1, 2].map(statIndex => (
-                            <div key={statIndex} className="min-w-0">
-                              <div className="mb-2 flex items-center gap-1.5">
-                                <span className="h-1.5 w-1.5 rounded-full bg-[#d5d5cd]" />
-                                <div
-                                  className="h-2.5 w-12 rounded-full bg-muted animate-shimmer"
-                                  style={{ animationDelay: `${i * 0.12 + statIndex * 0.08}s` }}
-                                />
-                              </div>
-                              <div
-                                className="h-5 w-8 rounded-md bg-muted animate-shimmer"
-                                style={{ animationDelay: `${i * 0.12 + statIndex * 0.08 + 0.12}s` }}
-                              />
-                            </div>
-                          ))}
-                        </div>
-
-                        <div className="mt-auto flex items-center justify-between pt-5">
-                          <div className="space-y-2">
-                            <div
-                              className="h-2.5 w-24 rounded-full bg-muted animate-shimmer"
-                              style={{ animationDelay: `${i * 0.12 + 0.34}s` }}
-                            />
-                            <div
-                              className="h-2.5 w-16 rounded-full bg-muted animate-shimmer"
-                              style={{ animationDelay: `${i * 0.12 + 0.42}s` }}
-                            />
-                          </div>
-                          <div
-                            className="h-9 w-28 rounded-md bg-muted animate-shimmer"
-                            style={{ animationDelay: `${i * 0.12 + 0.5}s` }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <TaskGroupsSkeleton />
                 ) : (
                   <AnimatePresence mode="popLayout">
                     {Object.keys(groupedTasks).length === 0 ? (
