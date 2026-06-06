@@ -5,7 +5,16 @@ import { AnimatePresence, motion } from 'framer-motion';
 import type { ServiceConfig } from '@/types';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { normalizeConfigSegments, splitHeadersBySensitivity } from '@/lib/crypto';
+import { splitHeadersBySensitivity } from '@/lib/crypto';
+import {
+  createEditableConfig,
+  createHeadersString,
+  createRulesString,
+  DEFAULT_CONFIG,
+  DEFAULT_HEADERS_STR,
+  DEFAULT_RULES_STR,
+  hasAdvancedRules,
+} from './config';
 import {
   X,
   Save,
@@ -27,28 +36,6 @@ interface TaskConfigModalProps {
   onSuccess?: () => void;
 }
 
-const DEFAULT_CONFIG: Partial<ServiceConfig> = {
-  service: '',
-  name: '',
-  type: 'http',
-  enabled: true,
-  notification_level: 'failure-only',
-  config: {
-    urls: [''],
-    method: 'POST',
-    headers: {},
-    body: '',
-    success_message_template: '',
-    repeat_message_template: '',
-  },
-  secret_config: {
-    cookie: '',
-    supabase_key: '',
-    notification_key: '',
-  },
-  rules: { success: { status: 200 } },
-};
-
 export function TaskConfigModal({
   isOpen,
   onClose,
@@ -64,54 +51,28 @@ export function TaskConfigModal({
 
   const [config, setConfig] = useState<Partial<ServiceConfig>>(DEFAULT_CONFIG);
   // 局部状态处理 JSON 字符串，避免直接绑定 JSON.stringify 导致的编辑卡顿
-  const [headersStr, setHeadersStr] = useState('{}');
-  const [rulesStr, setRulesStr] = useState('{\n  "status": 200\n}');
+  const [headersStr, setHeadersStr] = useState(DEFAULT_HEADERS_STR);
+  const [rulesStr, setRulesStr] = useState(DEFAULT_RULES_STR);
 
   useEffect(() => {
     if (!isOpen) return;
 
     if (!serviceId) {
       setConfig(DEFAULT_CONFIG);
-      setHeadersStr('{}');
-      setRulesStr('{\n  "status": 200\n}');
+      setHeadersStr(DEFAULT_HEADERS_STR);
+      setRulesStr(DEFAULT_RULES_STR);
       return;
     }
 
     // 如果传入了 initialConfig，直接同步到本地状态，不再调用 API
     if (initialConfig) {
-      const normalized = normalizeConfigSegments(initialConfig.config, initialConfig.secret_config);
-      const finalConfig = {
-        ...initialConfig,
-        config: normalized.config || {
-          urls: [''],
-          method: 'POST',
-          headers: {},
-          body: '',
-          success_message_template: '',
-          repeat_message_template: '',
-        },
-        secret_config: normalized.secret_config || {
-          cookie: '',
-          supabase_key: '',
-          notification_key: '',
-        },
-        rules: initialConfig.rules || { success: { status: 200, smart_matching: true } },
-      };
+      const finalConfig = createEditableConfig(initialConfig);
       setConfig(finalConfig);
-      setHeadersStr(
-        JSON.stringify(
-          {
-            ...(finalConfig.config?.headers || {}),
-            ...(finalConfig.secret_config?.headers || {}),
-          },
-          null,
-          2
-        )
-      );
-      setRulesStr(JSON.stringify(finalConfig.rules?.success || {}, null, 2));
+      setHeadersStr(createHeadersString(finalConfig));
+      setRulesStr(createRulesString(finalConfig));
 
       // 如果已经有复杂的 json 规则，自动显示高级设置
-      if (finalConfig.rules?.success?.json && finalConfig.rules.success.json.length > 0) {
+      if (hasAdvancedRules(finalConfig)) {
         setShowAdvancedRules(true);
       }
     }

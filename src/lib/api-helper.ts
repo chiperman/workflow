@@ -1,4 +1,4 @@
-import { ServiceExecutor } from '@/lib/ServiceExecutor';
+import { ServiceExecutor } from '@/services/ServiceExecutor';
 import { checkTriggerPermission, verifyAuth } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 import { BaseService } from '@/services/BaseService';

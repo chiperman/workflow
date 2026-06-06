@@ -5,9 +5,9 @@ import { useState } from 'react';
 
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { Footer } from '@/components/Footer';
-import { Heatmap } from '@/components/Heatmap';
+import { Heatmap } from '@/components/heatmap';
 import { TaskCard } from '@/components/task-card';
-import { TaskConfigModal } from '@/components/TaskConfigModal';
+import { TaskConfigModal } from '@/components/task-config-modal';
 
 import { MOTION_CONFIG as MOTION, APP_VERSION } from '@/config/constants';
 import { useTasks } from '@/hooks/useTasks';

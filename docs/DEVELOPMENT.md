@@ -17,11 +17,13 @@ workflow/
 │   │   └── page.tsx           # 主面板
 │   ├── components/            # React 组件
 │   │   ├── task-card/         # 任务卡片视图
+│   │   ├── task-config-modal/ # 任务配置弹窗
 │   │   ├── heatmap/           # 签到热力图
 │   │   └── ui/                # 基础 UI 组件 (Button, Switch 等)
 │   ├── services/              # 核心业务逻辑
 │   │   ├── BaseService.ts     # 协议基类
 │   │   ├── DynamicService.ts  # 通用 HTTP 协议
+│   │   ├── ServiceExecutor.ts # 执行、日志和通知编排
 │   │   └── ServiceFactory.ts  # 服务编排工厂
 │   ├── hooks/                 # 业务逻辑 Hooks (`useTasks`)
 │   ├── lib/                   # 通用工具 & 客户端
@@ -68,7 +70,7 @@ workflow/
 
 ### 第二步：数据库持久化
 
-通过 UI 保存后，配置会自动存储于 `keep_alive` 表中。也可通过 `supabase/setup.sql` 批量导入。
+通过 UI 保存后，配置会自动存储于 `service_configs` 表中；执行结果会写入 `service_stats` 与 `keep_alive_logs`。表结构以 `supabase/migrations/` 为准。
 
 ---
 

@@ -2,7 +2,7 @@
  * @jest-environment node
  */
 import { checkTriggerPermission, verifyAuth } from '@/lib/auth';
-import { ServiceExecutor } from '@/lib/ServiceExecutor';
+import { ServiceExecutor } from '@/services/ServiceExecutor';
 import { KeepAliveResult } from '@/types';
 import { handleKeepAliveRequest } from '../api-helper';
 import { BaseService } from '@/services/BaseService';
@@ -13,7 +13,7 @@ jest.mock('@/lib/auth', () => ({
   verifyAuth: jest.fn(),
 }));
 
-jest.mock('@/lib/ServiceExecutor', () => ({
+jest.mock('@/services/ServiceExecutor', () => ({
   ServiceExecutor: {
     runService: jest.fn(),
   },

@@ -138,4 +138,3 @@
 - `/.github/workflows/release.yml`
 - `/scripts/determine-release.mjs`
 - `/docs/GIT_WORKFLOW.md`
-- `/docs/STANDARDIZED_WORKFLOW.md`
