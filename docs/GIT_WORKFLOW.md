@@ -50,9 +50,22 @@
 
 ## 4. Commit Message 规范
 
-推荐遵循 [Conventional Commits](https://www.conventionalcommits.org/) 规范，这直接影响 CHANGELOG 的生成：
+必须遵循 [Conventional Commits](https://www.conventionalcommits.org/) 规范，这直接影响 CHANGELOG 的生成：
+
+```text
+<type>(<scope>): <中文简短描述>
+
+<可选：中文详细列表描述>
+```
+
+常用类型：
 
 - `feat: ...` -> 对应新功能
 - `fix: ...` -> 对应缺陷修复
+- `perf: ...` -> 对应性能优化
+- `refactor: ...` -> 对应不改变行为的结构调整
+- `test: ...` -> 对应测试补充或修正
 - `chore: ...` -> 对应构建过程或辅助工具的变动
 - `docs: ...` -> 对应文档变更
+
+发布流水线只会对 `feat`、`fix`、`perf`、`revert` 与 `BREAKING CHANGE` 生成新版本。`docs`、`test`、`chore` 等提交仍会通过 CI，但不会发版或打 Tag。

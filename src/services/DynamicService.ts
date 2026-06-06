@@ -1,7 +1,7 @@
 import { logger } from '@/lib/logger';
 import { supabase as defaultSupabase } from '@/lib/supabase';
 import { getBeijingTime } from '@/lib/utils';
-import { ServiceExecutor } from '@/lib/ServiceExecutor';
+import { ServiceExecutor } from '@/services/ServiceExecutor';
 import type {
   KeepAliveResult,
   RuntimeTaskConfigData,
