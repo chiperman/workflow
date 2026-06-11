@@ -25,9 +25,10 @@ type ConfigValue = object;
  * 获取加密密钥 (从 APP_KEY 派生 32 字节密钥)
  */
 function getEncryptionKey(): Buffer {
-  const appKey = process.env.APP_KEY || 'default-secret-key-at-least-32-chars-long';
-  // 使用 SHA-256 确保密钥始终为 32 字节
-  return crypto.createHash('sha256').update(appKey).digest();
+  if (!process.env.APP_KEY) {
+    throw new Error('Missing required environment variable: APP_KEY');
+  }
+  return crypto.createHash('sha256').update(process.env.APP_KEY).digest();
 }
 
 /**
@@ -37,16 +38,21 @@ function getEncryptionKey(): Buffer {
 export function encrypt(text: string): string {
   if (!text || text.startsWith('enc:')) return text;
 
-  const iv = crypto.randomBytes(12);
-  const key = getEncryptionKey();
-  const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
+  try {
+    const iv = crypto.randomBytes(12);
+    const key = getEncryptionKey();
+    const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
 
-  let encrypted = cipher.update(text, 'utf8', 'hex');
-  encrypted += cipher.final('hex');
+    let encrypted = cipher.update(text, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
 
-  const tag = cipher.getAuthTag().toString('hex');
+    const tag = cipher.getAuthTag().toString('hex');
 
-  return `enc:${iv.toString('hex')}.${encrypted}.${tag}`;
+    return `enc:${iv.toString('hex')}.${encrypted}.${tag}`;
+  } catch (_err) {
+    // APP_KEY 未配置时降级返回原文，避免加密服务阻塞整体启动
+    return text;
+  }
 }
 
 /**
