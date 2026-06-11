@@ -36,6 +36,13 @@ export abstract class BaseService {
   protected abstract executeKeepAlive(trigger: 'auto' | 'manual'): Promise<KeepAliveResult>;
 
   /**
+   * 公共执行入口，调用 protected executeKeepAlive 供 ServiceExecutor 等外部模块使用
+   */
+  public async runKeepAlive(trigger: 'auto' | 'manual'): Promise<KeepAliveResult> {
+    return this.executeKeepAlive(trigger);
+  }
+
+  /**
    * 获取服务状态（默认实现，从 Supabase 查询）
    * 子类可直接继承此实现，或覆写以使用自定义逻辑
    */
