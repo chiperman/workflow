@@ -1,6 +1,7 @@
 import { RETRY_CONFIG } from '@/config/constants';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { logger } from './logger';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -57,7 +58,7 @@ export async function withRetry<T>(
 
       // 如果是重试成功则记录日志
       if (attempt > 1) {
-        console.log(`✓ Retry succeeded on attempt ${attempt}/${retries}`);
+        logger.log(`Retry succeeded on attempt ${attempt}/${retries}`);
       }
 
       return result;
@@ -74,26 +75,26 @@ export async function withRetry<T>(
             : error && typeof error === 'object' && 'code' in error
               ? String(error.code)
               : 'Unknown';
-        console.warn(`✗ Non-retryable error detected: ${errorMsg}`);
+        logger.warn(`Non-retryable error detected: ${errorMsg}`);
         throw error;
       }
 
       // 检查是否已用尽所有重试次数
       if (attempt >= retries) {
-        console.error(`✗ All ${retries} retry attempts failed`);
+        logger.error(`All ${retries} retry attempts failed`);
         throw error;
       }
 
       // 使用指数退避计算延迟:1s, 2s, 4s
       const delay = delayMs * Math.pow(RETRY_CONFIG.BACKOFF_MULTIPLIER, attempt - 1);
-      console.log(`⟳ Retry attempt ${attempt}/${retries} failed. Retrying in ${delay}ms...`);
+      logger.log(`Retry attempt ${attempt}/${retries} failed. Retrying in ${delay}ms...`);
       const errorMsg =
         error instanceof Error
           ? error.message
           : error && typeof error === 'object' && 'code' in error
             ? String(error.code)
             : 'Unknown error';
-      console.log(`  Error: ${errorMsg}`);
+      logger.log(`  Error: ${errorMsg}`);
 
       // 等待后重试
       await new Promise(resolve => setTimeout(resolve, delay));

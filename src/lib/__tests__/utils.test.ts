@@ -1,11 +1,14 @@
 import { withRetry } from '../utils';
+import { logger } from '@/lib/logger';
 
 describe('withRetry', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.spyOn(console, 'log').mockImplementation();
-    jest.spyOn(console, 'warn').mockImplementation();
-    jest.spyOn(console, 'error').mockImplementation();
+    jest.spyOn(logger, 'log').mockImplementation();
+    jest.spyOn(logger, 'warn').mockImplementation();
+    jest.spyOn(logger, 'error').mockImplementation();
+    jest.spyOn(logger, 'info').mockImplementation();
+    jest.spyOn(logger, 'debug').mockImplementation();
   });
 
   afterEach(() => {
@@ -19,7 +22,7 @@ describe('withRetry', () => {
 
       expect(result).toBe('success');
       expect(fn).toHaveBeenCalledTimes(1);
-      expect(console.log).not.toHaveBeenCalled();
+      expect(logger.log).not.toHaveBeenCalled();
     });
 
     it('第二次尝试成功', async () => {
@@ -32,7 +35,7 @@ describe('withRetry', () => {
 
       expect(result).toBe('success');
       expect(fn).toHaveBeenCalledTimes(2);
-      expect(console.log).toHaveBeenCalledWith(
+      expect(logger.log).toHaveBeenCalledWith(
         expect.stringContaining('Retry succeeded on attempt 2/3')
       );
     });
@@ -48,7 +51,7 @@ describe('withRetry', () => {
 
       expect(result).toBe('success');
       expect(fn).toHaveBeenCalledTimes(3);
-      expect(console.log).toHaveBeenCalledWith(
+      expect(logger.log).toHaveBeenCalledWith(
         expect.stringContaining('Retry succeeded on attempt 3/3')
       );
     });
@@ -61,7 +64,7 @@ describe('withRetry', () => {
 
       await expect(withRetry(fn, 3, 100)).rejects.toThrow('Persistent network error');
       expect(fn).toHaveBeenCalledTimes(3);
-      expect(console.error).toHaveBeenCalledWith(
+      expect(logger.error).toHaveBeenCalledWith(
         expect.stringContaining('All 3 retry attempts failed')
       );
     });
@@ -72,7 +75,7 @@ describe('withRetry', () => {
 
       await expect(withRetry(fn, 3, 100)).rejects.toEqual(error);
       expect(fn).toHaveBeenCalledTimes(1);
-      expect(console.warn).toHaveBeenCalledWith(
+      expect(logger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Non-retryable error detected')
       );
     });
@@ -128,8 +131,8 @@ describe('withRetry', () => {
 
       await withRetry(fn, 3, 100);
 
-      expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Retry attempt 1/3 failed'));
-      expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Error: Network timeout'));
+      expect(logger.log).toHaveBeenCalledWith(expect.stringContaining('Retry attempt 1/3 failed'));
+      expect(logger.log).toHaveBeenCalledWith(expect.stringContaining('Error: Network timeout'));
     });
   });
 });
@@ -137,9 +140,9 @@ describe('withRetry', () => {
 describe('isConfigurationError (通过 withRetry 间接测试)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.spyOn(console, 'log').mockImplementation();
-    jest.spyOn(console, 'warn').mockImplementation();
-    jest.spyOn(console, 'error').mockImplementation();
+    jest.spyOn(logger, 'log').mockImplementation();
+    jest.spyOn(logger, 'warn').mockImplementation();
+    jest.spyOn(logger, 'error').mockImplementation();
   });
 
   afterEach(() => {

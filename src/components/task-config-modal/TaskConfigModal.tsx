@@ -53,6 +53,7 @@ export function TaskConfigModal({
   // 局部状态处理 JSON 字符串，避免直接绑定 JSON.stringify 导致的编辑卡顿
   const [headersStr, setHeadersStr] = useState(DEFAULT_HEADERS_STR);
   const [rulesStr, setRulesStr] = useState(DEFAULT_RULES_STR);
+  const [rulesInvalid, setRulesInvalid] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -129,6 +130,11 @@ export function TaskConfigModal({
   const handleSave = async () => {
     if (!config.service) {
       toast.error('Service ID is required');
+      return;
+    }
+
+    if (showAdvancedRules && rulesInvalid) {
+      toast.error('Invalid JSON in rule definition, please fix before saving');
       return;
     }
 
@@ -742,7 +748,10 @@ export function TaskConfigModal({
                     <Button
                       variant="link"
                       size="sm"
-                      onClick={() => setShowAdvancedRules(!showAdvancedRules)}
+                      onClick={() => {
+                        if (showAdvancedRules && rulesInvalid) return;
+                        setShowAdvancedRules(!showAdvancedRules);
+                      }}
                       className="px-0 h-auto text-[10px] text-text-secondary hover:text-foreground underline underline-offset-4"
                       aria-expanded={showAdvancedRules}
                     >
@@ -767,12 +776,22 @@ export function TaskConfigModal({
                           try {
                             const s = JSON.parse(e.target.value);
                             setConfig({ ...config, rules: { ...config.rules!, success: s } });
-                          } catch (_err) {
-                            // Silently handle invalid JSON while typing
+                            setRulesInvalid(false);
+                          } catch {
+                            setRulesInvalid(true);
                           }
                         }}
-                        className="w-full px-3 py-3 bg-white border border-[#e5e5e0] rounded-lg text-sm font-mono focus:outline-none focus:border-[#d97757]/50 leading-relaxed shadow-inner"
+                        className={`w-full px-3 py-3 bg-white border rounded-lg text-sm font-mono focus:outline-none leading-relaxed shadow-inner ${
+                          rulesInvalid
+                            ? 'border-red-400 focus:border-red-500'
+                            : 'border-[#e5e5e0] focus:border-[#d97757]/50'
+                        }`}
                       />
+                      {rulesInvalid && (
+                        <p className="text-[10px] text-red-500 mt-1">
+                          Invalid JSON — save is blocked until this is fixed.
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>
