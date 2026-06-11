@@ -72,7 +72,8 @@
   },
   "config": {
     "commitizen": {
-      "path": ".cz-config.js"
+      "path": "cz-conventional-changelog",
+      "disableScopePrompt": false
     }
   }
 }
