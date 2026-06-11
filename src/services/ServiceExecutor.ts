@@ -92,11 +92,7 @@ export class ServiceExecutor {
     let result: KeepAliveResult;
     try {
       result = await withRetry(async () => {
-        const res = await (
-          service as unknown as {
-            executeKeepAlive: (t: 'auto' | 'manual') => Promise<KeepAliveResult>;
-          }
-        ).executeKeepAlive(trigger);
+        const res = await service.runKeepAlive(trigger);
         if (!res.success) {
           throw new Error(res.message || 'Service reported failure');
         }
@@ -113,16 +109,7 @@ export class ServiceExecutor {
     }
 
     const duration = Date.now() - start;
-    // 记录日志（如果子类实现了 logKeepAliveResult）
-    const svc = service as unknown as {
-      logKeepAliveResult?: (r: KeepAliveResult) => Promise<void>;
-      serviceName: string;
-    };
-    if (typeof svc.logKeepAliveResult === 'function') {
-      await svc.logKeepAliveResult({ ...result, duration });
-    } else {
-      logger.info(`[${service.name}] No logKeepAliveResult method, skipping log.`);
-    }
+    await service.logKeepAliveResult({ ...result, duration });
 
     // 失败统计
     if (!result.success) {

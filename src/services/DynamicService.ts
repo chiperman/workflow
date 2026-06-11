@@ -246,11 +246,21 @@ export class DynamicService extends BaseService {
       throw new Error('No URL configured for HTTP service');
     }
 
+    const totalTimeout = Math.min(
+      (config.timeout ? Number(config.timeout) : 10000) * urls.length,
+      60000
+    );
+    const totalStart = Date.now();
     let lastError: Error | null = null;
     let responseData: unknown = null;
     let responseStatus = 0;
 
     for (const url of urls) {
+      if (Date.now() - totalStart >= totalTimeout) {
+        lastError = new Error(`Total HTTP keep-alive timeout reached (${totalTimeout}ms)`);
+        break;
+      }
+
       try {
         logger.info(`[${this.serviceName}] Trying API: ${url}`);
         const headers: Record<string, string> = {
