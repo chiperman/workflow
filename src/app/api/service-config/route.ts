@@ -10,6 +10,24 @@ import {
   resolveUpdatedConfigSegments,
 } from '@/lib/crypto';
 
+const SERVICE_NAME_PATTERN = /^[a-z0-9_-]+$/;
+
+function validateServiceName(
+  service: unknown
+): { ok: true; value: string } | { ok: false; message: string } {
+  if (typeof service !== 'string' || !service.trim()) {
+    return { ok: false, message: 'service is required and must be a non-empty string' };
+  }
+  const normalized = service.trim().toLowerCase();
+  if (!SERVICE_NAME_PATTERN.test(normalized)) {
+    return {
+      ok: false,
+      message: 'service must only contain lowercase letters, digits, hyphens, and underscores',
+    };
+  }
+  return { ok: true, value: normalized };
+}
+
 export const dynamic = 'force-dynamic';
 
 /**
@@ -91,14 +109,12 @@ async function getExistingConfig(service: string) {
 export const PUT = withApiHandler(
   async request => {
     const body = await request.json();
-    const service = body.service;
 
-    if (!service) {
-      return NextResponse.json(
-        { success: false, message: 'Service ID is required' },
-        { status: 400 }
-      );
+    const validated = validateServiceName(body.service);
+    if (!validated.ok) {
+      return NextResponse.json({ success: false, message: validated.message }, { status: 400 });
     }
+    const service = validated.value;
 
     const existing = await getExistingConfig(service);
     const resolvedSegments =
@@ -144,14 +160,12 @@ export const PUT = withApiHandler(
 export const POST = withApiHandler(
   async request => {
     const body = await request.json();
-    const service = body.service;
 
-    if (!service) {
-      return NextResponse.json(
-        { success: false, message: 'Service ID is required' },
-        { status: 400 }
-      );
+    const validated = validateServiceName(body.service);
+    if (!validated.ok) {
+      return NextResponse.json({ success: false, message: validated.message }, { status: 400 });
     }
+    const service = validated.value;
 
     const normalizedIncoming = normalizeConfigSegments(body.config || {}, body.secret_config || {});
     const configToInsert: Record<string, unknown> = { service };
@@ -190,14 +204,20 @@ export const POST = withApiHandler(
 export const DELETE = withApiHandler(
   async request => {
     const { searchParams } = new URL(request.url);
-    const service = searchParams.get('service');
-
-    if (!service) {
+    const validated = validateServiceName(searchParams.get('service'));
+    if (!validated.ok) {
       return NextResponse.json(
-        { success: false, message: 'Service ID is required' },
+        {
+          success: false,
+          message:
+            validated.message === 'service is required and must be a non-empty string'
+              ? 'Service ID is required'
+              : validated.message,
+        },
         { status: 400 }
       );
     }
+    const service = validated.value;
 
     if (['supabase', 'glados'].includes(service.toLowerCase())) {
       return NextResponse.json(
@@ -220,9 +240,14 @@ export const DELETE = withApiHandler(
 export const PATCH = withApiHandler(
   async request => {
     const body = await request.json();
-    const { service, enabled } = body;
+    const validated = validateServiceName(body.service);
+    if (!validated.ok) {
+      return NextResponse.json({ success: false, message: validated.message }, { status: 400 });
+    }
+    const service = validated.value;
+    const { enabled } = body;
 
-    if (!service || typeof enabled !== 'boolean') {
+    if (typeof enabled !== 'boolean') {
       return NextResponse.json(
         { success: false, message: 'Invalid request body' },
         { status: 400 }
