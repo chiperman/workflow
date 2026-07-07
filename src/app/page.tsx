@@ -11,13 +11,22 @@ import { TaskConfigModal } from '@/components/task-config-modal';
 
 import { MOTION_CONFIG as MOTION, APP_VERSION } from '@/config/constants';
 import { useTasks } from '@/hooks/useTasks';
-import type { ServiceConfig } from '@/types';
-import { Workflow, RefreshCw, Plus, LogIn, LogOut, Check, AlertCircle } from 'lucide-react';
+import type { ServiceConfig, ServiceHealth } from '@/types';
+import {
+  Workflow,
+  RefreshCw,
+  Plus,
+  LogIn,
+  LogOut,
+  Check,
+  AlertCircle,
+  ShieldCheck,
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 
-const MotionButton = motion(Button);
+const MotionButton = motion.create(Button);
 
 const TASK_CARD_SKELETON_COUNT = 3;
 
@@ -91,6 +100,87 @@ function TaskGroupsSkeleton() {
   );
 }
 
+function StatusSummary({
+  services,
+  isRestricted,
+  isGuest,
+  isLoading,
+}: {
+  services: Record<string, ServiceHealth>;
+  isRestricted: boolean;
+  isGuest: boolean;
+  isLoading: boolean;
+}) {
+  const serviceList = Object.values(services);
+  const total = serviceList.length;
+  const enabled = serviceList.filter(service => service.enabled !== false).length;
+  const attention = serviceList.filter(
+    service =>
+      service.status === 'outage' ||
+      service.status === 'misconfigured' ||
+      Boolean(service.consecutiveFailures) ||
+      Boolean(service.remoteHeartbeatLagging)
+  ).length;
+  const todayReady = serviceList.filter(service => service.todayCheckedIn !== false).length;
+  const autoRuns = serviceList.reduce((sum, service) => sum + (service.stats?.auto_count ?? 0), 0);
+
+  const items = isLoading
+    ? [
+        { label: 'Protocols', value: '...' },
+        { label: 'Enabled', value: '...' },
+        { label: 'Attention', value: '...' },
+        { label: 'Auto Runs', value: '...' },
+      ]
+    : isRestricted
+      ? [
+          { label: 'Access', value: 'Locked' },
+          { label: 'Status', value: 'Sign in' },
+          { label: 'Scope', value: 'Private' },
+          { label: 'Mode', value: isGuest ? 'Preview' : 'Session' },
+        ]
+      : [
+          { label: 'Protocols', value: total },
+          { label: 'Enabled', value: enabled },
+          { label: 'Attention', value: attention },
+          { label: 'Auto Runs', value: autoRuns },
+        ];
+
+  return (
+    <div className="mb-8 rounded-lg border border-border-custom bg-white/90 p-4 shadow-sm shadow-black/[0.02]">
+      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+          <ShieldCheck className="h-4 w-4 text-accent-primary" aria-hidden="true" />
+          <span>
+            {isLoading
+              ? 'Checking operations status'
+              : isRestricted
+                ? 'Operations status is private'
+                : 'Operations status'}
+          </span>
+        </div>
+        {!isRestricted && (
+          <span className="text-[11px] uppercase tracking-[0.14em] text-text-secondary">
+            {todayReady}/{total} ready today
+          </span>
+        )}
+      </div>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {items.map(item => (
+          <div
+            key={item.label}
+            className="min-w-0 rounded-md border border-[#f0f0ed] bg-[#fdfcf8] px-3 py-2"
+          >
+            <div className="truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-text-secondary">
+              {item.label}
+            </div>
+            <div className="mt-1 font-mono text-lg leading-none text-foreground">{item.value}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /**
  * Workflow Dashboard - 核心控制面板 (已恢复原始布局)
  */
@@ -98,7 +188,7 @@ export default function Home() {
   const router = useRouter();
 
   // 使用重构后的业务 Hook，但保持 UI 结构不变
-  const { groupedTasks, services, refreshAll, authType, isLoading } = useTasks();
+  const { groupedTasks, services, refreshAll, authType, isLoading, isRestricted } = useTasks();
 
   const isGuest = authType === 'public' || authType === 'none';
 
@@ -336,19 +426,37 @@ export default function Home() {
                 </motion.p>
               </header>
 
-              {/* Heatmap Section - 恢复至 Header 下方 */}
               <motion.div
                 initial={{ opacity: 0, y: MOTION.yOffset }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{
-                  delay: MOTION.delay.heatmap,
+                  delay: MOTION.delay.description,
                   duration: MOTION.duration,
                   ease: MOTION.ease,
                 }}
-                className="mb-8"
               >
-                <Heatmap />
+                <StatusSummary
+                  services={services}
+                  isRestricted={isRestricted}
+                  isGuest={isGuest}
+                  isLoading={isLoading}
+                />
               </motion.div>
+
+              {!isLoading && !isRestricted && (
+                <motion.div
+                  initial={{ opacity: 0, y: MOTION.yOffset }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    delay: MOTION.delay.heatmap,
+                    duration: MOTION.duration,
+                    ease: MOTION.ease,
+                  }}
+                  className="mb-8"
+                >
+                  <Heatmap />
+                </motion.div>
+              )}
 
               {/* Task Cards List - 响应式多列布局 */}
               <div className="flex flex-col gap-12 mb-12 relative min-h-[200px]">
@@ -356,7 +464,33 @@ export default function Home() {
                   <TaskGroupsSkeleton />
                 ) : (
                   <AnimatePresence mode="popLayout">
-                    {Object.keys(groupedTasks).length === 0 ? (
+                    {isRestricted ? (
+                      <motion.div
+                        key="restricted-state"
+                        initial={{ opacity: 0, scale: 0.98 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.98 }}
+                        className="flex flex-col items-center justify-center rounded-2xl border border-border-custom bg-white/40 px-6 py-16 text-center backdrop-blur-sm"
+                      >
+                        <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+                          <LogIn className="h-5 w-5 text-text-tertiary" />
+                        </div>
+                        <h3 className="mb-3 font-serif text-xl font-medium text-foreground">
+                          Sign in to view operations
+                        </h3>
+                        <p className="mb-8 max-w-sm text-sm font-light leading-relaxed text-text-secondary">
+                          Task status, execution history, and configuration details are private.
+                        </p>
+                        <Button
+                          variant="brand"
+                          onClick={() => router.push('/login')}
+                          className="h-10 gap-2"
+                        >
+                          <LogIn className="h-4 w-4" />
+                          Sign in
+                        </Button>
+                      </motion.div>
+                    ) : Object.keys(groupedTasks).length === 0 ? (
                       <motion.div
                         key="empty-state"
                         initial={{ opacity: 0, scale: 0.98 }}

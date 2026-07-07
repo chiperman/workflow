@@ -28,8 +28,12 @@ export function RollingNumber({ value }: { value: number }) {
   }, [isAnimating, value]);
 
   return (
-    <span className="relative inline-flex h-[1.25em] overflow-hidden align-bottom">
+    <span
+      className="relative inline-flex h-[1.25em] overflow-hidden align-bottom"
+      aria-label={String(value)}
+    >
       <span
+        aria-hidden="true"
         className={`flex flex-col ${isAnimating ? 'transition-transform duration-500 ease-in-out -translate-y-1/2' : ''}`}
         style={{ height: '2.5em' }}
       >

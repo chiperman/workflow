@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 
-const MotionButton = motion(Button);
+const MotionButton = motion.create(Button);
 
 export default function LoginPage() {
   const [key, setKey] = useState('');
