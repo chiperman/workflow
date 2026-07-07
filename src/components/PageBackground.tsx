@@ -30,9 +30,6 @@ export function PageBackground() {
         transition={{ duration: 30, repeat: Infinity, ease: 'easeInOut' }}
         className="absolute bottom-[5%] right-[5%] w-[70%] h-[70%] bg-[#d97757] blur-[160px] rounded-full mix-blend-multiply"
       />
-
-      {/* Grain/Noise Overlay */}
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')] blend-overlay" />
     </div>
   );
 }

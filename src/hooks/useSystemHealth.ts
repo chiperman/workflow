@@ -15,6 +15,7 @@ interface UseSystemHealthResult {
   refreshAll: () => Promise<void>;
   isRefreshing: boolean;
   authType: 'cron' | 'app-key' | 'session' | 'public' | 'none';
+  isRestricted: boolean;
 }
 
 /**
@@ -46,6 +47,7 @@ export function useSystemHealth(): UseSystemHealthResult {
   // 3. Derive System Info
   const systemStatus = data?.status || 'Checking';
   const authType = data?.auth?.type || 'none';
+  const isRestricted = Boolean(data?.restricted);
 
   const failingServices = useMemo(() => {
     return Object.entries(services)
@@ -81,5 +83,6 @@ export function useSystemHealth(): UseSystemHealthResult {
     refreshAll,
     isRefreshing,
     authType,
+    isRestricted,
   };
 }
