@@ -20,7 +20,7 @@ Workflow Operations Center 是一个私有的任务维护控制台，用来集�
 - Next.js 16 / React 19 / TypeScript
 - Tailwind CSS 4 / Framer Motion / SWR
 - Supabase PostgreSQL
-- Jest / React Testing Library / Playwright
+- Jest / React Testing Library
 - ESLint / Prettier / Commitlint / Husky
 
 ## 本地开发
@@ -89,7 +89,6 @@ npm run dev
 | `npm run lint:check` | 以零 warning 标准检查 lint         |
 | `npm run type-check` | 运行 TypeScript 类型检查           |
 | `npm test`           | 运行 Jest 测试                     |
-| `npm run test:e2e`   | 运行 Playwright E2E 测试           |
 | `npm run build`      | 先 lint、类型检查，再构建生产包    |
 | `npm run release`    | 使用 standard-version 生成版本变更 |
 
@@ -133,7 +132,6 @@ Authorization: Bearer <CRON_SECRET>
 ```text
 workflow/
 ├── docs/                  # API、配置、测试和发布说明
-├── e2e/                   # Playwright 测试
 ├── src/
 │   ├── app/               # Next.js 页面与 API Routes
 │   ├── components/        # 页面组件与基础 UI
@@ -153,7 +151,7 @@ workflow/
 - [开发指南](./docs/DEVELOPMENT.md)：架构、目录和新增协议说明。
 - [任务配置](./docs/TASK_CONFIGURATION.md)：任务字段、HTTP 配置和成功规则。
 - [API 文档](./docs/API.md)：核心接口、鉴权方式和响应格式。
-- [测试指南](./docs/TESTING.md)：Jest、Playwright 和组件测试范围。
+- [测试指南](./docs/TESTING.md)：Jest 和组件测试范围。
 - [Git 工作流](./docs/GIT_WORKFLOW.md)：提交、分支和发布约定。
 - [发布检查清单](./docs/RELEASE_SETUP_CHECKLIST.md)：上线前配置核对。
 
@@ -172,6 +170,6 @@ workflow/
 
 - 新增任务类型前，优先确认现有 `DynamicService` 是否已经能覆盖。
 - 涉及敏感值时，优先使用环境变量或 secret 字段，不要把密钥写入普通配置。
-- 修改任务执行链路后，至少运行 `npm run type-check`、`npm test`，必要时补充 `npm run test:e2e`。
+- 修改任务执行链路后，至少运行 `npm run type-check`、`npm test`。
 - 修改 Cron 行为时，同步更新 `vercel.json` 与本文档。
 - 发布版本使用 `npm run release`，变更记录维护在 [CHANGELOG.md](./CHANGELOG.md)。
