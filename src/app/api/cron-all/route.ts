@@ -12,10 +12,8 @@ export async function GET(request: Request) {
   const authHeader = request.headers.get('authorization');
 
   // 验证 cron secret
-  if (env.cron?.secret) {
-    if (authHeader !== `Bearer ${env.cron.secret}`) {
-      return NextResponse.json({ success: false, message: 'Unauthorized (Cron)' }, { status: 401 });
-    }
+  if (authHeader !== `Bearer ${env.cron.secret}`) {
+    return NextResponse.json({ success: false, message: 'Unauthorized (Cron)' }, { status: 401 });
   }
 
   // 动态获取所有启用的服务

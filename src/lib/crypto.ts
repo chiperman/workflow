@@ -49,9 +49,12 @@ export function encrypt(text: string): string {
     const tag = cipher.getAuthTag().toString('hex');
 
     return `enc:${iv.toString('hex')}.${encrypted}.${tag}`;
-  } catch (_err) {
-    // APP_KEY 未配置时降级返回原文，避免加密服务阻塞整体启动
-    return text;
+  } catch (error) {
+    throw new Error(
+      error instanceof Error
+        ? `Failed to encrypt secret config: ${error.message}`
+        : 'Failed to encrypt secret config'
+    );
   }
 }
 

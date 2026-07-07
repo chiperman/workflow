@@ -10,6 +10,18 @@ export const dynamic = 'force-dynamic';
  */
 export const GET = withApiHandler(async request => {
   const authResult = verifyAuth(request);
+
+  if (authResult.type === 'public' || authResult.type === 'none') {
+    return {
+      status: 'Operational',
+      auth: {
+        type: authResult.type,
+      },
+      services: {},
+      restricted: true,
+    };
+  }
+
   const services = await checkAllServicesHealth();
 
   return {

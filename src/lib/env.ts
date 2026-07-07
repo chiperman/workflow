@@ -13,10 +13,10 @@ interface EnvConfig {
   bark?: {
     deviceKey: string;
   };
-  cron?: {
+  cron: {
     secret: string;
   };
-  appKey?: string;
+  appKey: string;
 }
 
 /**
@@ -38,6 +38,8 @@ function validateEnv(): EnvConfig {
   if (isServer) {
     if (!supabaseUrl) missing.push('NEXT_PUBLIC_SUPABASE_URL');
     if (!supabaseServiceRoleKey) missing.push('SUPABASE_SERVICE_ROLE_KEY');
+    if (!cronSecret) missing.push('CRON_SECRET');
+    if (!appKey) missing.push('APP_KEY');
 
     if (missing.length > 0) {
       const errorMessage = [
@@ -62,9 +64,6 @@ function validateEnv(): EnvConfig {
     // 警告信息 (仅开发环境服务端显示)
     if (process.env.NODE_ENV === 'development') {
       if (!barkDeviceKey) warnings.push('BARK_DEVICE_KEY is not set.');
-      if (!cronSecret) warnings.push('CRON_SECRET is not set.');
-      if (!appKey) warnings.push('APP_KEY is not set.');
-
       if (warnings.length > 0) {
         console.warn('⚠️  Env Warnings:', warnings.join(' '));
       }
@@ -78,8 +77,8 @@ function validateEnv(): EnvConfig {
       serviceRoleKey: supabaseServiceRoleKey || '',
     },
     ...(barkDeviceKey && { bark: { deviceKey: barkDeviceKey } }),
-    ...(cronSecret && { cron: { secret: cronSecret } }),
-    appKey,
+    cron: { secret: cronSecret || '' },
+    appKey: appKey || '',
   };
 }
 
