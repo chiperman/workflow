@@ -10,11 +10,6 @@ export function proxy(request: NextRequest) {
 
   // 2. Api 路由处理
   if (pathname.startsWith('/api/')) {
-    // 排除 api/auth 和 api/stats (已被 verifyAuth 识别为 public 或 authenticated)
-    // 但我们需要明确：如果是 public 类型，且不在 public 路径白名单中（理论上 verifyAuth 已经处理了），
-    // 这里主要处理 authorized: false 的情况
-    // 注意：verifyAuth 内部已经把 api/auth 和 api/stats 归为 public
-
     if (!authResult.authorized) {
       return NextResponse.json({ success: false, message: authResult.message }, { status: 401 });
     }

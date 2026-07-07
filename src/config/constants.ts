@@ -50,7 +50,7 @@ export const PUBLIC_PATHS = ['/', '/login', '/api/health', '/api/auth', '/favico
 /**
  * 允许公开访问的路径前缀
  */
-export const PUBLIC_PATH_PREFIXES = ['/api/stats/heatmap', '/_next'] as const;
+export const PUBLIC_PATH_PREFIXES = ['/_next'] as const;
 
 /**
  * 服务端重试配置

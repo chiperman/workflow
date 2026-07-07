@@ -208,6 +208,7 @@ export interface HealthCheckResponse {
     type: 'cron' | 'app-key' | 'session' | 'public' | 'none';
   };
   services: Record<string, ServiceHealth>;
+  restricted?: boolean;
 }
 
 /**

@@ -72,6 +72,8 @@ GET /api/stats/heatmap
 
 返回指定年度的聚合签到数据，默认返回当前年度。
 
+该接口需要登录态或有效的 API 凭证。
+
 ### 响应示例
 
 ```json
@@ -102,7 +104,7 @@ POST /api/tasks/[id]
 通过唯一标识符触发特定的维护协议。
 
 - **id**: 服务唯一标识符（如 `glados`）。
-- **查询参数**: `trigger=manual` (手动) 或 `trigger=auto` (自动)。
+- **查询参数**：`trigger=manual` （手动）或 `trigger=auto` （自动）。
 
 ### 响应示例
 

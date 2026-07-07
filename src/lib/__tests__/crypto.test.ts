@@ -9,6 +9,18 @@ import {
 } from '../crypto';
 
 describe('crypto config segmentation', () => {
+  const originalAppKey = process.env.APP_KEY;
+
+  afterEach(() => {
+    process.env.APP_KEY = originalAppKey;
+  });
+
+  it('APP_KEY 缺失时加密应失败而不是返回原文', () => {
+    delete process.env.APP_KEY;
+
+    expect(() => encrypt('secret-value')).toThrow('Missing required environment variable: APP_KEY');
+  });
+
   it('should keep non-sensitive headers in config and move sensitive headers to secret_config', () => {
     const result = normalizeConfigSegments(
       {

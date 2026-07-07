@@ -27,13 +27,7 @@ describe('auth.ts', () => {
     };
 
     it('should recognize public paths', () => {
-      const publicPaths = [
-        '/',
-        '/login',
-        '/api/health',
-        '/api/stats/heatmap',
-        '/api/stats/heatmap/2024',
-      ];
+      const publicPaths = ['/', '/login', '/api/health'];
       publicPaths.forEach(path => {
         const req = createRequest(path);
         const result = verifyAuth(req);
@@ -43,7 +37,13 @@ describe('auth.ts', () => {
     });
 
     it('should NOT recognize other paths as public', () => {
-      const privatePaths = ['/api/tasks/supabase', '/api/tasks/glados', '/api/service-config'];
+      const privatePaths = [
+        '/api/tasks/supabase',
+        '/api/tasks/glados',
+        '/api/service-config',
+        '/api/stats/heatmap',
+        '/api/stats/heatmap/years',
+      ];
       privatePaths.forEach(path => {
         const req = createRequest(path);
         const result = verifyAuth(req);
