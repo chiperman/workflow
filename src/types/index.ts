@@ -224,6 +224,8 @@ export interface KeepAliveResult {
   error?: string;
   /** 设为 true 时跳过日志记录（如 GLaDOS 重复签到场景） */
   skipLog?: boolean;
+  /** 设为 true 时表示服务未执行（如任务被禁用或执行前置检查失败） */
+  skipped?: boolean;
 }
 
 /**

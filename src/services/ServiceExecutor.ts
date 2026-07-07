@@ -20,11 +20,10 @@ export class ServiceExecutor {
       .eq('service', serviceKey)
       .single();
     if (error) {
-      // 默认开启，记录警告
       logger.warn(
         `[ServiceExecutor] Failed to fetch enabled flag for ${serviceKey}: ${error.message}`
       );
-      return true;
+      return error.code === 'PGRST116';
     }
     return data?.enabled ?? true;
   }
