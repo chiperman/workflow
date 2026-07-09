@@ -36,6 +36,8 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // 匹配所有路径，除了 api/auth 已经手动在代码里处理了，这里可以保持通用
-  matcher: ['/((?!api/auth|_next/static|_next/image|favicon.ico).*)'],
+  // 静态资源由 public 或 Next.js 直接处理，不进入业务鉴权。
+  matcher: [
+    '/((?!api/auth|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt|xml|json)$).*)',
+  ],
 };

@@ -36,6 +36,24 @@ describe('auth.ts', () => {
       });
     });
 
+    it('should recognize public static asset paths', () => {
+      const publicAssetPaths = [
+        '/vercel.svg',
+        '/github.svg',
+        '/gemini-color.svg',
+        '/claude-color.svg',
+        '/logo.png',
+        '/manifest.json',
+      ];
+
+      publicAssetPaths.forEach(path => {
+        const req = createRequest(path);
+        const result = verifyAuth(req);
+        expect(result.authorized).toBe(true);
+        expect(result.type).toBe('public');
+      });
+    });
+
     it('should NOT recognize other paths as public', () => {
       const privatePaths = [
         '/api/tasks/supabase',

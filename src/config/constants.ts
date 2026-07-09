@@ -53,6 +53,22 @@ export const PUBLIC_PATHS = ['/', '/login', '/api/health', '/api/auth', '/favico
 export const PUBLIC_PATH_PREFIXES = ['/_next'] as const;
 
 /**
+ * 允许公开访问的静态资源扩展名
+ */
+export const PUBLIC_FILE_EXTENSIONS = [
+  '.svg',
+  '.png',
+  '.jpg',
+  '.jpeg',
+  '.gif',
+  '.webp',
+  '.ico',
+  '.txt',
+  '.xml',
+  '.json',
+] as const;
+
+/**
  * 服务端重试配置
  */
 export const RETRY_CONFIG = {
