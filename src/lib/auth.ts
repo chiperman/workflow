@@ -1,4 +1,4 @@
-import { PUBLIC_PATH_PREFIXES, PUBLIC_PATHS } from '@/config/constants';
+import { PUBLIC_FILE_EXTENSIONS, PUBLIC_PATH_PREFIXES, PUBLIC_PATHS } from '@/config/constants';
 import { Result } from '@/types';
 import type { NextRequest } from 'next/server';
 
@@ -35,7 +35,9 @@ export function verifyAuth(req: Request | NextRequest): AuthResult {
 
   // 1. 公开路径检查 (Public)
   const isPublicPath =
-    PUBLIC_PATHS_SET.has(pathname) || PUBLIC_PATH_PREFIXES.some(p => pathname.startsWith(p));
+    PUBLIC_PATHS_SET.has(pathname) ||
+    PUBLIC_PATH_PREFIXES.some(p => pathname.startsWith(p)) ||
+    PUBLIC_FILE_EXTENSIONS.some(extension => pathname.endsWith(extension));
 
   // 注意：即使是公开路径，如果携带了凭证，我们也优先验证凭证（以便 API 明确调用者身份）
   // 但对于 middleware 拦截来说，公开路径可以直接放行。
