@@ -248,7 +248,7 @@ describe('TaskCard', () => {
     expect(screen.getByText('Heartbeat Lag')).toBeInTheDocument();
     expect(screen.getByText('Failures: 2')).toBeInTheDocument();
     expect(screen.getByText(/Last heartbeat:/i)).toBeInTheDocument();
-    expect(screen.getByText(/Failure streak: 2/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Failure streak:/i)).not.toBeInTheDocument();
   });
 
   it('开关按钮应可点击切换状态', async () => {
