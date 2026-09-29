@@ -7,7 +7,6 @@ interface StatsProps {
   stats: ServiceHealth['stats'];
   displayStatus: 'idle' | 'loading' | 'success' | 'error' | 'deleting';
   remoteHeartbeatAt?: string;
-  consecutiveFailures?: number;
   remoteHeartbeatLagging?: boolean;
 }
 
@@ -26,7 +25,6 @@ export const Stats = memo(function Stats({
   stats,
   displayStatus,
   remoteHeartbeatAt,
-  consecutiveFailures,
   remoteHeartbeatLagging,
 }: StatsProps) {
   const items = [
@@ -66,16 +64,13 @@ export const Stats = memo(function Stats({
         ))}
       </div>
 
-      {(remoteHeartbeatAt || remoteHeartbeatLagging || consecutiveFailures) && (
+      {(remoteHeartbeatAt || remoteHeartbeatLagging) && (
         <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-text-tertiary">
           {(remoteHeartbeatAt || remoteHeartbeatLagging) && (
             <span className={remoteHeartbeatLagging ? 'text-amber-700' : undefined}>
               Last heartbeat:{' '}
               {remoteHeartbeatAt ? formatHeartbeat(remoteHeartbeatAt) : 'Unavailable'}
             </span>
-          )}
-          {!!consecutiveFailures && (
-            <span className="text-red-600">Failure streak: {consecutiveFailures}</span>
           )}
         </div>
       )}

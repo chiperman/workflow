@@ -197,7 +197,6 @@ function TaskCardComponent({
         displayStatus={displayStatus}
         remoteHeartbeatAt={localHealth.remoteHeartbeatAt}
         remoteHeartbeatLagging={localHealth.remoteHeartbeatLagging}
-        consecutiveFailures={localHealth.consecutiveFailures}
       />
 
       <Actions
