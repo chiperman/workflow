@@ -1,6 +1,8 @@
 import { DynamicService } from '../DynamicService';
 import type { ServiceConfig } from '@/types';
 import * as supabaseJs from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
+import { aggregateByDay, type LogEntry } from '@/lib/heatmap-utils';
 
 // Mock dependencies
 jest.mock('@/lib/supabase', () => ({
@@ -181,7 +183,43 @@ describe('DynamicService Robustness Tests', () => {
       expect(result.success).toBe(true);
       expect(result.message).toContain('通用签到 今日已签到');
       expect(result.message).toContain("Today's observation logged.");
-      expect(result.skipLog).toBe(true);
+      expect(result.skipLog).toBe(false);
+    });
+
+    it('should recover the heatmap after repeat check-in without incrementing counts or duplicating success logs', async () => {
+      const timestamp = new Date().toISOString();
+      const logs: LogEntry[] = [{ service: checkinConfig.service, status: 'failure', timestamp }];
+      const insert = jest.fn(async (entry: Omit<LogEntry, 'timestamp'>) => {
+        logs.push({ ...entry, timestamp });
+        return { error: null };
+      });
+      const query = {
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        gte: jest.fn().mockReturnThis(),
+        then: (resolve: (value: { count: number }) => unknown) =>
+          Promise.resolve({ count: logs.filter(log => log.status === 'success').length }).then(
+            resolve
+          ),
+        insert,
+      };
+      (supabase.from as jest.Mock).mockReturnValue(query);
+      (global.fetch as jest.Mock).mockResolvedValue({
+        status: 200,
+        headers: new Map([['content-type', 'application/json']]),
+        json: async () => ({ code: 1, points: 0, message: 'Already checked in' }),
+      });
+
+      const service = new DynamicService(checkinConfig);
+      const result = await service.runKeepAlive('manual');
+      await service.logKeepAliveResult(result);
+
+      expect(aggregateByDay(logs)[0].services[checkinConfig.service]).toBe('success');
+      expect(mockUpdateStats).toHaveBeenCalledWith(false, 'manual');
+      expect(query.eq).toHaveBeenCalledWith('status', 'success');
+
+      await service.logKeepAliveResult(await service.runKeepAlive('manual'));
+      expect(insert).toHaveBeenCalledTimes(1);
     });
 
     it('should support nested JSON paths in success message templates', async () => {

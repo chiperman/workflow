@@ -328,7 +328,8 @@ export class DynamicService extends BaseService {
       duration: 0,
       rawResponse: responseData, // 这里的 rawResponse 供测试页面显示原始响应内容
       shouldIncrement,
-      skipLog: !shouldIncrement,
+      // 已签到也要记录成功；每日去重由 BaseService 处理，计数仍由 shouldIncrement 控制。
+      skipLog: false,
     };
   }
 

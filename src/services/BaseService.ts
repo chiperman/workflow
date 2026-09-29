@@ -129,7 +129,7 @@ export abstract class BaseService {
    * 此方法设计为"尽力而为"，失败不影响主逻辑
    */
   public async logKeepAliveResult(result: KeepAliveResult): Promise<void> {
-    // 如果结果标记为跳过日志（如重复签到），直接返回
+    // 如果结果显式标记为跳过日志，直接返回
     if (result.skipLog) {
       logger.info(`[${this.serviceName}] Skipping log (skipLog=true).`);
       return;
