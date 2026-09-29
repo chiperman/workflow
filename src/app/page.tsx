@@ -1,7 +1,7 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { Footer } from '@/components/Footer';
@@ -30,8 +30,21 @@ const MotionButton = motion.create(Button);
 
 const TASK_CARD_SKELETON_COUNT = 3;
 
-function SkeletonBlock({ className, delay = 0 }: { className: string; delay?: number }) {
-  return <div className={`animate-shimmer ${className}`} style={{ animationDelay: `${delay}s` }} />;
+function SkeletonBlock({
+  className,
+  delay = 0,
+  style,
+}: {
+  className: string;
+  delay?: number;
+  style?: CSSProperties;
+}) {
+  return (
+    <div
+      className={`animate-shimmer ${className}`}
+      style={{ animationDelay: `${delay}s`, ...style }}
+    />
+  );
 }
 
 function TaskCardSkeleton({ index }: { index: number }) {
@@ -126,23 +139,28 @@ function StatusSummary({
 
   const items = isLoading
     ? [
-        { label: 'Protocols', value: '...' },
-        { label: 'Enabled', value: '...' },
-        { label: 'Attention', value: '...' },
-        { label: 'Auto Runs', value: '...' },
+        { label: 'Protocols', value: '...', labelWidth: 'w-20', valueWidth: 'w-10' },
+        { label: 'Enabled', value: '...', labelWidth: 'w-16', valueWidth: 'w-10' },
+        { label: 'Attention', value: '...', labelWidth: 'w-16', valueWidth: 'w-10' },
+        { label: 'Auto Runs', value: '...', labelWidth: 'w-20', valueWidth: 'w-16' },
       ]
     : isRestricted
       ? [
-          { label: 'Access', value: 'Locked' },
-          { label: 'Status', value: 'Sign in' },
-          { label: 'Scope', value: 'Private' },
-          { label: 'Mode', value: isGuest ? 'Preview' : 'Session' },
+          { label: 'Access', value: 'Locked', labelWidth: 'w-auto', valueWidth: 'w-auto' },
+          { label: 'Status', value: 'Sign in', labelWidth: 'w-auto', valueWidth: 'w-auto' },
+          { label: 'Scope', value: 'Private', labelWidth: 'w-auto', valueWidth: 'w-auto' },
+          {
+            label: 'Mode',
+            value: isGuest ? 'Preview' : 'Session',
+            labelWidth: 'w-auto',
+            valueWidth: 'w-auto',
+          },
         ]
       : [
-          { label: 'Protocols', value: total },
-          { label: 'Enabled', value: enabled },
-          { label: 'Attention', value: attention },
-          { label: 'Auto Runs', value: autoRuns },
+          { label: 'Protocols', value: total, labelWidth: 'w-auto', valueWidth: 'w-auto' },
+          { label: 'Enabled', value: enabled, labelWidth: 'w-auto', valueWidth: 'w-auto' },
+          { label: 'Attention', value: attention, labelWidth: 'w-auto', valueWidth: 'w-auto' },
+          { label: 'Auto Runs', value: autoRuns, labelWidth: 'w-auto', valueWidth: 'w-auto' },
         ];
 
   return (
@@ -150,30 +168,44 @@ function StatusSummary({
       <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2 text-sm font-medium text-foreground">
           <ShieldCheck className="h-4 w-4 text-accent-primary" aria-hidden="true" />
-          <span>
-            {isLoading
-              ? 'Checking operations status'
-              : isRestricted
-                ? 'Operations status is private'
-                : 'Operations status'}
-          </span>
+          {isLoading ? (
+            <SkeletonBlock className="h-3.5 w-44 rounded-sm" delay={0.04} />
+          ) : (
+            <span>{isRestricted ? 'Operations status is private' : 'Operations status'}</span>
+          )}
         </div>
-        {!isRestricted && (
+        {!isRestricted && !isLoading && (
           <span className="text-[11px] uppercase tracking-[0.14em] text-text-secondary">
             {todayReady}/{total} ready today
           </span>
         )}
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {items.map(item => (
+        {items.map((item, index) => (
           <div
             key={item.label}
             className="min-w-0 rounded-md border border-[#f0f0ed] bg-[#fdfcf8] px-3 py-2"
           >
             <div className="truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-text-secondary">
-              {item.label}
+              {isLoading ? (
+                <SkeletonBlock
+                  className={`h-[10px] ${item.labelWidth} rounded-sm`}
+                  delay={index * 0.06}
+                />
+              ) : (
+                item.label
+              )}
             </div>
-            <div className="mt-1 font-mono text-lg leading-none text-foreground">{item.value}</div>
+            {isLoading ? (
+              <SkeletonBlock
+                className={`mt-1 h-6 ${item.valueWidth} rounded-sm`}
+                delay={index * 0.06 + 0.12}
+              />
+            ) : (
+              <div className="mt-1 font-mono text-lg leading-none text-foreground">
+                {item.value}
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -274,11 +306,14 @@ export default function Home() {
                   </motion.h1>
                   <div className="flex items-center gap-3">
                     {isLoading ? (
-                      <div className="flex items-center gap-2 opacity-60">
-                        <div className="w-8 h-8 rounded-lg bg-muted animate-pulse" />
-                        <div className="w-8 h-8 rounded-lg bg-muted animate-pulse" />
-                        <div className="w-16 h-8 rounded-lg bg-muted animate-pulse hidden sm:block" />
-                        <div className="w-8 h-8 rounded-lg bg-muted animate-pulse sm:hidden" />
+                      <div className="flex items-center gap-2 opacity-70">
+                        <SkeletonBlock className="h-8 w-8 rounded-lg" delay={0} />
+                        <SkeletonBlock className="h-8 w-8 rounded-lg" delay={0.08} />
+                        <SkeletonBlock
+                          className="hidden sm:block h-8 w-16 rounded-lg"
+                          delay={0.16}
+                        />
+                        <SkeletonBlock className="h-8 w-8 rounded-lg sm:hidden" delay={0.24} />
                       </div>
                     ) : (
                       <>
