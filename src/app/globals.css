@@ -330,7 +330,7 @@ h6 {
   }
 }
 
-/* 加载骨架的暖色低对比光泽 */
+/* 加载骨架的分层光泽 */
 @keyframes shimmer {
   0% {
     background-position: 180% 0;
@@ -341,14 +341,17 @@ h6 {
 }
 
 .animate-shimmer {
+  background-color: #f3f1ec;
   background: linear-gradient(
     90deg,
-    #f1f0ea 0%,
-    #f7f5ee 42%,
-    #e8e6de 50%,
-    #f7f5ee 58%,
-    #f1f0ea 100%
+    rgba(241, 239, 233, 0.95) 0%,
+    rgba(246, 244, 236, 0.72) 42%,
+    rgba(239, 234, 221, 0.95) 52%,
+    rgba(246, 244, 236, 0.72) 62%,
+    rgba(241, 239, 233, 0.95) 100%
   );
   background-size: 260% 100%;
-  animation: shimmer 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation: shimmer 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  border-radius: inherit;
+  will-change: background-position;
 }
